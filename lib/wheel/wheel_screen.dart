@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../widgets/spin_btn.dart';
 import '../widgets/reset_btn.dart';
 import '../widgets/add_btn.dart';
+import '../wheel/wheel.dart';
 
 class WheelScreen extends StatefulWidget {  // ← МЕНЯЕМ НА StatefulWidget!
   const WheelScreen({super.key});
@@ -15,7 +16,8 @@ class _WheelScreenState extends State<WheelScreen> {
   // ПЕРЕМЕННАЯ ДЛЯ ХРАНЕНИЯ СЕКТОРОВ
   List<String> sectors = [];
 
-  @override 
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -43,23 +45,29 @@ Color(0xFFB874EC)  // еще светлее лаванда (акцент)
         ),
         child: Stack(
           children: [
-            // Колесо
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "🎡 Wheel",
-                    style: TextStyle(color: Colors.white, fontSize: 24),
+
+            Positioned(
+              top: 120,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  "You lucky today?",
+                  style: TextStyle(
+                    color: Colors.yellow.shade500,
+                    fontSize: 35,
+                    
                   ),
-                  if (sectors.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    Text(
-                      "Sectors: ${sectors.length}",
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                  ],
-                ],
+                ),
+              ),
+            ),
+            // КОЛЕСО
+            Positioned(
+              top: 240,  // ← МЕНЯЙ ЭТО ЧИСЛО ДЛЯ ДВИЖЕНИЯ
+              left: 0,
+              right: 0,
+              child: Center(
+                child: WheelDraw(sectors: sectors),
               ),
             ),
             
@@ -69,7 +77,6 @@ Color(0xFFB874EC)  // еще светлее лаванда (акцент)
               bottom: 180,
               child: ResetButton(
                 onPressed: () {
-                  print("Reset нажат!");
                   setState(() {
                     sectors.clear();
                   });
@@ -77,21 +84,18 @@ Color(0xFFB874EC)  // еще светлее лаванда (акцент)
               ),
             ),
             
-            // ADD кнопка - ПО ЦЕНТРУ
+            // ADD кнопка
             Positioned(
               left: 0,
               right: 0,
               bottom: 30,
               child: Center(
                 child: AddBtn(
-                  onPressed: () {
-                    print("Add нажат!");
-                  },
+                  onPressed: () {},
                   onSectorAdded: (String sectorName) {
                     setState(() {
                       sectors.add(sectorName);
                     });
-                    print("📝 Текущие секторы: $sectors");
                   },
                 ),
               ),
