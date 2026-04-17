@@ -1,0 +1,180 @@
+// файл: lib/wheel/logic.dart
+// ИСПРАВЛЕННАЯ ВЕРСИЯ - АНИМАЦИЯ РАБОТАЕТ
+
+import 'dart:math';
+import 'package:flutter/material.dart';
+
+// ============================================================
+// 1. ГЕНЕРАТОР СЛУЧАЙНЫХ ЧИСЕЛ
+// ============================================================
+class _FortuneRandom {
+  int _seed;
+  int _callCounter = 0;
+  static const int _MASK = 0xFFFFFFFF;
+
+  _FortuneRandom() : _seed = DateTime.now().microsecondsSinceEpoch & _MASK;
+
+  int _xorshift32() {
+    _seed ^= (_seed << 13) & _MASK;
+    _seed ^= (_seed >> 17) & _MASK;
+    _seed ^= (_seed << 5) & _MASK;
+    return _seed;
+  }
+
+  double nextDouble() {
+    int randomInt = _xorshift32();
+    randomInt = (randomInt + _callCounter) & _MASK;
+    _callCounter++;
+    if (_callCounter > 1000000) _callCounter = 0;
+    return randomInt / 4294967296.0;
+  }
+
+  double nextDoubleRange(double min, double max) {
+    return min + nextDouble() * (max - min);
+  }
+
+  int nextInt(int min, int max) {
+    return min + (nextDouble() * (max - min + 1)).floor();
+  }
+}
+
+// ============================================================
+// 2. СУПЕР-ПЛАВНАЯ КРИВАЯ (синусоидальное замедление)
+// ============================================================
+class _SuperSmoothCurve extends Curve {
+  const _SuperSmoothCurve();
+  
+  @override
+  double transform(double t) {
+    // Синусоидальная кривая — самое плавное замедление
+    // Сначала быстро, потом плавно замедляется до 0
+    return sin(t * pi / 2);
+  }
+}
+
+// ============================================================
+// 3. КЛАСС-КОНТРОЛЛЕР ВРАЩЕНИЯ
+// ============================================================
+class WheelLogic {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  
+  double _currentAngle = 0.0;
+  double _startAngle = 0.0;      // ЗАПОМИНАЕМ начальный угол
+  double _targetDelta = 0.0;
+  bool _isSpinning = false;
+  
+  int _fullRotations = 0;
+  double _targetLandingAngle = 0.0;
+  
+  final _FortuneRandom _random = _FortuneRandom();
+  final VoidCallback onAngleChanged;
+  final Function(String prize) onWin;
+  List<String> sectors;
+  
+  // 🔧 НАСТРОЙКИ
+  static const double SPIN_DURATION_SECONDS = 4.0;   // 4 секунды
+  
+  WheelLogic({
+    required TickerProvider vsync,
+    required this.onAngleChanged,
+    required this.onWin,
+    required this.sectors,
+  }) {
+    _controller = AnimationController(
+      vsync: vsync,
+      duration: Duration(milliseconds: (SPIN_DURATION_SECONDS * 1000).round()),
+    );
+    
+    _animation = _controller.drive(
+      CurveTween(curve: _SuperSmoothCurve()),
+    );
+    
+    _controller.addListener(_onAnimationFrame);
+    _controller.addStatusListener(_onAnimationEnd);
+  }
+  
+  double get currentAngle => _currentAngle;
+  bool get isSpinning => _isSpinning;
+  
+  // ============================================================
+  // 4. ЗАПУСК ВРАЩЕНИЯ
+  // ============================================================
+  void spin() {
+    if (_isSpinning) return;
+    if (sectors.isEmpty) return;
+    
+    // Запоминаем угол ПЕРЕД вращением
+    _startAngle = _currentAngle;
+    
+    _fullRotations = _random.nextInt(6, 10);
+    _targetLandingAngle = _random.nextDouble() * 2 * pi;
+    _targetDelta = _fullRotations * 2 * pi + _targetLandingAngle;
+    
+    print('🎡 Вращение: ${_fullRotations} оборотов, посадка ${(_targetLandingAngle * 180 / pi).toStringAsFixed(0)}°');
+    
+    _isSpinning = true;
+    _controller.forward(from: 0.0);
+  }
+  
+  // ============================================================
+  // 5. КАЖДЫЙ КАДР (ИСПРАВЛЕНО!)
+  // ============================================================
+  void _onAnimationFrame() {
+    // progress идёт от 0 до 1
+    double progress = _animation.value;
+    
+    // ГЛАВНАЯ ФОРМУЛА: начальный угол + (пройденный путь * прогресс)
+    _currentAngle = _startAngle + (_targetDelta * progress);
+    
+    // Обновляем UI
+    onAngleChanged();
+  }
+  
+  // ============================================================
+  // 6. ОКОНЧАНИЕ АНИМАЦИИ
+  // ============================================================
+  void _onAnimationEnd(AnimationStatus status) {
+    if (status == AnimationStatus.completed) {
+      double finalAngle = _currentAngle % (2 * pi);
+      if (finalAngle < 0) finalAngle += 2 * pi;
+      
+      String prize = _getSectorByAngle(finalAngle);
+      print('🏆 ВЫИГРЫШ: $prize (угол ${(finalAngle * 180 / pi).toStringAsFixed(0)}°)');
+      
+      _controller.reset();
+      _isSpinning = false;
+      
+      onWin(prize);
+    }
+  }
+  
+  // ============================================================
+  // 7. ОПРЕДЕЛЕНИЕ СЕКТОРА
+  // ============================================================
+  String _getSectorByAngle(double angle) {
+    if (sectors.isEmpty) return "Нет секторов";
+    
+    int sectorsCount = sectors.length;
+    double anglePerSector = (2 * pi) / sectorsCount;
+    
+    double normalizedAngle = angle % (2 * pi);
+    if (normalizedAngle < 0) normalizedAngle += 2 * pi;
+    
+    double correctedAngle = normalizedAngle - pi / 2;
+    if (correctedAngle < 0) correctedAngle += 2 * pi;
+    
+    int sectorIndex = (correctedAngle / anglePerSector).floor();
+    if (sectorIndex >= sectorsCount) sectorIndex = 0;
+    
+    return sectors[sectorIndex];
+  }
+  
+  void updateSectors(List<String> newSectors) {
+    sectors = newSectors;
+  }
+  
+  void dispose() {
+    _controller.dispose();
+  }
+}
