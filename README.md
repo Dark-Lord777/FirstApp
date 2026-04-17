@@ -5,6 +5,6 @@
     max-width="600px"
     style="max-width: 100%; height: auto;"
     alt="image"
-    src="https://github.com/user-attachments/assets/7f4660a2-9d39-4c52-a259-d171d4b699f7"
+    src="https://github.com/user-attachments/assets/958ab0a6-052f-491a-8d4b-413a0ce74b6f"
   />
 </div>
