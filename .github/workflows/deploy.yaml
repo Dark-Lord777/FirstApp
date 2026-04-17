@@ -1,0 +1,45 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'lib/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'assets/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+      
+      - run: flutter pub get
+      - run: flutter build web --release
+      
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+      
+      - name: Clean old deployments
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ids=($(gh api repos/${{ github.repository }}/deployments --paginate --jq 'sort_by(.created_at) | .[].id'))
+          total=${#ids[@]}
+          if [ $total -gt 2 ]; then
+            for i in $(seq 0 $(($total - 3))); do
+              gh api -X DELETE repos/${{ github.repository }}/deployments/${ids[$i]} --silent
+            done
+          fi
