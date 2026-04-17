@@ -18,6 +18,8 @@ A customizable wheel of fortune app built with Flutter. No hardcoded sectors –
 
 [![Download APK](https://github.com/user-attachments/files/26829304/WheelOfFortune_v1.0.0-beta.1.zip)](https://github.com/Dark-Lord777/FirstApp/releases/tag/V1.0.0)
 
+###or
+  [![Open wheel of fortune on site](https://dark-lord777.github.io/FirstApp/)]
 
 > **Size:** 7.5 MB | **Android 8.0+** | Extract ZIP and install APK
 
