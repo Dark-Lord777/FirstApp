@@ -41,6 +41,9 @@ A customizable wheel of fortune app built with Flutter. No hardcoded sectors –
 
 ## 🚀 Run from source
 
+
+</div>
+
 ```
 git clone https://github.com/Dark-Lord777/FirstApp
 cd FirstApp
@@ -48,4 +51,3 @@ flutter pub get
 flutter run
 ```
 
-</div>
