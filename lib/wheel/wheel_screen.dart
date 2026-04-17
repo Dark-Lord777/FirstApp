@@ -1,11 +1,10 @@
-// файл: lib/wheel/wheel_screen.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../widgets/spin_btn.dart';
 import '../widgets/reset_btn.dart';
 import '../widgets/add_btn.dart';
 import '../wheel/wheel.dart';
-import '../wheel/logic.dart'; // ← ПОДКЛЮЧАЕМ НАШУ ЛОГИКУ
+import '../wheel/logic.dart'; 
 
 class WheelScreen extends StatefulWidget {
   const WheelScreen({super.key});
@@ -15,31 +14,25 @@ class WheelScreen extends StatefulWidget {
 }
 
 class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin {
-  // Список секторов
   List<String> sectors = [];
   
-  // КОНТРОЛЛЕР ЛОГИКИ ВРАЩЕНИЯ
   late WheelLogic _wheelLogic;
   
-  // Текущий угол для передачи в WheelDraw
   double _currentRotationAngle = 0.0;
 
   @override
   void initState() {
     super.initState();
     
-    // ИНИЦИАЛИЗАЦИЯ ЛОГИКИ
     _wheelLogic = WheelLogic(
-      vsync: this,  // нужно для анимации (with TickerProviderStateMixin)
+      vsync: this,  
       onAngleChanged: () {
-        // Этот колбэк вызывается при каждом кадре анимации
         setState(() {
           _currentRotationAngle = _wheelLogic.currentAngle;
         });
       },
       onWin: (String prize) {
-        // Диалог убран - только вывод в консоль
-        print('🏆 ВЫИГРЫШ: $prize');
+        //print('You win: $prize');
       },
       sectors: sectors,
     );
@@ -73,7 +66,6 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
         ),
         child: Stack(
           children: [
-            // Заголовок
             Positioned(
               top: 120,
               left: 0,
@@ -89,7 +81,6 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
               ),
             ),
             
-            // КОЛЕСО (теперь передаём угол поворота)
             Positioned(
               top: 240,
               left: 0,
@@ -97,12 +88,11 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
               child: Center(
                 child: WheelDraw(
                   sectors: sectors,
-                  rotationAngle: _currentRotationAngle, // ← угол из логики
+                  rotationAngle: _currentRotationAngle, 
                 ),
               ),
             ),
             
-            // RESET кнопка
             Positioned(
               left: 30,
               bottom: 180,
@@ -110,13 +100,12 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                 onPressed: () {
                   setState(() {
                     sectors.clear();
-                    _wheelLogic.updateSectors(sectors); // ← обновляем в логике
+                    _wheelLogic.updateSectors(sectors); 
                   });
                 },
               ),
             ),
             
-            // ADD кнопка
             Positioned(
               left: 0,
               right: 0,
@@ -127,30 +116,22 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                   onSectorAdded: (String sectorName) {
                     setState(() {
                       sectors.add(sectorName);
-                      _wheelLogic.updateSectors(sectors); // ← обновляем в логике
+                      _wheelLogic.updateSectors(sectors);
                     });
                   },
                 ),
               ),
             ),
             
-            // SPIN кнопка (теперь вызывает spin из логики)
             Positioned(
               right: 30,
               bottom: 180,
               child: SpinBtn(
                 onPressed: () {
                   if (sectors.isEmpty) {
-                    // Если секторов нет — показываем предупреждение
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Сначала добавьте сектора!'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
+                    return; 
                   }
-                  _wheelLogic.spin(); // ← ЗАПУСКАЕМ ВРАЩЕНИЕ
+                  _wheelLogic.spin(); 
                 },
               ),
             ),
@@ -162,7 +143,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
   
   @override
   void dispose() {
-    _wheelLogic.dispose(); // ← ВАЖНО: очищаем контроллер
+    _wheelLogic.dispose(); 
     super.dispose();
   }
 }

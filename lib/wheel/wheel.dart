@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 
 class WheelDraw extends StatelessWidget {
   final List<String> sectors;
-  final double rotationAngle;  // ← ДОБАВИТЬ
+  final double rotationAngle; 
   
   const WheelDraw({
     required this.sectors, 
-    this.rotationAngle = 0.0,  // ← ДОБАВИТЬ
+    this.rotationAngle = 0.0,
     super.key
   });
 
@@ -29,7 +29,7 @@ class WheelDraw extends StatelessWidget {
       height: 300,
       child: CustomPaint(
         size: Size(300, 300),
-        painter: _WheelPainter(sectors, rotationAngle),  // ← ПЕРЕДАЁМ ОБА
+        painter: _WheelPainter(sectors, rotationAngle),  
       ),
     );
   }
@@ -37,9 +37,9 @@ class WheelDraw extends StatelessWidget {
 
 class _WheelPainter extends CustomPainter {
   final List<String> sectors;
-  final double rotationAngle;  // ← ДОБАВИТЬ
+  final double rotationAngle;  
   
-  _WheelPainter(this.sectors, this.rotationAngle);  // ← ИЗМЕНИТЬ
+  _WheelPainter(this.sectors, this.rotationAngle); 
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -47,7 +47,6 @@ class _WheelPainter extends CustomPainter {
     var radius = size.width / 2;
     
     if (sectors.isEmpty) {
-      // Рисуем надпись если нет секторов
       TextPainter textPainter = TextPainter(
         text: TextSpan(
           style: TextStyle(color: Colors.white, fontSize: 16),
@@ -71,6 +70,11 @@ class _WheelPainter extends CustomPainter {
       Paint bgPaint = Paint()..color = Colors.grey.shade800;
       canvas.drawCircle(center, radius, bgPaint);
       
+    Paint borderPaint = Paint()
+      ..color = Colors.yellow.shade700
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 7;
+    canvas.drawCircle(center, radius, borderPaint);
       textPainter.paint(
         canvas,
         Offset(center.dx - textPainter.width / 2, center.dy - textPainter.height / 2),
@@ -79,20 +83,17 @@ class _WheelPainter extends CustomPainter {
     }
     
     double anglePerSector = 2 * pi / sectors.length;
-    double startAngle = -pi / 2 + rotationAngle;  // ← С УЧЁТОМ ПОВОРОТА
+    double startAngle = -pi / 2 + rotationAngle;  
     
-    // Фон
     Paint backgroundPaint = Paint()..color = Colors.grey.shade800;
     canvas.drawCircle(center, radius, backgroundPaint);
     
-    // Обводка
     Paint borderPaint = Paint()
       ..color = Colors.yellow.shade700
       ..style = PaintingStyle.stroke
       ..strokeWidth = 7;
     canvas.drawCircle(center, radius, borderPaint);
     
-    // Сектора
     for (int i = 0; i < sectors.length; i++) {
       Paint sectorPaint = Paint()
         ..color = Colors.primaries[i % Colors.primaries.length];
@@ -105,7 +106,6 @@ class _WheelPainter extends CustomPainter {
         sectorPaint,
       );
       
-      // Текст
       double midAngle = startAngle + anglePerSector / 2;
       double textRadius = radius * 0.7;
       double x = center.dx + textRadius * cos(midAngle);
@@ -127,7 +127,6 @@ class _WheelPainter extends CustomPainter {
       startAngle += anglePerSector;
     }
     
-    // Стрелка
     Paint pointerPaint = Paint()..color = Colors.red.shade700;
     Path pointerPath = Path();
     double pointerX = size.width / 2;

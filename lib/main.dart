@@ -16,9 +16,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-class Welcome extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Text("Welcome");
-  }
-}

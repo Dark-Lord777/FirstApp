@@ -1,12 +1,7 @@
-// файл: lib/wheel/logic.dart
-// ИСПРАВЛЕННАЯ ВЕРСИЯ - ПЛАВНОЕ ЗАМЕДЛЕНИЕ
-
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-// ============================================================
-// 1. ГЕНЕРАТОР СЛУЧАЙНЫХ ЧИСЕЛ
-// ============================================================
+
 class _FortuneRandom {
   int _seed;
   int _callCounter = 0;
@@ -38,9 +33,6 @@ class _FortuneRandom {
   }
 }
 
-// ============================================================
-// 2. ПРАВИЛЬНАЯ КРИВАЯ ЗАМЕДЛЕНИЯ
-// ============================================================
 class _SmoothCurve extends Curve {
   const _SmoothCurve();
   
@@ -49,7 +41,6 @@ class _SmoothCurve extends Curve {
     // КВАДРАТИЧНОЕ ЗАМЕДЛЕНИЕ - плавно замедляется к концу
     //return 1 - (1 - t) * (1 - t);
     
-    // Другие варианты (раскомментируй для теста):
     // Кубическое замедление (ещё плавнее)
      return 1 - (1 - t) * (1 - t) * (1 - t);
     
@@ -61,9 +52,6 @@ class _SmoothCurve extends Curve {
   }
 }
 
-// ============================================================
-// 3. ОСНОВНОЙ КЛАСС
-// ============================================================
 class WheelLogic {
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -78,8 +66,7 @@ class WheelLogic {
   final Function(String prize) onWin;
   List<String> sectors;
   
-  // НАСТРОЙКИ (можно увеличить длительность для более плавного вращения)
-  static const double SPIN_DURATION_SECONDS = 9.0;  // 3 секунды
+  static const double SPIN_DURATION_SECONDS = 9.0;  
   
   WheelLogic({
     required TickerProvider vsync,
@@ -92,10 +79,9 @@ class WheelLogic {
       duration: Duration(milliseconds: (SPIN_DURATION_SECONDS * 1000).round()),
     );
     
-    // Используем правильную кривую замедления
     _animation = CurvedAnimation(
       parent: _controller,
-      curve: _SmoothCurve(),  // ← правильное замедление
+      curve: _SmoothCurve(),  
     );
     
     _controller.addListener(_onAnimationFrame);
@@ -111,12 +97,11 @@ class WheelLogic {
     
     _startAngle = _currentAngle;
     
-    // УВЕЛИЧИЛ ОБОРОТЫ для более долгого вращения
-    int fullRotations = _random.nextInt(15, 30);  // от 8 до 15 оборотов
+    int fullRotations = _random.nextInt(15, 30);  
     double landingAngle = _random.nextDouble() * 2 * pi;
     _targetDelta = fullRotations * 2 * pi + landingAngle;
     
-    print('🎡 Вращение: $fullRotations оборотов, длительность: ${SPIN_DURATION_SECONDS} сек');
+    //print('🎡 Вращение: $fullRotations оборотов, длительность: ${SPIN_DURATION_SECONDS} сек');
     
     _isSpinning = true;
     _controller.forward(from: 0.0);
@@ -134,7 +119,7 @@ class WheelLogic {
       if (finalAngle < 0) finalAngle += 2 * pi;
       
       String prize = _getSectorByAngle(finalAngle);
-      print('🏆 ВЫИГРЫШ: $prize');
+      //print('Winner : $prize');
       
       _isSpinning = false;
       onWin(prize);
@@ -142,7 +127,7 @@ class WheelLogic {
   }
   
   String _getSectorByAngle(double angle) {
-    if (sectors.isEmpty) return "Нет секторов";
+    if (sectors.isEmpty) return "No sectors";
     
     int sectorsCount = sectors.length;
     double anglePerSector = (2 * pi) / sectorsCount;
