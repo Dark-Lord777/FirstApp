@@ -8,7 +8,7 @@ on:
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - 'assets/**'
-
+workflow_dispatch:
 permissions:
   contents: write
   deployments: write
