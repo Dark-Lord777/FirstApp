@@ -12,7 +12,6 @@ class AddBtn extends StatelessWidget {
     this.onSectorAdded,
   });
 
-  // Функция показа диалога
   Future<void> _showDialog(BuildContext context) async {
     final String? sectorName = await showAddSectorDialog(context);
     
