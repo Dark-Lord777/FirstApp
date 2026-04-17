@@ -3,6 +3,11 @@ name: Deploy Flutter Web to GitHub Pages
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'lib/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'assets/**'
 
 permissions:
   contents: write
@@ -11,29 +16,23 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.24.0'
       
-      - name: Install dependencies
-        run: flutter pub get
+      - run: flutter pub get
+      - run: flutter build web --release
       
-      - name: Build web
-        run: flutter build web --release
-      
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build/web
       
-      - name: Clean old deployments (keep only last 2)
-        if: always()
+      # АВТООЧИСТКА: только если деплой успешен
+      - name: Clean old deployments
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -43,4 +42,7 @@ jobs:
             for i in $(seq 0 $(($total - 3))); do
               gh api -X DELETE repos/${{ github.repository }}/deployments/${ids[$i]} --silent
             done
+            echo "Deleted $(($total - 2)) old deployment(s), kept 2 most recent"
+          else
+            echo "Only $total deployment(s), nothing to clean"
           fi
