@@ -8,6 +8,7 @@ on:
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - 'assets/**'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -41,4 +42,7 @@ jobs:
             for i in $(seq 0 $(($total - 3))); do
               gh api -X DELETE repos/${{ github.repository }}/deployments/${ids[$i]} --silent
             done
+            echo "Deleted $(($total - 2)) old deployment(s), kept 2 most recent"
+          else
+            echo "Only $total deployment(s), nothing to clean"
           fi
