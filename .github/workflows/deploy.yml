@@ -28,7 +28,9 @@ jobs:
         with:
           flutter-version: '3.24.0'
       - run: flutter pub get
-      - run: flutter build web --release
+     # - run: flutter build web --release --base-href "/FirstApp/"
+      - run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+     # - run: flutter build web --release
       - name: Debug build output
         run: ls -la ./build/web
       - uses: peaceiris/actions-gh-pages@v4
