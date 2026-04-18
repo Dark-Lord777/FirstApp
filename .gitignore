@@ -50,7 +50,8 @@ DerivedData
 # --- Linux / Windows / Web (обычно не нужны в репе) ---
 linux/flutter/
 windows/flutter/
-web/
+#web/
+
 
 # --- Rust (сборки, но НЕ исходники!) ---
 rust/target/
