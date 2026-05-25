@@ -16,14 +16,13 @@ jobs:
       
       - name: Setup keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/keystore.jks
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
           cat > android/key.properties << EOF
-          storeFile=keystore.jks
+          storeFile=../app/keystore.jks
           storePassword=${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
           keyAlias=${{ secrets.KEY_ALIAS }}
           EOF
-
       - uses: subosito/flutter-action@v2
         with: 
           flutter-version: '3.24.0'
