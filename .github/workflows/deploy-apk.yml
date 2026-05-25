@@ -40,7 +40,7 @@ jobs:
           echo "Vers_my_proj: $APP_VERS"
       
       - name: Rename file
-        run: mv build/app/outputs/flutter-apk/app-release.apk \
+        run: mv build/app/outputs/flutter-apk/app*.apk \
                 build/app/outputs/flutter-apk/WheelOfFortune_V${{ steps.git_version.outputs.APP_VERS }}.apk
       
       - name: Create zip 
