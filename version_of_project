@@ -1,6 +1,7 @@
 #Hi. Here we write a version of the project for Gh Actions
+#Please/ If you want to your code works do that steps
+#Please do not leave the last line blank. Please It's very important else your deploy was fall
 #So. Enter your wanted version and...
 #See you later:)
 
 1.00.1-beta
-
