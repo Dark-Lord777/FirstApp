@@ -41,7 +41,7 @@ jobs:
       
       - name: Rename file
         run: mv build/app/outputs/flutter-apk/app-release.apk \
-                  build/app/outputs/flutter-apk/WheelOfFortune_V${{ steps.git_version.outputs.APP_VERS }}.apk
+                build/app/outputs/flutter-apk/WheelOfFortune_V${{ steps.git_version.outputs.APP_VERS }}.apk
       
       - name: Create zip 
         run: |
