@@ -10,30 +10,47 @@ jobs:
     build-apk:
       runs-on: ubuntu-latest
       steps:
+         #Now for debug i do this steps. I understand that doesn't like you but it's neneded.   
+      #And fuck, I am the king of the project here. Hah
       - uses: actions/checkout@v4
+      
+      - name: Setup keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
+          mkdir -p android
+          cat > android/key.properties << EOF
+          storeFile=../keystore.jks
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          EOF
+      
       - uses: subosito/flutter-action@v2
         with: 
           flutter-version: '3.24.0'
+      
       - run: flutter pub get
-
-         #Now for debug i do this steps. I understand that doesn't like you but it's neneded.   
-      #And fuck, I am the king of the project here. Hah
+      
       - name: Build APK 
         run: flutter build apk --release
+      
       - name: Cat version from file 
         id: git_version 
         run: |
           APP_VERS=$(tail -n 1 version_of_project | tr -d '\n\r')
           echo "APP_VERS=$APP_VERS" >> $GITHUB_OUTPUT
           echo "Vers_my_proj: $APP_VERS"
-      - name: Rename  file
+      
+      - name: Rename file
         run: mv build/app/outputs/flutter-apk/app-release.apk \
-                  build/app/outputs/flutter-apk/WheelOfFortune_V${{ steps.git_version.outputs.APP_VERS}}.apk
+                  build/app/outputs/flutter-apk/WheelOfFortune_V${{ steps.git_version.outputs.APP_VERS }}.apk
+      
       - name: Create zip 
         run: |
           cd build/app/outputs/flutter-apk/ 
           zip WheelOfFortune_V${{ steps.git_version.outputs.APP_VERS }}.zip \
-                WheelOfFortune_V${{ steps.git_version.outputs.APP_VERS }}.apk
+              WheelOfFortune_V${{ steps.git_version.outputs.APP_VERS }}.apk
+      
       - name: Upload APK to Release
         uses: ncipollo/release-action@v1
         with:
@@ -44,5 +61,3 @@ jobs:
           omitBody: true
           omitNameDuringUpdate: true
           replacesArtifacts: true
-
-
