@@ -18,11 +18,12 @@ jobs:
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
           cat > android/key.properties << EOF
-          storeFile=../app/keystore.jks
+          storeFile=keystore.jks
           storePassword=${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
           keyAlias=${{ secrets.KEY_ALIAS }}
           EOF
+      
       - uses: subosito/flutter-action@v2
         with: 
           flutter-version: '3.24.0'
@@ -37,37 +38,35 @@ jobs:
         run: |
           APP_VERS=$(tail -n 1 version_of_project | tr -d '\n\r')
           echo "APP_VERS=$APP_VERS" >> $GITHUB_OUTPUT
-          echo "Vers_my_proj: $APP_VERS"
       
-      - name: Rename file
-        run: mv build/app/outputs/flutter-apk/app*.apk build/app/outputs/flutter-apk/WheelOfFortune_V${{ steps.git_version.outputs.APP_VERS }}.apk
-      
-      - name: Create zip 
+      - name: Rename and zip
         run: |
-          cd build/app/outputs/flutter-apk/ 
-          zip WheelOfFortune_V${{ steps.git_version.outputs.APP_VERS }}.zip \
-              WheelOfFortune_V${{ steps.git_version.outputs.APP_VERS }}.apk
+          cd build/app/outputs/flutter-apk/
+          VERSION="${{ steps.git_version.outputs.APP_VERS }}"
+          mv app*.apk "WheelOfFortune_V${VERSION}.apk"
+          zip "WheelOfFortune_V${VERSION}.zip" "WheelOfFortune_V${VERSION}.apk"
       
-      - name: Upload APK to Release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: "build/app/outputs/flutter-apk/*.zip"
-          tag: "latest"
-          name: "Latest Build"
-          allowUpdates: true
-          omitBody: true
-          omitNameDuringUpdate: true
-          replacesArtifacts: true
-      - name: Update README with latest version
+      - name: Update README with new version
         run: |
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
-          sed -i "s|WheelOfFortune_V[0-9.]*-beta.*.zip|WheelOfFortune_V${VERSION}.zip|g" README.md
-          sed -i "s|/releases/tag/V[0-9.]*|/releases/tag/V${VERSION}|g" README.md
+          sed -i "s|WheelOfFortune_V[0-9a-zA-Z.-]*.zip|WheelOfFortune_V${VERSION}.zip|g" README.md
+          sed -i "s|/releases/tag/V[0-9a-zA-Z.-]*|/releases/tag/V${VERSION}|g" README.md
       
       - name: Commit and push updated README
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add README.md
-          git diff --staged --quiet || git commit -m "Update README with latest version ${{ steps.git_version.outputs.APP_VERS }}"
+          git diff --staged --quiet || git commit -m "Update README to version ${{ steps.git_version.outputs.APP_VERS }}"
           git push
+      
+      - name: Create Release with version tag
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/flutter-apk/*.zip"
+          tag: "V${{ steps.git_version.outputs.APP_VERS }}"
+          name: "Version ${{ steps.git_version.outputs.APP_VERS }}"
+          allowUpdates: false
+          omitBody: false
+          body: "Automated release for version ${{ steps.git_version.outputs.APP_VERS }}"
+          replacesArtifacts: true
