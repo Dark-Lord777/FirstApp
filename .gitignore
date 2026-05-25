@@ -47,13 +47,11 @@ DerivedData
 *.hmap
 *.ipa
 
-# --- Linux / Windows / Web (обычно не нужны в репе) ---
 linux/flutter/
 windows/flutter/
 #web/
 
 
-# --- Rust (сборки, но НЕ исходники!) ---
 rust/target/
 **/*.rs.bk
 *.pdb
@@ -68,12 +66,4 @@ rust/target/
 *.jks
 local.properties
 
-# --- IDE ---
-.vscode/
-*.swp
-*.swo
-*~
-.DS_Store
 
-# --- Сгенерированные файлы FRB (их нельзя коммитить, они генерятся) ---
-lib/src/rust/

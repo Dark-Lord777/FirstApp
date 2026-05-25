@@ -72,7 +72,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
               right: 0,
               child: Center(
                 child: Text(
-                  "You lucky today?",
+                  "Are you lucky today?",
                   style: TextStyle(
                     color: Colors.yellow.shade500,
                     fontSize: 35,
