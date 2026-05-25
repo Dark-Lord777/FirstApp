@@ -66,4 +66,6 @@ rust/target/
 *.jks
 local.properties
 
-
+keystore.jks
+android/key.properties
+keystore_base64.txt
