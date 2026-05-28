@@ -166,7 +166,7 @@ Future<String?> showAddSectorDialog({
                         if (text.isNotEmpty) {
                           Navigator.pop(dialogContext, text);
                         } else {
-                          final errorMsg = errorText ?? "Please enter something"
+                          final errorMsg = errorText ?? "Please enter something";
                           ScaffoldMessenger.of(dialogContext).showSnackBar(
                             SnackBar(
                               content: Text(errorMsg),

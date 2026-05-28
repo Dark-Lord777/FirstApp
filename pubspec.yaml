@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  shared_preferences: ^2.2.2
+  http: ^1.1.0
 
   cupertino_icons: ^1.0.8
   flutter_fortune_wheel: ^1.3.2
@@ -22,6 +24,8 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
 
 flutter:
+  assets:
+  - assets/certificates/server.crt
 
   uses-material-design: true
 flutter_launcher_icons:

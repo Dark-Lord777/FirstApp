@@ -48,12 +48,12 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     });
   }
 
-Future<void> showCustomDialog() async {
-  final result = await showCustomDialog(
+Future<void> showAddSectorDialog() async {
+  final result = await showAddSectorDialog(
     context: context,
     title: "Add New Sector",
-    hintText: "Enter sector name..."
-    invitetext: "Enter sector name"
+    hintText: "Enter sector name...",
+    errorText: "Please enter sector name",
     buttonText: "Add",
     icon: Icons.add_circle_outline_rounded,
   );
@@ -65,18 +65,19 @@ Future<void> showCustomDialog() async {
     }
   }
 
-Future<void> showCustomDialog() async {
-  final newTitle = await showCustomDialog(
+Future<void> _showChangeTitleDialog() async {
+  final newTitle = await showAddSectorDialog(
     context: context,
     title: "Change Title",
     hintText: "Enter new title...",
-    buttonText: "Change"
+    buttonText: "Change",
     icon: Icons.title,
-    initialValue: currentTitle,
+    initialValue: titleText,
+    errorText: "Please enter title",
   );
    if (newTitle !=null && newTitle.isNotEmpty) {
     setState(() {
-    titleText = newTitle
+    titleText = newTitle;
     });
     }
   }
@@ -117,6 +118,7 @@ Future<void> showCustomDialog() async {
               child: Center(
                 child: GestureDetector(
                   onTap: _showChangeTitleDialog,
+                  child: Text(
                   titleText,
                   style: TextStyle(
                     color: Colors.yellow.shade500,
@@ -125,6 +127,7 @@ Future<void> showCustomDialog() async {
                 ),
               ),
             ),
+          ),
             
             Positioned(
               top: 240,
