@@ -19,7 +19,7 @@ class ConfigService {
 
   Future<void> _initHttps() async {
     if (_isInitialiazed) return;
-    httpClient = HttpClient();
+    _httpClient = HttpClient();
 
     try {
       final cerData = await rootBundle.load('assets/certificates/server.crt');
@@ -89,14 +89,14 @@ class ConfigService {
 
       if (response.statusCode == 200) {
         final responseBody = await response.transform(utf8.decoder).join();
-        final serverConfig = jsonDecode(response.body);
+        final serverConfig = jsonDecode(responseBody);
         final prefs = await SharedPreferences.getInstance();
 
         final cachedVersion = prefs.getInt(_cachedVersionKey) ?? 0;
         final serverVersion = serverConfig['version'] ?? 0;
 
         if (serverVersion != cachedVersion) {
-        await prefs.setString(_cachedConfigKey, response.body);
+        await prefs.setString(_cachedConfigKey, responseBody);
         await prefs.setInt(_cachedVersionKey, serverVersion);
         _currentConfig = serverConfig;
         print('Update config from server: version $serverVersion');
