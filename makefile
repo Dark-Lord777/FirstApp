@@ -12,6 +12,8 @@ run:
 		-v /dev/bus/usb:/dev/bus/usb \
 		--group-add $(PLUGDEV_GID) \
 		-v $$(pwd):/workspace \
+		-v $$HOME/.gradle:/root/.gradle \
+		-v $$HOME/.pub-cache:/root/.pub-cache \
 		flutter-full-power
 
 build:
