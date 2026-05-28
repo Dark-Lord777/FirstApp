@@ -14,9 +14,9 @@ RUN apt-get update && apt-get install -y \
         cmake \
         ninja-build \
         libgtk-3-dev \
-        liblzma-dev \
         #hot reload and debugging
         #android-sdk-platforms-tools-common \
+        liblzma-dev \
         x11-apps \
         #when you download a list avaliable packages you download expect 
         #for the necessary packages still garbage. and command down delete this garbage 
@@ -24,24 +24,28 @@ RUN apt-get update && apt-get install -y \
 
 #Install Android SDK
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
-ENV PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:ANDROID_SDK_ROOT/platforms-tools
+ENV PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
 RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools \
         && wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip \
         && unzip commandlinetools-linux-*_latest.zip -d $ANDROID_SDK_ROOT/cmdline-tools \
         && mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest \
-        && rm commandlinetools-linux-*_latest.zip 
-        #Accept license 
-        RUN yes | sdkmanager --licenses > /dev/null 2>&1 || true
-        RUN sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+        && rm commandlinetools-linux-*_latest.zip
+
+# ВАЖНО: принимаем лицензии правильно
+RUN yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+# Устанавливаем platform-tools (в них adb) и другие компоненты
+RUN $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
 #Install flutter sdk
 ENV FLUTTER_ROOT=/opt/flutter
 ENV PATH=$PATH:$FLUTTER_ROOT/bin
-RUN git clone  https://github.com/flutter/flutter.git $FLUTTER_ROOT
-#Enable support web and linux
+RUN git clone https://github.com/flutter/flutter.git $FLUTTER_ROOT
 RUN flutter config --enable-web && flutter config --enable-linux-desktop
-#cached insruments
 RUN flutter precache
+
+# Устанавливаем adb отдельно на всякий случай
+RUN apt-get update && apt-get install -y adb && rm -rf /var/lib/apt/lists/*
+
 #Install shell. Not necessary
 ENV SHELL=/bin/zsh
 

@@ -1,3 +1,5 @@
+.PHONY: run build clean
+
 #Use command: make (your option: run, build, clean)
 PLUGDEV_GID := $(shell getent group plugdev | cut -d: -f3)
 
