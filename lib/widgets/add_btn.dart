@@ -4,15 +4,15 @@ import 'modalka.dart';
 
 class AddBtn extends StatelessWidget {
   final VoidCallback onPressed;
-  final Function(String)? onSectorAdded;
+//  final Function(String)? onSectorAdded;
 
   const AddBtn({
     super.key,
     required this.onPressed,
-    this.onSectorAdded,
+  //  this.onSectorAdded,
   });
 
-  Future<void> _showDialog(BuildContext context) async {
+  /* Future<void> _showDialog(BuildContext context) async {
     final String? sectorName = await showAddSectorDialog(context);
     
     if (sectorName != null && sectorName.isNotEmpty) {
@@ -21,15 +21,17 @@ class AddBtn extends StatelessWidget {
       }
     }
   }
-
+*/ 
   @override
   Widget build(BuildContext context) {
     return BaseAnimatedButton(
       text: "Add Sectors",
-      onPressed: () {
-        onPressed();
-        _showDialog(context);
-      },
+   //   onPressed: () {
+        
+     //   onPressed();
+     //   _showDialog(context);
+     // },
+      onPressed: onPressed,
       gradientColors: [
         Color(0xFFF48FB1),
         Color(0xFFEC407A),
