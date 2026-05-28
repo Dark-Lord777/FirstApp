@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import '../widgets/spin_btn.dart';
 import '../widgets/reset_btn.dart';
 import '../widgets/add_btn.dart';
+import '../widgets/modalka.dart';
 import '../wheel/wheel.dart';
 import '../wheel/logic.dart'; 
+import '../services/config_service.dart';
 
 class WheelScreen extends StatefulWidget {
-  const WheelScreen({super.key});
+  final ConfigService configService;
+  const WheelScreen({required this.configService, super.key});
 
   @override
   State<WheelScreen> createState() => _WheelScreenState();
@@ -15,14 +18,16 @@ class WheelScreen extends StatefulWidget {
 
 class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin {
   List<String> sectors = [];
-  
   late WheelLogic _wheelLogic;
-  
   double _currentRotationAngle = 0.0;
+
+  String titleText = "Are you lucky today?";
 
   @override
   void initState() {
     super.initState();
+    
+    _applyConfig();
     
     _wheelLogic = WheelLogic(
       vsync: this,  
@@ -32,11 +37,50 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
         });
       },
       onWin: (String prize) {
-        //print('You win: $prize');
       },
       sectors: sectors,
     );
   }
+  void _applyConfig() {
+    final config = widget.configService.currentConfig;
+    setState(() {
+      titleText = config['titleText'] ?? "Are you lucky today?";
+    });
+  }
+
+Future<void> showCustomDialog() async {
+  final result = await showCustomDialog(
+    context: context,
+    title: "Add New Sector",
+    hintText: "Enter sector name..."
+    invitetext: "Enter sector name"
+    buttonText: "Add",
+    icon: Icons.add_circle_outline_rounded,
+  );
+    if (result !=null && result.isNotEmpty) {
+    setState(() {
+    sectors.add(result);
+    _wheelLogic.updateSectors(sectors);
+    });
+    }
+  }
+
+Future<void> showCustomDialog() async {
+  final newTitle = await showCustomDialog(
+    context: context,
+    title: "Change Title",
+    hintText: "Enter new title...",
+    buttonText: "Change"
+    icon: Icons.title,
+    initialValue: currentTitle,
+  );
+   if (newTitle !=null && newTitle.isNotEmpty) {
+    setState(() {
+    titleText = newTitle
+    });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -71,8 +115,9 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
               left: 0,
               right: 0,
               child: Center(
-                child: Text(
-                  "Are you lucky today?",
+                child: GestureDetector(
+                  onTap: _showChangeTitleDialog,
+                  titleText,
                   style: TextStyle(
                     color: Colors.yellow.shade500,
                     fontSize: 35,
@@ -112,7 +157,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
               bottom: 30,
               child: Center(
                 child: AddBtn(
-                  onPressed: () {},
+              //    onPressed: () {},
                   onSectorAdded: (String sectorName) {
                     setState(() {
                       sectors.add(sectorName);

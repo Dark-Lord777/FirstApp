@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
+import 'services/config_service.dart';
 import 'wheel/wheel_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final configService = ConfigService();
+  await configService.loadConfig();
+
+  runApp(MyApp(configService: configService));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final ConfigService configService;
+
+  const MyApp({required this.configService, super.key});
 
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: WheelScreen(),
+      home: WheelScreen(configService: configService),
     );
   }
 }

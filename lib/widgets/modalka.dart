@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
-import 'base_anim_btn.dart';  // ← ПРАВИЛЬНЫЙ ИМПОРТ (без ./widgets/)
+import 'base_anim_btn.dart';  
 
-Future<String?> showAddSectorDialog(BuildContext context) {
-  final TextEditingController textController = TextEditingController();
-
+Future<String?> showAddSectorDialog({
+  required BuildContext context,
+  required String title,
+  required String hintText,
+  required String buttonText,
+  IconData? icon,
+  String? initialValue,
+  String? errorText,
+  }) async {
+  final TextEditingController textController = TextEditingController(text: initialValue ?? '');
+  
   return showDialog<String?>(
     context: context,
     barrierDismissible: false,
@@ -22,7 +30,7 @@ Future<String?> showAddSectorDialog(BuildContext context) {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(  // ← Border.all (не Bolder.all)
+            border: Border.all(  
               color: Colors.white.withOpacity(0.1),
               width: 1,
             ),
@@ -42,7 +50,6 @@ Future<String?> showAddSectorDialog(BuildContext context) {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ЗАГОЛОВОК
               Row(
                 children: [
                   Container(
@@ -52,14 +59,14 @@ Future<String?> showAddSectorDialog(BuildContext context) {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      Icons.add_circle_outline_rounded,
+                      icon ?? Icons.edit_note_rounded,
                       color: Color(0xFFB874EC),
                       size: 24,
                     ),
                   ),
-                  const SizedBox(width: 12),  // ← width: 12 (с двоеточием)
+                  const SizedBox(width: 12),  
                   Text(
-                    "Add New Sector",
+                    title,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 22,
@@ -72,7 +79,6 @@ Future<String?> showAddSectorDialog(BuildContext context) {
               
               const SizedBox(height: 24),
               
-              // ПОЛЕ ВВОДА
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.05),
@@ -95,9 +101,9 @@ Future<String?> showAddSectorDialog(BuildContext context) {
                     fontSize: 16,
                   ),
                   decoration: InputDecoration(
-                    hintText: "Enter sector name...",
+                    hintText: hintText,
                     hintStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.4),  // ← Colors.white (не color.white)
+                      color: Colors.white.withOpacity(0.4),  
                     ),
                     prefixIcon: Icon(
                       Icons.edit_note_rounded,
@@ -120,7 +126,7 @@ Future<String?> showAddSectorDialog(BuildContext context) {
               
               const SizedBox(height: 24),
               
-              // КНОПКИ
+              // Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -148,21 +154,22 @@ Future<String?> showAddSectorDialog(BuildContext context) {
                     ),
                   ),
                   
-                  const SizedBox(width: 12),  // ← width: 12
+                  const SizedBox(width: 12),  
                   
-                  // ADD кнопка
+                  // ADD button 
                   SizedBox(
                     width: 100,
-                    child: BaseAnimatedButton(  // ← BaseAnimatedButton (не BaseAnimationButton)
-                      text: "Add",
+                    child: BaseAnimatedButton(  
+                      text: buttonText,
                       onPressed: () {
                         final text = textController.text.trim();
                         if (text.isNotEmpty) {
                           Navigator.pop(dialogContext, text);
                         } else {
+                          final errorMsg = errorText ?? "Please enter something"
                           ScaffoldMessenger.of(dialogContext).showSnackBar(
                             SnackBar(
-                              content: Text("Please enter sector name"),
+                              content: Text(errorMsg),
                               backgroundColor: Colors.red.shade400,
                               behavior: SnackBarBehavior.floating,
                             ),
@@ -178,7 +185,7 @@ Future<String?> showAddSectorDialog(BuildContext context) {
                         horizontal: 16,
                         vertical: 10,
                       ),
-                      fontSize: 16,  // ← fontSize (не fontsize)
+                      fontSize: 16,  
                     ),
                   ),
                 ],
