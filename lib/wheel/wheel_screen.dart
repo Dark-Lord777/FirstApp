@@ -48,7 +48,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     });
   }
 
-Future<void> showAddSectorDialog() async {
+Future<void> _showAddSectorDialog() async {
   final result = await showAddSectorDialog(
     context: context,
     title: "Add New Sector",
@@ -160,13 +160,13 @@ Future<void> _showChangeTitleDialog() async {
               bottom: 30,
               child: Center(
                 child: AddBtn(
-              //    onPressed: () {},
-                  onSectorAdded: (String sectorName) {
+                onPressed: _showAddSectorDialog,
+               /*   onSectorAdded: (String sectorName) {
                     setState(() {
                       sectors.add(sectorName);
                       _wheelLogic.updateSectors(sectors);
                     });
-                  },
+                  },*/ 
                 ),
               ),
             ),
