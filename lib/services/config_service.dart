@@ -12,8 +12,10 @@ class ConfigService {
   static const String _cachedVersionKey = '_cachedVersionKey';
 
   Map<String, dynamic> _currentConfig = {};
-  late HttpClient httpClient;
+  late HttpClient _httpClient; 
   bool _isInitialiazed = false;
+
+  Map<String, dynamic> get currentConfig => _currentConfig; 
 
   Future<void> _initHttps() async {
     if (_isInitialiazed) return;
@@ -74,7 +76,7 @@ class ConfigService {
     print('use load cahce');
     } else {
     _currentConfig = getDefaultConfig();
-    print('use default cache')
+    print('use default cache');
     }
 
     await _checkServerForUpdate();
@@ -97,15 +99,15 @@ class ConfigService {
         await prefs.setString(_cachedConfigKey, response.body);
         await prefs.setInt(_cachedVersionKey, serverVersion);
         _currentConfig = serverConfig;
-        print('Update config from server: version &serverVersion');
+        print('Update config from server: version $serverVersion');
         } else {
         print('config is update to date( version $serverVersion)');
         }
       } else {
-      print('server returned $(response.statusCode)');
+      print('server returned ${response.statusCode}');
       }
     } catch (e) { 
-      print('Updating failed');
+      print('Updating failed $e');
     }
   }
 
