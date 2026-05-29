@@ -16,7 +16,7 @@ A customizable wheel of fortune app built with Flutter. No hardcoded sectors –
 
 ## 📱 Download
 
-[![Download APK](https://github.com/user-attachments/files/26829304/WheelOfFortune_v1.0.0-beta.1.zip)](https://github.com/Dark-Lord777/FirstApp/releases/tag/V1.00.1-beta)
+[![Download APK](https://github.com/user-attachments/files/26829304/WheelOfFortune_v1.0.0-beta.1.zip)](https://github.com/Dark-Lord777/FirstApp/releases/tag/V1.00.2-beta)
 
 
 **Play online:** https://dark-lord777.github.io/FirstApp/
