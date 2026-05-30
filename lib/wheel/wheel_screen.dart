@@ -44,7 +44,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
   void _applyConfig() {
     final config = widget.configService.currentConfig;
     setState(() {
-      titleText = config['titleText'] ?? "Are you lucky today?";
+      titleText = config['titleText'] ?? "";
     });
   }
 
