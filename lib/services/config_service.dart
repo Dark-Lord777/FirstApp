@@ -6,9 +6,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ConfigService {
-  static const String _host = 'my future ip(maybe future onio adress)';
-  static const int _port = future port(may not needed);
-  static const String _configUrl = 'https://$_host:$_port/config';
+  static const String _host = 'landfall-platypus-truck.ngrok-free.dev';
+  static const String _configUrl = 'https://$_host/config';
   
   static const String _cachedConfigKey = '_cachedConfigKey';
   static const String _cachedVersionKey = '_cachedVersionKey';
