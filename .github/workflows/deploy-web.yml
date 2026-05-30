@@ -62,3 +62,73 @@ jobs:
           git add .nojekyll
           git commit --allow-empty -m "Force rebuild Pages"
           git push
+        #I saw very difficult problem. My site can build true but its can 
+        #doesn't work on browser. So i do this steps 
+      - name: Check console errors
+        id: test
+        continue-on-error: true
+        run: |
+          npm install puppeteer
+          node -e "
+          const puppeteer = require('puppeteer');
+          
+          (async () => {
+            const browser = await puppeteer.launch({ headless: true });
+            const page = await browser.newPage();
+            const errors = [];
+            
+            page.on('pageerror', (err) => {
+              errors.push({ type: 'pageerror', message: err.message });
+            });
+            
+            page.on('console', (msg) => {
+              if (msg.type() === 'error') {
+                errors.push({ type: 'console', message: msg.text() });
+              }
+            });
+            
+            console.log('Navigating to site...');
+       
+            const url = 'https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/';
+            console.log('URL:', url);
+            await page.goto(url, {
+              waitUntil: 'networkidle2',
+              timeout: 30000
+            });
+            
+            await new Promise(r => setTimeout(r, 5000));
+            
+            if (errors.length > 0) {
+              console.error(' Found', errors.length, 'errors:');
+              errors.forEach((e, i) => {
+                console.error(\`  \${i+1}. [\${e.type}] \${e.message}\`);
+              });
+              process.exit(1);
+            } else {
+              console.log(' No console errors found');
+              process.exit(0);
+            }
+            
+            await browser.close();
+          })();
+          "
+      
+      - name: Rollback on failure
+        if: steps.test.outcome == 'failure'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo " Rolling back to previous successful deployment..."
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git --branch gh-pages --single-branch gh-pages-temp
+          cd gh-pages-temp
+          PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
+          git rm -rf .
+          git checkout $PREVIOUS_COMMIT -- .
+          touch .nojekyll
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Rollback to $PREVIOUS_COMMIT (successful deployment)"
+          git push
+          cd ..
+          rm -rf gh-pages-temp
