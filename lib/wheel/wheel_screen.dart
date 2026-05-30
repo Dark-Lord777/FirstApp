@@ -1,15 +1,15 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../widgets/spin_btn.dart';
-import '../widgets/reset_btn.dart';
-import '../widgets/add_btn.dart';
-import '../widgets/modalka.dart';
-import '../wheel/wheel.dart';
-import '../wheel/logic.dart'; 
-import '../services/config_service.dart';
+import 'package:wheel_of_fortune/widgets/spin_btn.dart';
+import 'package:wheel_of_fortune/widgets/reset_btn.dart';
+import 'package:wheel_of_fortune/widgets/add_btn.dart';
+import 'package:wheel_of_fortune/widgets/modalka.dart';
+import 'package:wheel_of_fortune/wheel/wheel.dart';
+import 'package:wheel_of_fortune/wheel/logic.dart'; 
+import 'package:wheel_of_fortune/services/config_service_interface.dart';
 
 class WheelScreen extends StatefulWidget {
-  final ConfigService configService;
+  final ConfigServiceInterface configService;
   const WheelScreen({required this.configService, super.key});
 
   @override

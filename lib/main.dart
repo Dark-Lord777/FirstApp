@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'services/config_service.dart';
-import 'wheel/wheel_screen.dart';
-
+import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
+import 'package:wheel_of_fortune/services/config_service.dart';  
+import 'package:wheel_of_fortune/services/config_service_interface.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final configService = ConfigService();
+
+  final configService = createConfigService();
   await configService.loadConfig();
 
   runApp(MyApp(configService: configService));
 }
 
 class MyApp extends StatelessWidget {
-  final ConfigService configService;
+  final ConfigServiceInterface configService;
 
   const MyApp({required this.configService, super.key});
 
