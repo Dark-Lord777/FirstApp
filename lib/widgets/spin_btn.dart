@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import './base_anim_btn.dart'; //if you call this function use BaseAnimatedButton 
+import 'package:wheel_of_fortune/widgets/base_anim_btn.dart'; //if you call this function use BaseAnimatedButton 
 
 class SpinBtn extends StatelessWidget {
   final VoidCallback onPressed;

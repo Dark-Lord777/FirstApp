@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'base_anim_btn.dart';
-import 'modalka.dart';
+import 'package:wheel_of_fortune/widgets/base_anim_btn.dart';
+import 'package:wheel_of_fortune/widgets/modalka.dart';
 
 class AddBtn extends StatelessWidget {
   final VoidCallback onPressed;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import './base_anim_btn.dart';
+import 'package:wheel_of_fortune/widgets/base_anim_btn.dart';
 
 class ResetButton extends StatelessWidget {
   final VoidCallback onPressed;
