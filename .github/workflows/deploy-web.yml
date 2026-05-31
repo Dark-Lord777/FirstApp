@@ -13,7 +13,8 @@ on:
 
 permissions:
   contents: write
-  deployments: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: "deploy-${{ github.ref }}"
@@ -22,6 +23,8 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    outputs:
+      test_status: ${{ steps. test.outcome }}
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -29,6 +32,49 @@ jobs:
           flutter-version: '3.24.0'
       - run: flutter pub get
       - run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+
+      - name: Test built site
+        id: test
+        continue-on-error: true
+        run: |
+          npm install -g serve
+          serve -s build/web -l 8080 &
+          SERVER_PID=$!
+          sleep 5
+          STATUS=$(curl -s -o /dev/null -w "%(http_code)" http://localhost:8080)
+
+          if [ "$STATUS" != "200" ]; then
+            echo "HTTP #STATUS"
+            exit 1
+          fi
+          if curl -s http://localhost:8080 | grep -qi "error\|exception"; then
+            echo "Found Errors"
+            exit 1
+          fi
+          echo "Test passed"
+          kill $SERVER_PID 
+      - name: Upload build artifact
+        if: steps.test.outcome == 'success'
+        uses: action/upload-artifact@v4
+        with: 
+          name: web-build
+          path: build/web
+    deploy:
+      needs: build-test
+      if: needs.build-test.outputs.test_status == 'success'
+      runs-on: ubuntu-latest
+      steps: 
+        - uses: actions/download-artifact@v4
+          with:
+            name: web-build
+            path: build/web
+        - uses: peaceiris/actiona-gh-pages@v4
+          with:
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            publish_dir: .build/web
+            publish_branch: gh-pages
+            force_orphan: true
+
       - name: Debug build output
         run: ls -la ./build/web
       - uses: peaceiris/actions-gh-pages@v4
