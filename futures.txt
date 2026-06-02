@@ -1,0 +1,7 @@
+⚠️ **BETA VERSION** ⚠️
+This is not an official release, but just a beta test CI/CD automatisation
+
+**Changes in this build:**
+• CI/CD pipeline test
+• Automated build system
+• Telegram delivery test

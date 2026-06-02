@@ -3,12 +3,30 @@ name: Build Apk
 on: 
   workflow_dispatch
 
+env:
+FLUTTER_VERSION: '3.24.0'
+KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_Wheel_of_fortune }}
+TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_My_Group }}
+PROJECT: WheelOfFortune_V 
+FUTURES: futures.txt
+
 permissions:
   contents: write
+  id-token: write 
 
+concurrency: 
+  group: "deploy-${ github.ref }"
+  cancel-in-progress: true
+  
 jobs:
     build-apk:
       runs-on: ubuntu-latest
+      outputs: 
+        build_status: ${{ steps.build.outcome }}
+        test_status: ${{ steps.test.outcome }}
       steps:
          #Now for debug i do this steps. I understand that doesn't like you but it's neneded.   
       #And fuck, I am the king of the project here. Hah
@@ -19,14 +37,14 @@ jobs:
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
           cat > android/key.properties << EOF
           storeFile=keystore.jks
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
+          storePassword=${{ env.KEYSTORE_PASSWORD }}
+          keyPassword=${{ env.KEY_PASSWORD }}
+          keyAlias=${{ env.KEY_ALIAS }}
           EOF
       
       - uses: subosito/flutter-action@v2
         with: 
-          flutter-version: '3.24.0'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
       
       - run: flutter pub get
       
@@ -43,13 +61,13 @@ jobs:
         run: |
           cd build/app/outputs/flutter-apk/
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
-          mv app*.apk "WheelOfFortune_V${VERSION}.apk"
-          zip "WheelOfFortune_V${VERSION}.zip" "WheelOfFortune_V${VERSION}.apk"
+          mv app*.apk "${PROJECT}${VERSION}.apk"
+          zip "${PROJECT}${VERSION}.zip" "${PROJECT}${VERSION}.apk"
       
       - name: Update README with new version
         run: |
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
-          sed -i "s|WheelOfFortune_V[0-9a-zA-Z.-]*.zip|WheelOfFortune_V${VERSION}.zip|g" README.md
+          sed -i "s|${PROJECT}[0-9a-zA-Z.-]*.zip|${PROJECT}${VERSION}.zip|g" README.md
           sed -i "s|/releases/tag/V[0-9a-zA-Z.-]*|/releases/tag/V${VERSION}|g" README.md
       
       - name: Commit and push updated README
@@ -59,7 +77,18 @@ jobs:
           git add README.md
           git diff --staged --quiet || git commit -m "Update README to version ${{ steps.git_version.outputs.APP_VERS }}"
           git push
-      
+      - name: Read Features from file
+        id: features
+        run: |
+         if [ -f "${{ env.FUTURES }}" ]; then
+          CONTENT=$(cat "${{ env.FUTURES }}")
+         else
+          CONTENT="No features listed"
+         fi
+         echo "content<<EOF" >> $GITHUB_OUTPUT
+         echo "$CONTENT" >> $GITHUB_OUTPUT
+         echo "EOF" >> $GITHUB_OUTPUT 
+
       - name: Create Release with version tag
         uses: ncipollo/release-action@v1
         with:
@@ -68,5 +97,39 @@ jobs:
           name: "Version ${{ steps.git_version.outputs.APP_VERS }}"
           allowUpdates: false
           omitBody: false
-          body: "Automated release for version ${{ steps.git_version.outputs.APP_VERS }}"
+          body: | 
+            **Automated release for version ${{ steps.git_version.outputs.APP_VERS }}**
+              ${{ steps.features.outputs.content }}
           replacesArtifacts: true
+      - name: Send APk to Telegram channel
+        run: |
+          VERSION="${{ steps.git_version.outputs.APP_VERS }}"
+          APK_PATH="build/app/outputs/flutter-apk/${{ env.PROJECT }}${VERSION}.apk"
+          ZIP_PATH="build/app/outputs/flutter-apk/${{ env.PROJECT }}${VERSION}.zip"
+
+          MESSAGE="**New Build!**%0A"
+          MESSAGE="${MESSAGE}PROJECT: ${{ env.PROJECT }}${VERSION}%0A"
+          MESSAGE="${MESSAGE}**What's New?**%0A"
+
+          if [ -f "${{ env.FUTURES }}" ]; then
+            FEATURES=$(cat "${{ env.FUTURES }}" | sed 's/$/%0A/g' | tr -d '\n')
+            MESSAGE="${MESSAGE}${FEATURES}%0A"
+          else
+            MESSAGE="${MESSAGE}Without Description%0A"
+          fi
+          
+          MESSAGE="${MESSAGE}%0ADownload: [GitHub Release](https://github.com/${{ github.repository }}/releases/tag/V${VERSION})"
+          
+          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
+            -d text="$MESSAGE" \
+            -d parse_mode="Markdown"
+        
+          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendDocument" \
+            -F chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
+            -F document="@${APK_PATH}" \
+            -F caption=" ${{ env.PROJECT }} ${VERSION}"
+          
+
+
+
