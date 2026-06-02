@@ -11,6 +11,13 @@ on:
       - 'web/**'
   workflow_dispatch:
 
+# global settings for this yml
+env:
+  FLUTTER_VERSION: '3.24.0'
+  BASE_HREF: '/${{ github.event.repository.name }}'
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_Wheel_of_fortune }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_My_Group }}
+
 permissions:
   contents: write
   pages: write
@@ -19,111 +26,116 @@ permissions:
 concurrency:
   group: "deploy-${{ github.ref }}"
   cancel-in-progress: true
-  
-env:
-TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_Wheel_of_fortune}}
-TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_My_Group }}
 
 jobs:
-  deploy:
+  build-and-test:
     runs-on: ubuntu-latest
     outputs:
-      test_status: ${{ steps. test.outcome }}
+      build_status: ${{ steps.build.outcome }}
+      test_status: ${{ steps.test.outcome }}
     steps:
-      - uses: action/checkout@v4
+      - uses: actions/checkout@v4
+      
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+      
       - name: Build Flutter Web
-        id: build 
-        continue-on-error: true 
-      - run: |
+        id: build
+        continue-on-error: true
+        run: |
           flutter pub get
           flutter build web --release --base-href "/${{ github.event.repository.name }}/"
-      - name: Notify Telegram if build failed 
+      
+      - name: Notify Telegram if build failed
         if: steps.build.outcome == 'failure'
         run: |
-          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
-          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-          -d text="Build Failed!*%0A${{github.repository }}%0AError of Build Flutter" \
-          -d parse_mode=Markdown
+          curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
+            -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
+            -d text="[ERROR] *Build Failed!*%0A${{ github.repository }}%0AError of Build Flutter" \
+            -d parse_mode=Markdown
 
       - name: Test built site
         id: test
+        if: steps.build.outcome == 'success'
         continue-on-error: true
         run: |
           npm install -g serve
           serve -s build/web -l 8080 &
           SERVER_PID=$!
           sleep 5
-          STATUS=$(curl -s -o /dev/null -w "%(http_code)" http://localhost:8080)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080)
 
           if [ "$STATUS" != "200" ]; then
-            echo "HTTP #STATUS"
+            echo "[ERROR] HTTP $STATUS"
             exit 1
           fi
-          if curl -s http://localhost:8080 | grep -qi "error\|exception"; then
-            echo "Found Errors"
+          if curl -s http://localhost:8080 | grep -qiE "error|exception"; then
+            echo "[ERROR] Found Errors"
             exit 1
           fi
-          echo "Test passed"
-          kill $SERVER_PID 
+          echo "[OK] Test passed"
+          kill $SERVER_PID
+      
       - name: Upload build artifact
         if: steps.test.outcome == 'success'
-        uses: action/upload-artifact@v4
-        with: 
+        uses: actions/upload-artifact@v4
+        with:
           name: web-build
           path: build/web
-          
-    deploy:
-      needs: build-test
-      if: needs.build-test.outputs.test_status == 'success'
-      runs-on: ubuntu-latest
-      steps: 
-        - uses: actions/download-artifact@v4
-          with:
-            name: web-build
-            path: build/web
-        - uses: peaceiris/actions-gh-pages@v4
-          with:
-            github_token: ${{ secrets.GITHUB_TOKEN }}
-            publish_dir: build/web
-            publish_branch: gh-pages
-            force_orphan: true
-        - name: Notify Telegram when build success 
-          run: |
-            curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
-            -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-            -d text="Deploy was success!*%0A${{ github.repository }}%0Ahttps://${{ github.repository_owner }}.github.io/&{{ github.event.repository.name }}/" \
+
+  deploy:
+    needs: build-and-test
+    if: needs.build-and-test.outputs.test_status == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: build/web
+      
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/web
+          publish_branch: gh-pages
+          force_orphan: true
+      
+      - name: Notify Telegram on success
+        run: |
+          curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
+            -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
+            -d text="[OK] *Deploy success!*%0A${{ github.repository }}%0Ahttps://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" \
             -d parse_mode=Markdown
-      rollback:
-        needs: build-test
-        if: needs.build-test.outputs.test_status == 'failure'
-        runs-on: ubuntu-latest
-        steps:
-         - name: Rollback to previous version
-           env: 
-             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-           run: |
-            echo "Build broak, rollback"
 
-            if git ls-remote --heads origin gh-pages | grep -q gh-pages; then
-              rm -rf gh-pages-temp 2>/dev/null || true
-              git clone https://x-access-token:$(GITHUB_TOKEN)@github.com/${{ github.repository }}.git --branch gh-pages --single-branch gh-pages-temp
-              cd gh-pages-temp
-              PREVIOUS_COMMIT=$(git rev-parse HEAD-1)
-              git reset --hard $PREVIOUS_COMMIT
-              git push --force origin gh-pages
-
-              cd ..
-              rm -rf gh-pages-temp
-              echo "Rollback to $PREVIOUS_COMMIT"
-            else
-              echo "Branch gh-pages not exist"
-            fi
-         - name: Notify Telegram when build failed 
-           run: |
-             curl -s -x POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
-             -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-             -d text="Deploy was failed!*%0A${{ github.repository }}%0ARollback success. Site saved" \
-             -d parse_mode=Markdown 
+  rollback:
+    needs: build-and-test
+    if: needs.build-and-test.outputs.test_status == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rollback to previous version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "[WARNING] Build broken, rollback"
+          
+          if git ls-remote --heads origin gh-pages | grep -q gh-pages; then
+            rm -rf gh-pages-temp 2>/dev/null || true
+            git clone https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git --branch gh-pages --single-branch gh-pages-temp
+            cd gh-pages-temp
+            PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
+            git reset --hard $PREVIOUS_COMMIT
+            git push --force origin gh-pages
+            cd ..
+            rm -rf gh-pages-temp
+            echo "✅ Rollback to $PREVIOUS_COMMIT"
+          else
+            echo "ℹ️ Branch gh-pages not exist"
+          fi
+      
+      - name: Notify Telegram on failure
+        run: |
+          curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
+            -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
+            -d text="[ERROR] *Deploy failed!*%0A${{ github.repository }}%0ARollback completed, old site restored" \
+            -d parse_mode=Markdown
