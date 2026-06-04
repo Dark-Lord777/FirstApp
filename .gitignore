@@ -71,3 +71,5 @@ android/key.properties
 keystore_base64.txt
 platform-tools-latest-linux.zip
 *.zip
+platform-tools/
+macos/Runner/GeneratedPluginRegistrant.*

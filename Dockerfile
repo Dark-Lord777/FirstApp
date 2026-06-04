@@ -43,8 +43,6 @@ RUN git clone https://github.com/flutter/flutter.git $FLUTTER_ROOT
 RUN flutter config --enable-web && flutter config --enable-linux-desktop
 RUN flutter precache
 
-# Устанавливаем adb отдельно на всякий случай
-RUN apt-get update && apt-get install -y adb && rm -rf /var/lib/apt/lists/*
 
 #Install shell. Not necessary
 ENV SHELL=/bin/zsh

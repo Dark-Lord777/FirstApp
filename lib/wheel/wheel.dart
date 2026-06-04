@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 class WheelDraw extends StatelessWidget {
   final List<String> sectors;
   final double rotationAngle; 
+  final double? availableWidth;
   
   const WheelDraw({
     required this.sectors, 
     this.rotationAngle = 0.0,
+    this.availableWidth,
     super.key
   });
 
