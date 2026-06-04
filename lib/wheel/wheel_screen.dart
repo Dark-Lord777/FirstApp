@@ -89,13 +89,29 @@ Future<void> _showChangeTitleDialog() async {
     final screenHeight = MediaQuery.of(context).size.height;
     final isLandscape = screenWidth > screenHeight;
     final isTablet = screenWidth > 600;
+    final isSmallWindow = screenWidth < 500;
     
     final topPadding = screenHeight * (isLandscape ? 0.05 : 0.13);
     final wheelTop = screenHeight * (isLandscape ? 0.15 : 0.25);
     final bottomButtons = screenHeight * 0.23;
     final addButtonBottom = screenHeight * 0.06;
-    final titleFontSize = isTablet ? 50.0 : screenWidth * 0.08;
+
+    double titleFontSize;
+    if (isTablet) {
+      titleFontSize = 50.0;
+    } else if (isSmallWindow) {
+      titleFontSize = 24.0;
+    } else {
+      titleFontSize = screenWidth * 0.08;
+    }
+    titleFontSize = titleFontSize.clamp(20.0, 50.0);
+    
     final leftRightOffset = screenWidth * 0.05;
+    return LayoutBuilder (
+      builder: ( context, constraints ) {
+        final availableWidth = constraints.maxWidth;
+      
+    
 
     return Scaffold(
       body: Container(
@@ -151,6 +167,7 @@ Future<void> _showChangeTitleDialog() async {
                 child: WheelDraw(
                   sectors: sectors,
                   rotationAngle: _currentRotationAngle, 
+                  availableWidth: availableWidth,
                 ),
               ),
             ),
@@ -193,19 +210,21 @@ Future<void> _showChangeTitleDialog() async {
                   if (sectors.isEmpty) {
                     return; 
                   }
-                  _wheelLogic.spin(); 
+                  _wheelLogic.spin();
                 },
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
+            ),   
+          ],    
+        ),     
+      ),      
+    );      
+  },
+);
+}
+
   @override
   void dispose() {
-    _wheelLogic.dispose(); 
+    _wheelLogic.dispose();
     super.dispose();
   }
 }
