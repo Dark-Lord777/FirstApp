@@ -21,7 +21,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
   late WheelLogic _wheelLogic;
   double _currentRotationAngle = 0.0;
 
-  String titleText = "Are you lucky today?";
+  String titleText = "";
 
   @override
   void initState() {
@@ -85,6 +85,18 @@ Future<void> _showChangeTitleDialog() async {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isLandscape = screenWidth > screenHeight;
+    final isTablet = screenWidth > 600;
+    
+    final topPadding = screenHeight * (isLandscape ? 0.05 : 0.13);
+    final wheelTop = screenHeight * (isLandscape ? 0.15 : 0.25);
+    final bottomButtons = screenHeight * 0.23;
+    final addButtonBottom = screenHeight * 0.06;
+    final titleFontSize = isTablet ? 50.0 : screenWidth * 0.08;
+    final leftRightOffset = screenWidth * 0.05;
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -112,7 +124,7 @@ Future<void> _showChangeTitleDialog() async {
         child: Stack(
           children: [
             Positioned(
-              top: 120,
+              top: topPadding,
               left: 0,
               right: 0,
               child: Center(
@@ -120,9 +132,11 @@ Future<void> _showChangeTitleDialog() async {
                   onTap: _showChangeTitleDialog,
                   child: Text(
                   titleText,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.yellow.shade500,
-                    fontSize: 35,
+                      fontSize: titleFontSize,
+                      fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
@@ -130,7 +144,7 @@ Future<void> _showChangeTitleDialog() async {
           ),
             
             Positioned(
-              top: 240,
+              top: wheelTop,
               left: 0,
               right: 0,
               child: Center(
@@ -142,8 +156,8 @@ Future<void> _showChangeTitleDialog() async {
             ),
             
             Positioned(
-              left: 30,
-              bottom: 180,
+              left: leftRightOffset,
+              bottom: bottomButtons,
               child: ResetButton(
                 onPressed: () {
                   setState(() {
@@ -157,7 +171,7 @@ Future<void> _showChangeTitleDialog() async {
             Positioned(
               left: 0,
               right: 0,
-              bottom: 30,
+              bottom: addButtonBottom,
               child: Center(
                 child: AddBtn(
                 onPressed: _showAddSectorDialog,
@@ -172,8 +186,8 @@ Future<void> _showChangeTitleDialog() async {
             ),
             
             Positioned(
-              right: 30,
-              bottom: 180,
+              right: leftRightOffset,
+              bottom: bottomButtons,
               child: SpinBtn(
                 onPressed: () {
                   if (sectors.isEmpty) {
