@@ -6,6 +6,7 @@ PLUGDEV_GID := $(shell getent group plugdev | cut -d: -f3)
 run:
 	docker run -it --rm \
 		--name flutter-dev \
+		--privileged \
 		--device /dev/kvm \
 		-v /tmp/.x11-unix:/tmp/.x11-unix \
 		-e DISPLAY=$(DISPLAY) \
