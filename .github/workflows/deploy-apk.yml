@@ -12,6 +12,8 @@ env:
   TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_My_Group }}
   PROJECT: WheelOfFortune_V 
   FUTURES: futures.txt
+  RUN_URL: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+
 
 permissions:
   contents: write
@@ -47,14 +49,17 @@ jobs:
         with: 
           flutter-version: ${{ env.FLUTTER_VERSION }}
       
-      
-      - name: Build APK 
+      - name: Fix SDK versions for bee_dynamic_launcher
+        run: |
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/g' android/app/build.gradle
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/g' android/app/build.gradleame: Build APK 
         run: |
           echo "" >> pubspec.yaml
           echo "dependency_overrides:" >> pubspec.yaml
           echo "  path: 1.9.0" >> pubspec.yaml
           flutter pub get 
           flutter build apk --release
+
       - name: Notify Telegram if build failed
         if: failure()
         run: |
