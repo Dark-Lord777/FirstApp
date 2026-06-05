@@ -22,6 +22,7 @@ env:
 permissions:
   contents: write
   pages: write
+  actions: write
   id-token: write
 
 concurrency:
