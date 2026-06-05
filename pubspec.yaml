@@ -20,7 +20,7 @@ dependencies:
   
   http: ^1.1.0
   
-  bee_dynamic_launcher: ^1.1.0
+  bee_dynamic_launcher: ^1.1.1
   
   background_fetch: ^1.2.0
 
