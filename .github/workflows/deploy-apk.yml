@@ -52,7 +52,11 @@ jobs:
       - name: Fix SDK versions for bee_dynamic_launcher
         run: |
           sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/g' android/app/build.gradle
-          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/g' android/app/build.gradleame: Build APK 
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/g' android/app/build.gradle
+
+      - name: Build APK 
+        id: build
+        continue-on-error: true
         run: |
           echo "" >> pubspec.yaml
           echo "dependency_overrides:" >> pubspec.yaml
@@ -61,20 +65,22 @@ jobs:
           flutter build apk --release
 
       - name: Notify Telegram if build failed
-        if: failure()
+        if: steps.build.outcome == 'failure'
         run: |
           curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
             -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
             -d text="[ERROR] *APK Build Failed!*%0A📦 ${{ github.repository }}%0A🔴 Error during Flutter build%0A🔗 [View the failed run](${{ env.RUN_URL }})" \
-            -d parse_mode=Markdown
-
+            -d parse_mode=Markdown    
+      
       - name: Cat version from file 
+        if: steps.build.outcome == 'success'
         id: git_version 
         run: |
           APP_VERS=$(tail -n 1 version_of_project | tr -d '\n\r')
           echo "APP_VERS=$APP_VERS" >> $GITHUB_OUTPUT
       
       - name: Rename and zip
+        if: steps.build.outcome == 'success'
         run: |
           cd build/app/outputs/flutter-apk/
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
@@ -82,12 +88,14 @@ jobs:
           zip "${PROJECT}${VERSION}.zip" "${PROJECT}${VERSION}.apk"
       
       - name: Update README with new version
+        if: steps.build.outcome == 'success'
         run: |
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
           sed -i "s|${PROJECT}[0-9a-zA-Z.-]*.zip|${PROJECT}${VERSION}.zip|g" README.md
           sed -i "s|/releases/tag/V[0-9a-zA-Z.-]*|/releases/tag/V${VERSION}|g" README.md
       
       - name: Commit and push updated README
+        if: steps.build.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -95,6 +103,7 @@ jobs:
           git diff --staged --quiet || git commit -m "Update README to version ${{ steps.git_version.outputs.APP_VERS }}"
           git push
       - name: Read Features from file
+        if: steps.build.outcome == 'success'
         id: features
         run: |
          if [ -f "${{ env.FUTURES }}" ]; then
@@ -107,6 +116,7 @@ jobs:
          echo "EOF" >> $GITHUB_OUTPUT 
 
       - name: Create Release with version tag
+        if: steps.build.outcome == 'success'
         uses: ncipollo/release-action@v1
         with:
           artifacts: "build/app/outputs/flutter-apk/*.zip"
@@ -119,6 +129,7 @@ jobs:
               ${{ steps.features.outputs.content }}
           replacesArtifacts: true
       - name: Send APk to Telegram channel
+        if: steps.build.outcome == 'success'
         run: |
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
           APK_PATH="build/app/outputs/flutter-apk/${{ env.PROJECT }}${VERSION}.apk"
