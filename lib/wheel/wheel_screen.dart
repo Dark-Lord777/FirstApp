@@ -7,6 +7,7 @@ import 'package:wheel_of_fortune/widgets/modalka.dart';
 import 'package:wheel_of_fortune/wheel/wheel.dart';
 import 'package:wheel_of_fortune/wheel/logic.dart'; 
 import 'package:wheel_of_fortune/services/config_service_interface.dart';
+import 'package:wheel_of_fortune/services/database_service.dart';
 
 class WheelScreen extends StatefulWidget {
   final ConfigServiceInterface configService;
@@ -36,7 +37,9 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
           _currentRotationAngle = _wheelLogic.currentAngle;
         });
       },
-      onWin: (String prize) {
+      onWin: (String prize) async  {
+        print("PRIZE $prize}");
+        await DatabaseService.instance.saveSpin(prize, true);
       },
       sectors: sectors,
     );
@@ -114,6 +117,7 @@ Future<void> _showChangeTitleDialog() async {
     
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(

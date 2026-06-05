@@ -73,3 +73,4 @@ platform-tools-latest-linux.zip
 *.zip
 platform-tools/
 macos/Runner/GeneratedPluginRegistrant.*
+macos/Flutter/GeneratedPluginRegistrant.swift
