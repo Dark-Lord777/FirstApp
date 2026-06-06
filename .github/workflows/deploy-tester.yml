@@ -118,7 +118,7 @@ jobs:
           flutter pub get
           flutter build web --profile --base-href "/${{ github.event.repository.name }}/"
       - name: Start dev server
-        if: steps.build-debug.oucome == 'success'
+        if: steps.build-debug.outcome == 'success'
         run: |
           npm install -g serve
           serve -s build/web -l 8080 &
