@@ -116,15 +116,6 @@ jobs:
           echo "  path: 1.9.0" >> pubspec.yaml
           flutter pub get
           flutter build web --profile --base-href "/${{ github.event.repository.name }}/"
-      
-      - name: Start dev server
-        if: steps.build-debug.outcome == 'success'
-        run: |
-          npm install -g serve
-          serve -s build/web -l 8080 &
-          sleep 5
-      
-
       - name: Testing on virtual machine
         id: test-vm-debug
         if: steps.build-debug.outcome == 'success'
@@ -133,7 +124,6 @@ jobs:
           npm install -D @playwright/test
           npx playwright install chromium
           
-          # Создаем конфиг на лету (чтобы не хранить в репе)
           cat > playwright.config.ts << 'EOF'
           import { defineConfig, devices } from '@playwright/test';
           export default defineConfig({
@@ -155,31 +145,22 @@ jobs:
           });
           EOF
           
-          # Создаем тест, который реально ждет Flutter
           mkdir -p tests
           cat > tests/flutter-ready.spec.ts << 'EOF'
           import { test, expect } from '@playwright/test';
           
           test('Flutter app загрузился', async ({ page }) => {
             await page.goto('/', { waitUntil: 'networkidle' });
-            
-            // Ждем canvas (признак что Flutter отрендерил CanvasKit)
             await page.waitForSelector('canvas', { timeout: 30000 });
-            
-            // Ждем текст на кнопках
             await page.waitForFunction(() => {
               const buttons = Array.from(document.querySelectorAll('button'));
               return buttons.some(b => b.textContent?.includes('Spin'));
             }, { timeout: 30000 });
-            
-            // Теперь можно проверять
-            const hasSpin = await page.getByText('Spin').isVisible();
-            expect(hasSpin).toBe(true);
+            await expect(page.getByText('Spin')).toBeVisible();
           });
           EOF
           
-        npx playwright test --project=chromium
-          
+          npx playwright test --project=chromium    
       - name: Upload debug build artifact
         if: steps.test-vm-debug.outcome == 'success'
         uses: actions/upload-artifact@v4
