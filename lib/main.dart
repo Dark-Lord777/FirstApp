@@ -6,6 +6,7 @@ import 'package:wheel_of_fortune/services/sync_service.dart';
 import 'package:bee_dynamic_launcher/bee_dynamic_launcher.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:async';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,17 +25,24 @@ void main() async {
       if (iconName != currentIcon) {
         await BeeDynamicLauncher.applyVariant(iconName);
         print('🖼️ Icon changed to: $iconName');
+        return;
       }
     } catch (e) {
       print('❌ Icon error (non-critical): $e');
+      return;
     }
   } else {
     print('🌐 Web mode: icons disabled');
+    return;
   }
 
   final configService = createConfigService();
   await configService.loadConfig();
 
+  Timer(const Duration(seconds: 5), () async {
+    await SyncService.syncData();
+  });
+/*
   // Синхронизация только если есть интернет (через 5 секунд)
   Future.delayed(Duration(seconds: 5), () async {
     try {
@@ -43,6 +51,7 @@ void main() async {
       print('❌ Sync failed: $e');
     }
   });
+*/
 
   runApp(MyApp(configService: configService));
 }

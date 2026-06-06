@@ -1,0 +1,28 @@
+{
+  "name": "firstapp",
+  "version": "1.0.0",
+  "description": "<!--www.flamingtext.com--> <div align=\"center\">   <img     width=\"80%\"     max-width=\"600px\"     style=\"max-width: 100%; height: auto;\"     alt=\"image\"     src=\"https://github.com/user-attachments/assets/958ab0a6-052f-491a-8d4b-413a0ce74b6f\"   />",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dark-Lord777/FirstApp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Dark-Lord777/FirstApp/issues"
+  },
+  "homepage": "https://github.com/Dark-Lord777/FirstApp#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}
