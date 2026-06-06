@@ -116,6 +116,18 @@ jobs:
           echo "  path: 1.9.0" >> pubspec.yaml
           flutter pub get
           flutter build web --profile --base-href "/${{ github.event.repository.name }}/"
+
+      - name: Debug build output
+        if: steps.build-debug.outcome == 'success'
+        run: |
+          echo "=== Содержимое build/web ==="
+          ls -la build/web/
+          echo "=== Первые 50 строк index.html ==="
+          head -50 build/web/index.html
+          echo "=== Существует ли main.dart.js? ==="
+          ls -la build/web/main.dart.js || echo "ОТСУТСТВУЕТ!"
+          echo "=== Размер main.dart.js ==="
+          du -sh build/web/main.dart.js || echo "НЕТ ФАЙЛА"
       - name: Testing on virtual machine
         id: test-vm-debug
         if: steps.build-debug.outcome == 'success'
