@@ -5,3 +5,5 @@ This is not an official release, but just a beta test CI/CD automatisation
 • CI/CD pipeline test
 • Automated build system
 • Telegram delivery test
+
+

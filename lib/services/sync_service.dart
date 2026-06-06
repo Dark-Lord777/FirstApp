@@ -4,9 +4,13 @@ import 'package:http/http.dart' as http;
 import 'package:wheel_of_fortune/services/database_service.dart';
 
 class SyncService {
+  static bool _isSyncing = false;
   static const String serverUrl = 'https://deploy-boss.dark-lord.workers.dev/analytics';
 
   static Future<void> syncData() async {
+    if (_isSyncing) return;
+    _isSyncing = true;
+
     try {
       final data = await DatabaseService.instance.getAllAnalytics();
       
@@ -34,11 +38,15 @@ class SyncService {
       if (response.statusCode == 200) {
         await DatabaseService.instance.clearAfterSync();
         print('✅ Analytics synced and cleared');
+        //now i write return here because when i commented print for release app i think this function ma broke my app
+        return;
       } else {
         print('❌ Server returned ${response.statusCode}');
+        return;
       }
     } catch (e) {
       print('❌ Sync failed: $e');
+      return;
     }
   }
 

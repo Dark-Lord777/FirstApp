@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -55,13 +56,14 @@ class DatabaseService {
 
   // Сохранить выигрыш
   Future<void> saveSpin(String sector, bool isWin) async {
-    final db = await database;
-    await db.insert('spins', {
-      'sector': sector,
-      'timestamp': DateTime.now().toIso8601String(),
-      'is_win': isWin ? 1 : 0,
-    });
-  }
+    unawaited(
+    database.then((db) => db.insert('spins', {
+    'sector': sector,
+    'timestamp': DateTime.now().toIso8601String(),
+    'is_win': isWin ? 1 : 0,
+  }))
+  );
+}
 
   // Сохранить сектор
   Future<void> saveSector(String name) async {
