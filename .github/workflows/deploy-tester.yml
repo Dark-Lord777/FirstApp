@@ -123,6 +123,7 @@ jobs:
         run: |
           npm install -D @playwright/test
           npx playwright install chromium
+          npm install -g serve 
           
           cat > playwright.config.ts << 'EOF'
           import { defineConfig, devices } from '@playwright/test';
