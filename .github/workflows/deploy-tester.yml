@@ -11,7 +11,6 @@ on:
       - 'web/**'
   workflow_dispatch:
 
-# global settings for this yml
 env:
   FLUTTER_VERSION: '3.27.0'
   BASE_HREF: '/${{ github.event.repository.name }}'
@@ -46,7 +45,6 @@ jobs:
         id: build
         continue-on-error: true
         run: |
-          #temporary cruthc
           echo "" >> pubspec.yaml
           echo "dependency_overrides:" >> pubspec.yaml
           echo "  path: 1.9.0" >> pubspec.yaml
@@ -58,8 +56,7 @@ jobs:
         run: |
           curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
             -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
-            -d text="[ERROR] *Build Failed!*%0A📦 ${{ github.repository }}%0A🔴 Error during Flutter build%0A🔗 [View the failed run](${{ env.RUN_URL }})" \
-            -d parse_mode=Markdown
+            -d text="[ERROR] Build Failed!%0A📦 ${{ github.repository }}%0A🔴 Error during Flutter build%0A🔗 View: ${{ env.RUN_URL }}"
 
       - name: Test built site
         id: test
@@ -71,7 +68,6 @@ jobs:
           SERVER_PID=$!
           sleep 5
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080)
-
           if [ "$STATUS" != "200" ]; then
             echo "[ERROR] HTTP $STATUS"
             exit 1
@@ -82,15 +78,15 @@ jobs:
           fi
           echo "[OK] Test passed"
           kill $SERVER_PID
-      - name: Notify Telegram if if test failed
+
+      - name: Notify Telegram if test failed
         if: steps.test.outcome == 'failure'
         run: |
           COMMIT_HASH=$(git log -1 --pretty=%h)
-          COMMIT_MSG=$(git log -1 --pretty=%B | head -1 | sed 's/[][_*`()]/\\&/g')
+          COMMIT_MSG=$(git log -1 --pretty=%B | head -1)
           curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
-           -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
-           -d text="[ERROR] *Test Failed!*%0A${{ github.repository}}%0A⚠️Site build built tests failed*%0A💢 Commit: \`${COMMIT_HASH}\`%0A💬 Message: ${COMMIT_MSG}%0A🔗 [Viev the failed run](${{ env.RUN_URL }})" \
-           -d parse_mode=Markdown 
+            -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
+            -d text="[ERROR] Test Failed!%0A${{ github.repository }}%0A⚠️ Site tests failed%0A💢 Commit: ${COMMIT_HASH}%0A💬 Message: ${COMMIT_MSG}%0A🔗 View: ${{ env.RUN_URL }}"
       
       - name: Upload build artifact
         if: steps.test.outcome == 'success'
@@ -98,76 +94,76 @@ jobs:
         with:
           name: web-build
           path: build/web
-  test-debug: 
+
+  test-debug:
     runs-on: ubuntu-latest
     outputs:
       build_status: ${{ steps.build-debug.outcome }}
-      test_status: ${{ steps.test-debug.outcome }}
+      test_status: ${{ steps.test-vm-debug.outcome }}
     steps:
       - uses: actions/checkout@v4
       
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+      
       - name: Build debug version
-        id: build-debug 
+        id: build-debug
         continue-on-error: true
         run: |
-          #temporary cruthc
           echo "" >> pubspec.yaml
           echo "dependency_overrides:" >> pubspec.yaml
           echo "  path: 1.9.0" >> pubspec.yaml
           flutter pub get
           flutter build web --profile --base-href "/${{ github.event.repository.name }}/"
+      
       - name: Start dev server
         if: steps.build-debug.outcome == 'success'
         run: |
           npm install -g serve
           serve -s build/web -l 8080 &
-          sleep 5 
+          sleep 5
+      
       - name: Testing on virtual machine
-        id: test-vm-debug 
+        id: test-vm-debug
         if: steps.build-debug.outcome == 'success'
         continue-on-error: true
         run: |
           npm install -D @playwright/test
           npx playwright install chromium
-
-          npx playwright test --project=chromium 
-
+          npx playwright test --project=chromium
+      
       - name: Upload debug build artifact
         if: steps.test-vm-debug.outcome == 'success'
         uses: actions/upload-artifact@v4
-        with: 
+        with:
           name: web/build-debug
-          path: build/web 
-
-      - name: Notify Telegram if if test failed
+          path: build/web
+      
+      - name: Notify Telegram if build failed
         if: steps.build-debug.outcome == 'failure'
         run: |
           COMMIT_HASH=$(git log -1 --pretty=%h)
-          COMMIT_MSG=$(git log -1 --pretty=%B | head -1 | sed 's/[][_*`()]/\\&/g')
+          COMMIT_MSG=$(git log -1 --pretty=%B | head -1)
           curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
-           -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
-           -d text="[ERROR] *Test Failed!*%0A${{ github.repository}}%0A⚠️Site build built tests failed*%0A💢 Commit: \`${COMMIT_HASH}\`%0A💬 Message: ${COMMIT_MSG}%0A🔗 [Viev the failed run](${{ env.RUN_URL }})" \
-           -d parse_mode=Markdown 
-      - name: Notify telegram if test failed
+            -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
+            -d text="[ERROR] Debug Build Failed!%0A${{ github.repository }}%0A💢 Commit: ${COMMIT_HASH}%0A💬 Message: ${COMMIT_MSG}%0A🔗 View: ${{ env.RUN_URL }}"
+      
+      - name: Notify telegram if tests failed
         if: steps.test-vm-debug.outcome == 'failure'
         run: |
           COMMIT_HASH=$(git log -1 --pretty=%h)
-          COMMIT_MSG=$(git log -1 --pretty=%B | head -1 | sed 's/[][_*`()]/\\&/g')
+          COMMIT_MSG=$(git log -1 --pretty=%B | head -1)
           curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
-           -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
-           -d text="[ERROR] *Test Failed!*%0A${{ github.repository}}%0A⚠️Playwright tests failed*%0A💢 Commit: \`${COMMIT_HASH}\`%0A💬 Message: ${COMMIT_MSG}%0A🔗 [Viev the failed run](${{ env.RUN_URL }})" \
-           -d parse_mode=Markdown 
-
+            -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
+            -d text="[ERROR] Playwright Tests Failed!%0A${{ github.repository }}%0A💢 Commit: ${COMMIT_HASH}%0A💬 Message: ${COMMIT_MSG}%0A🔗 View: ${{ env.RUN_URL }}"
 
   deploy:
     needs: [build-and-test-release, test-debug]
     if: |
         needs.build-and-test-release.outputs.test_status == 'success' &&
         needs.test-debug.outputs.test_status == 'success'
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -183,8 +179,8 @@ jobs:
       
       - name: Notify Telegram on success
         run: |
+          COMMIT_HASH=$(git log -1 --pretty=%h)
+          COMMIT_MSG=$(git log -1 --pretty=%B | head -1)
           curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
             -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
-            -d text="[OK] *Deploy success!*%0A💚 Commit: \`${COMMIT_HASH}\`%0A💬 Message: ${COMMIT_MSG}%0A${{ github.repository }}%0Ahttps://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/%0A🔗 [View the workflow run](${{ env.RUN_URL }})" \
-            -d parse_mode=Markdown
-
+            -d text="[OK] Deploy success!%0A💚 Commit: ${COMMIT_HASH}%0A💬 Message: ${COMMIT_MSG}%0A${{ github.repository }}%0Ahttps://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/%0A🔗 View: ${{ env.RUN_URL }}"
