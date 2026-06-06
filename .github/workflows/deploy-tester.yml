@@ -117,6 +117,12 @@ jobs:
           echo "  path: 1.9.0" >> pubspec.yaml
           flutter pub get
           flutter build web --profile --base-href "/${{ github.event.repository.name }}/"
+      - name: Start dev server
+        if: steps.build-debug.oucome == 'success'
+        run: |
+          npm install -g serve
+          serve -s build/web -l 8080 &
+          sleep 5 
       - name: Testing on virtual machine
         id: test-vm-debug 
         if: steps.build-debug.outcome == 'success'
