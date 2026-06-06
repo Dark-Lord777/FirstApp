@@ -33,7 +33,6 @@ dev_dependencies:
 
 flutter:
   assets:
-    - assets/certificates/server.crt
     - assets/bee_dynamic_launcher/catalog.json
     - assets/bee_dynamic_launcher/icons/
 

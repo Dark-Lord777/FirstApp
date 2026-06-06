@@ -1,4 +1,4 @@
-name: Deploy Flutter Web
+name: Testing code
 
 on:
   push:
@@ -116,7 +116,7 @@ jobs:
           echo "dependency_overrides:" >> pubspec.yaml
           echo "  path: 1.9.0" >> pubspec.yaml
           flutter pub get
-          flutter build web --debug --base-href "/${{ github.event.repository.name }}/"
+          flutter build web --profile --base-href "/${{ github.event.repository.name }}/"
       - name: Testing on virtual machine
         id: test-vm-debug 
         if: steps.build-debug.outcome == 'success'
