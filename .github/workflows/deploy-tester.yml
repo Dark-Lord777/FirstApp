@@ -138,8 +138,15 @@ jobs:
           npm install -D @playwright/test
           npx playwright install chromium
           npm install -g serve 
+          serve -s build/web -l 8080 &
+          SERVER_PID=$!
+
+          sleep 10 
+          curl -I http://localhost:8080 
+          curl http://localhost:8080 | head -20
           xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" \
-          npx playwright test --project=chromium    
+          npx playwright test --project=chromium 
+          kill $SERVER_PID
       - name: Upload debug build artifact
         if: steps.test-vm-debug.outcome == 'success'
         uses: actions/upload-artifact@v4
