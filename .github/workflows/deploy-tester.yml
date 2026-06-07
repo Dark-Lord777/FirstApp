@@ -115,7 +115,7 @@ jobs:
           echo "dependency_overrides:" >> pubspec.yaml
           echo "  path: 1.9.0" >> pubspec.yaml
           flutter pub get
-          flutter build web --profile --base-href "/${{ github.event.repository.name }}/"
+          flutter build web --profile
 
       - name: Debug build output
         if: steps.build-debug.outcome == 'success'
