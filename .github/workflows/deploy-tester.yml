@@ -180,7 +180,6 @@ jobs:
           curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
             -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
             -d text="[ERROR] Playwright Tests Failed!%0A${{ github.repository }}%0A💢 Commit: ${COMMIT_HASH}%0A💬 Message: ${COMMIT_MSG}%0A🔗 View: ${{ env.RUN_URL }}"
-
   deploy:
     needs: [build-and-test-release, test-debug]
     if: |
@@ -188,18 +187,20 @@ jobs:
         needs.test-debug.outputs.test_status == 'success'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           name: web-build
           path: build/web
-      
+
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: build/web
           publish_branch: gh-pages
           force_orphan: true
-      
+
       - name: Notify Telegram on success
         run: |
           COMMIT_HASH=$(git log -1 --pretty=%h)
