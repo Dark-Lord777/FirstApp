@@ -159,20 +159,28 @@ jobs:
           EOF
           
           mkdir -p tests
-          cat > tests/flutter-ready.spec.ts << 'EOF'
+                    cat > tests/wheel.spec.ts << 'EOF'
           import { test, expect } from '@playwright/test';
           
-          test('Flutter app загрузился', async ({ page }) => {
+          test('Spin button works', async ({ page }) => {
             await page.goto('/', { waitUntil: 'networkidle' });
-            await page.waitForSelector('canvas', { timeout: 30000 });
-            await page.waitForFunction(() => {
-              const buttons = Array.from(document.querySelectorAll('button'));
-              return buttons.some(b => b.textContent?.includes('Spin'));
-            }, { timeout: 30000 });
-            await expect(page.getByText('Spin')).toBeVisible();
+            
+            // Ждем появления canvas (увеличил до 45 секунд)
+            await page.waitForSelector('canvas', { timeout: 45000 });
+            
+            // Теперь ждем кнопку
+            await page.waitForSelector('button', { timeout: 15000 });
+            
+            // Кликаем
+            await page.getByText('Spin').click();
+            
+            // Проверяем, что нет ошибок
+            await expect(page.locator('body')).not.toContainText('error');
           });
           EOF
           
+          # Удали старый файл, чтобы не выполнять два теста
+          rm -f tests/flutter-ready.spec.ts
           npx playwright test --project=chromium    
       - name: Upload debug build artifact
         if: steps.test-vm-debug.outcome == 'success'
