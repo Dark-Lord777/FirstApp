@@ -138,7 +138,7 @@ jobs:
           ESCAPED_PROJECT=$(echo "${{ env.PROJECT }}" | sed 's/[][_*`()]/\\&/g')
 
           MESSAGE="**New Build!**%0A"
-          MESSAGE="${MESSAGE}PROJECT: ${ ESCAPED_PROJECT }${VERSION}%0A"
+          MESSAGE="${MESSAGE}PROJECT: ${ESCAPED_PROJECT}${VERSION}%0A"
           MESSAGE="${MESSAGE}**What's New?**%0A"
 
           if [ -f "${{ env.FUTURES }}" ]; then
