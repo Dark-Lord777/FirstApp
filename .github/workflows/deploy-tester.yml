@@ -138,47 +138,6 @@ jobs:
           npm install -D @playwright/test
           npx playwright install chromium
           npm install -g serve 
-          
-          cat > playwright.config.ts << 'EOF'
-          import { defineConfig, devices } from '@playwright/test';
-          export default defineConfig({
-            testDir: './tests',
-            timeout: 120000,
-            use: {
-              baseURL: 'http://localhost:8080',
-              headless: false,
-              trace: 'on-first-retry',
-              screenshot: 'only-on-failure',
-              launchOptions: {
-                args: ['--disable-dev-shm-usage', '--no-sandbox']
-                }
-           },
-            projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-            webServer: {
-              command: 'serve -s build/web -l 8080',
-              port: 8080,
-              timeout: 120000,
-              reuseExistingServer: false,
-            },
-          });
-          EOF
-          
-          mkdir -p tests
-                    cat > tests/wheel.spec.ts << 'EOF'
-          import { test, expect } from '@playwright/test';
-          
-          test('Spin button works', async ({ page }) => {
-            await page.goto('/', { waitUntil: 'networkidle' });
-            
-            await page.waitForSelector('canvas', { timeout: 45000 });
-            
-            await page.waitForSelector('button', { timeout: 15000 });
-            
-            await page.getByText('Spin').click();
-            
-            await expect(page.locator('body')).not.toContainText('error');
-          });
-          EOF
           xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" \
           npx playwright test --project=chromium    
       - name: Upload debug build artifact
@@ -187,6 +146,15 @@ jobs:
         with:
           name: web/build-debug
           path: build/web
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: 
+          name: playwright-config
+          path: |
+            startup.png
+            test-results
+            playwright-report
       
       - name: Notify Telegram if build failed
         if: steps.build-debug.outcome == 'failure'

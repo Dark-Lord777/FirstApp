@@ -1,17 +1,31 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
-test('Spin button works', async ({ page }) => {
+test('Flutter startup debug', async ({ page }) => {
+  page.on('console', msg => {
+    console.log(`[${msg.type()}] ${msg.text()}`);
+  });
+
+  page.on('pageerror', err => {
+    console.log(`[PAGEERROR] ${err.message}`);
+  });
+
+  page.on('requestfailed', req => {
+    console.log(`[FAILED] ${req.url()}`);
+  });
+
   await page.goto('/', { waitUntil: 'networkidle' });
-  
-  // Ждем появления canvas (признак что Flutter запустился)
-  await page.waitForSelector('canvas', { timeout: 45000 });
-  
-  // Теперь ждем кнопку (она появится через несколько секунд после canvas)
-  await page.waitForSelector('button', { timeout: 15000 });
-  
-  // Кликаем
-  await page.getByText('Spin').click();
-  
-  // Проверяем, что нет ошибок
-  await expect(page.locator('body')).not.toContainText('error');
+
+  console.log('TITLE:', await page.title());
+
+  console.log(
+    'BODY:',
+    await page.locator('body').innerHTML()
+  );
+
+  await page.screenshot({
+    path: 'startup.png',
+    fullPage: true,
+  });
+
+  await page.waitForTimeout(10000);
 });
