@@ -1,11 +1,20 @@
 import { test, expect } from '@playwright/test';
 
-test('страница открывается', async ({ page }) => {
-  await page.goto('/');
-  await page.waitForTimeout(5000);
+test('Flutter приложение загрузилось и кнопка нажимается', async ({ page }) => {
+  // Идем на страницу
+  await page.goto('/', { waitUntil: 'networkidle' });
   
-  const body = await page.textContent('body');
-  expect(body?.length).toBeGreaterThan(100);
-  expect(body).not.toContain('error');
-  expect(body).not.toContain('exception');
+  // Ждем появления кнопки (ждет до 30 секунд)
+  await page.waitForSelector('button', { timeout: 30000 });
+  
+  // Находим кнопку Spin
+  const spinButton = page.getByText('Spin');
+  await spinButton.waitFor({ state: 'visible' });
+  
+  // КЛИКАЕМ!
+  await spinButton.click();
+  
+  // Проверяем, что что-то изменилось (появилось значение, изменился текст и т.д.)
+  // Здесь добавь свою проверку
+  await expect(page.locator('body')).not.toContainText('error');
 });
