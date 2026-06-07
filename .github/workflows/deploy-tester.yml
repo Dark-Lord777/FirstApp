@@ -107,7 +107,7 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
       - name: Install system dependencies
         run: |
-          sudo apt-get update && sudo apt install -y xvfb libgbm1 libasound2 
+          sudo apt-get update && sudo apt-get install -y xvfb libgbm1 libasound2t64
       
       - name: Build debug version
         id: build-debug
