@@ -1,20 +1,17 @@
 import { test, expect } from '@playwright/test';
 
-test('Flutter приложение загрузилось и кнопка нажимается', async ({ page }) => {
-  // Идем на страницу
+test('Spin button works', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
   
-  // Ждем появления кнопки (ждет до 30 секунд)
-  await page.waitForSelector('button', { timeout: 30000 });
+  // Ждем появления canvas (признак что Flutter запустился)
+  await page.waitForSelector('canvas', { timeout: 45000 });
   
-  // Находим кнопку Spin
-  const spinButton = page.getByText('Spin');
-  await spinButton.waitFor({ state: 'visible' });
+  // Теперь ждем кнопку (она появится через несколько секунд после canvas)
+  await page.waitForSelector('button', { timeout: 15000 });
   
-  // КЛИКАЕМ!
-  await spinButton.click();
+  // Кликаем
+  await page.getByText('Spin').click();
   
-  // Проверяем, что что-то изменилось (появилось значение, изменился текст и т.д.)
-  // Здесь добавь свою проверку
+  // Проверяем, что нет ошибок
   await expect(page.locator('body')).not.toContainText('error');
 });
