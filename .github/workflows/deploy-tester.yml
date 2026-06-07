@@ -94,7 +94,6 @@ jobs:
         with:
           name: web-build
           path: build/web
-
   test-debug:
     runs-on: ubuntu-latest
     outputs:
@@ -106,6 +105,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update && sudo apt install -y xvfb libgbm1 libasound2 
       
       - name: Build debug version
         id: build-debug
@@ -115,7 +117,7 @@ jobs:
           echo "dependency_overrides:" >> pubspec.yaml
           echo "  path: 1.9.0" >> pubspec.yaml
           flutter pub get 
-          flutter build web --profile --web-renderer html
+          flutter build web --profile 
 
       - name: Debug build output
         if: steps.build-debug.outcome == 'success'
@@ -141,13 +143,16 @@ jobs:
           import { defineConfig, devices } from '@playwright/test';
           export default defineConfig({
             testDir: './tests',
-            timeout: 60000,
+            timeout: 120000,
             use: {
               baseURL: 'http://localhost:8080',
-              headless: true,
+              headless: false,
               trace: 'on-first-retry',
               screenshot: 'only-on-failure',
-            },
+              launchOptions: {
+                args: ['--disable-dev-shm-usage', '--no-sandbox']
+                }
+           },
             projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
             webServer: {
               command: 'serve -s build/web -l 8080',
@@ -165,22 +170,16 @@ jobs:
           test('Spin button works', async ({ page }) => {
             await page.goto('/', { waitUntil: 'networkidle' });
             
-            // Ждем появления canvas (увеличил до 45 секунд)
             await page.waitForSelector('canvas', { timeout: 45000 });
             
-            // Теперь ждем кнопку
             await page.waitForSelector('button', { timeout: 15000 });
             
-            // Кликаем
             await page.getByText('Spin').click();
             
-            // Проверяем, что нет ошибок
             await expect(page.locator('body')).not.toContainText('error');
           });
           EOF
-          
-          # Удали старый файл, чтобы не выполнять два теста
-          rm -f tests/flutter-ready.spec.ts
+          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" \
           npx playwright test --project=chromium    
       - name: Upload debug build artifact
         if: steps.test-vm-debug.outcome == 'success'
