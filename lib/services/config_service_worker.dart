@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import './config_service_interface.dart';
+import 'package:flutter/foundation.dart' show debugPrint; 
 
 class ConfigServiceWorker implements ConfigServiceInterface {
   static const String _workerUrl = 'https://deploy-boss.dark-lord.workers.dev/config';
@@ -21,10 +22,10 @@ class ConfigServiceWorker implements ConfigServiceInterface {
     final cached = prefs.getString(_cachedConfigKey);
     if (cached != null) {
       _currentConfig = jsonDecode(cached);
-      print('📦 Loaded config from cache');
+      debugPrint(' Loaded config from cache');
     } else {
       _currentConfig = getDefaultConfig();
-      print('📦 Using default config');
+      debugPrint(' Using default config');
     }
 
     // Проверяем обновления на сервере
@@ -40,10 +41,10 @@ class ConfigServiceWorker implements ConfigServiceInterface {
       if (response.statusCode == 200) {
         await _processResponse(response.body);
       } else {
-        print('⚠️ Server returned ${response.statusCode}');
+        debugPrint(' Server returned ${response.statusCode}');
       }
     } catch (e) {
-      print('⚠️ Update check failed: $e');
+      debugPrint(' Update check failed: $e');
     }
   }
   
@@ -58,9 +59,9 @@ class ConfigServiceWorker implements ConfigServiceInterface {
       await prefs.setString(_cachedConfigKey, responseBody);
       await prefs.setInt(_cachedVersionKey, serverVersion);
       _currentConfig = serverConfig;
-      print('🔄 Updated config from worker: version $serverVersion');
+      debugPrint('Updated config from worker: version $serverVersion');
     } else {
-      print('✅ Config is up to date (version $serverVersion)');
+      debugPrint(' Config is up to date (version $serverVersion)');
     }
   }
   

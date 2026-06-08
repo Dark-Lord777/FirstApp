@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 
 
 class _FortuneRandom {
@@ -48,7 +49,6 @@ class _SmoothCurve extends Curve {
     // return 1 - pow(1 - t, 4);
     
     // С отскоком в конце
-     return Curves.bounceOut.transform(t);
   }
 }
 
@@ -101,7 +101,7 @@ class WheelLogic {
     double landingAngle = _random.nextDouble() * 2 * pi;
     _targetDelta = fullRotations * 2 * pi + landingAngle;
     
-    //print('🎡 Вращение: $fullRotations оборотов, длительность: ${SPIN_DURATION_SECONDS} сек');
+  debugPrint('🎡 Вращение: $fullRotations оборотов, длительность: ${SPIN_DURATION_SECONDS} сек');
     
     _isSpinning = true;
     _controller.forward(from: 0.0);
@@ -119,7 +119,7 @@ class WheelLogic {
       if (finalAngle < 0) finalAngle += 2 * pi;
       
       String prize = _getSectorByAngle(finalAngle);
-      //print('Winner : $prize');
+      debugPrint('Winner : $prize');
       
       _isSpinning = false;
       onWin(prize);

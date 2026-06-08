@@ -12,6 +12,7 @@ run:
 		-e DISPLAY=$(DISPLAY) \
 		-v /dev/bus/usb:/dev/bus/usb \
 		--group-add $(PLUGDEV_GID) \
+		-p 8080:8080 \
 		-v $$(pwd):/workspace \
 		-v $$HOME/.gradle:/root/.gradle \
 		-v $$HOME/.pub-cache:/root/.pub-cache \
