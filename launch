@@ -1,6 +1,14 @@
+For Android use this commands for live debagging
+This commands not universaly but for me its good 
 /opt/android-sdk/platform-tools/adb devices
 /opt/android-sdk/platform-tools/adb tcpip 5555
 /opt/android-sdk/platform-tools/adb connect 100.90.246.11:5555
 /opt/android-sdk/platform-tools/adb devices
 flutter run -d 100.90.246.11:5555 --android-skip-build-dependency-validation
+
+For Web use this commands for live dabagging
+This commands are universally
+
+flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0
+
 

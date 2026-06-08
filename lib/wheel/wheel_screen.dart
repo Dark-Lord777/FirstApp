@@ -1,4 +1,6 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint; 
+
 import 'package:flutter/material.dart';
 import 'package:wheel_of_fortune/widgets/spin_btn.dart';
 import 'package:wheel_of_fortune/widgets/reset_btn.dart';
@@ -38,8 +40,10 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
         });
       },
       onWin: (String prize) async  {
-        print("PRIZE $prize}");
+        debugPrint("PRIZE $prize}");
+        if (!kIsWeb) {
         await DatabaseService.instance.saveSpin(prize, true);
+        }
       },
       sectors: sectors,
     );
