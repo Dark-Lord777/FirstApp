@@ -122,6 +122,7 @@ Future<void> _showChangeTitleDialog() async {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
+      drawer: const SettingsDrawer(),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -221,7 +222,25 @@ Future<void> _showChangeTitleDialog() async {
                   _wheelLogic.spin();
                 },
               ),
-            ),   
+            ),
+            Positioned(
+                  top: MediaQuery.of(context).padding.top + 8,
+                  left: 16,
+                  child: Builder(
+                    builder: (context) => GestureDetector(
+                      onTap: () => Scaffold.of(context).openDrawer(),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.menu, color: Colors.yellow.shade500, size: 28),
+                      ),
+                    ),
+                  ),
+                ),
+              //add btn 
           ],    
         ),     
       ),      

@@ -45,9 +45,6 @@ jobs:
         id: build
         continue-on-error: true
         run: |
-          echo "" >> pubspec.yaml
-          echo "dependency_overrides:" >> pubspec.yaml
-          echo "  path: 1.9.0" >> pubspec.yaml
           flutter pub get
           flutter build web --release --base-href "/${{ github.event.repository.name }}/"
       
@@ -113,9 +110,6 @@ jobs:
         id: build-debug
         continue-on-error: true
         run: |
-          echo "" >> pubspec.yaml
-          echo "dependency_overrides:" >> pubspec.yaml
-          echo "  path: 1.9.0" >> pubspec.yaml
           flutter pub get 
           flutter build web --profile 
 
