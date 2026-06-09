@@ -9,28 +9,12 @@ class AddBtn extends StatelessWidget {
   const AddBtn({
     super.key,
     required this.onPressed,
-  //  this.onSectorAdded,
   });
 
-  /* Future<void> _showDialog(BuildContext context) async {
-    final String? sectorName = await showAddSectorDialog(context);
-    
-    if (sectorName != null && sectorName.isNotEmpty) {
-      if (onSectorAdded != null) {
-        onSectorAdded!(sectorName);
-      }
-    }
-  }
-*/ 
   @override
   Widget build(BuildContext context) {
     return BaseAnimatedButton(
       text: "Add Sectors",
-   //   onPressed: () {
-        
-     //   onPressed();
-     //   _showDialog(context);
-     // },
       onPressed: onPressed,
       gradientColors: [
         Color(0xFFF48FB1),
