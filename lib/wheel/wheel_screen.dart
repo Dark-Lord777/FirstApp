@@ -10,6 +10,7 @@ import 'package:wheel_of_fortune/wheel/wheel.dart';
 import 'package:wheel_of_fortune/wheel/logic.dart'; 
 import 'package:wheel_of_fortune/services/config_service_interface.dart';
 import 'package:wheel_of_fortune/services/database_service.dart';
+import 'package:wheel_of_fortune/screen/hamburger_menu.dart';
 
 class WheelScreen extends StatefulWidget {
   final ConfigServiceInterface configService;
@@ -122,7 +123,7 @@ Future<void> _showChangeTitleDialog() async {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      drawer: const SettingsDrawer(),
+      drawer: SettingsDrawer(),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(

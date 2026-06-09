@@ -1,52 +1,57 @@
 import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
-import 'package:wheel_of_fortune/services/config_service.dart';  
-import 'package:wheel_of_fortune/services/config_service_interface.dart';
+import 'package:wheel_of_fortune/services/config_service.dart';
 import 'package:wheel_of_fortune/services/sync_service.dart';
 
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:bee_dynamic_launcher/bee_dynamic_launcher.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
-import 'dart:async';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Инициализация bee_dynamic_launcher
+  if (!kIsWeb && Platform.isAndroid) {
+    try {
+      await BeeDynamicLauncher.initializeFromCatalog();
+      debugPrint(' Launcher initialized');
+    } catch (e) {
+      debugPrint(' Init error: $e');
+    }
+  }
+
   final configService = ConfigService();
   await configService.loadConfig();
 
-  // Только для Android, НЕ для Web/ios 
+  // Смена иконки (только Android)
   if (!kIsWeb && Platform.isAndroid) {
     try {
-      final isSupported = await BeeDynamicLauncher.isSupported();
-      if (isSupported) {
-      final iconName = configService.currentConfig['currentIcon'] ?? 'default';
-      final result = await BeeDynamicLauncher.setIcon(iconName);
-      if (result == true) {
-      debugPrint("Icon changed to $iconName");
-        } else {
-      debugPrint("Failed to change icon");
-        }
-       } else {
-      debugPrint("Dynamic icon not supported in this device hah loh");
-        }
-      } catch(e) {
-      debugPrint("Icon error: $e");
-        }
-       } else if (kIsWeb) {
-      debugPrint("web mode icons disabled");
-        } else if (Platform.isIOS) {
-      debugPrint("I don't have a mackbook, so i don't know how to fix");
-       }
+      final variants = await BeeDynamicLauncher.getAvailableVariants();
+      debugPrint('Available variants: $variants');
 
-      
+      final iconName = configService.currentConfig['currentIcon'] ?? 'default';
+
+      if (variants.contains(iconName)) {
+        await BeeDynamicLauncher.applyVariant(iconName);
+        debugPrint(' Icon changed to $iconName');
+      } else {
+        debugPrint(' Variant $iconName not available');
+      }
+    } catch (e) {
+      debugPrint(' Icon error: $e');
+    }
+  } else if (kIsWeb) {
+    debugPrint(' Web mode: icons disabled');
+  } else if (Platform.isIOS) {
+    debugPrint(' iOS: dynamic icons supported with catalog setup');
+  }
+
   Future.delayed(const Duration(seconds: 5), () async {
     try {
-    await SyncService.syncData();
-      debugPrint("Sync completed");
-    } catch(e) {
-      debugPrint("Sync error: $e");
+      await SyncService.syncData();
+      debugPrint(' Sync completed');
+    } catch (e) {
+      debugPrint(' Sync error: $e');
     }
   });
 
@@ -59,10 +64,11 @@ class MyApp extends StatelessWidget {
   const MyApp({required this.configService, super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: WheelScreen(configService: configService),
-    );
-  }
+Widget build(BuildContext context) {
+  return MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData.dark(),
+    home: WheelScreen(configService: configService),
+  );
+}
 }
