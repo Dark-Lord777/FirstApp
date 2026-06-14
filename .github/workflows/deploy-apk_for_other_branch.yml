@@ -49,6 +49,7 @@ jobs:
         with: 
           flutter-version: ${{ env.FLUTTER_VERSION }}
       - name: Generate Dynamic Icons 
+        continue-on-error: true
         run: |
           flutter pub get
           dart run bee_dynamic_launcher --ignore-errors

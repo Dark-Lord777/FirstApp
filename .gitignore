@@ -75,3 +75,4 @@ platform-tools/
 macos/Runner/GeneratedPluginRegistrant.*
 macos/Flutter/GeneratedPluginRegistrant.swift
 node_modules
+.kotlin/
