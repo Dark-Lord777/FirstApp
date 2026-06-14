@@ -51,7 +51,7 @@ jobs:
       - name: Generate Dynamic Icons 
         run: |
           flutter pub get
-          dart run bee_dynamic_launcher
+          dart run bee_dynamic_launcher --ignore-errors
 
       - name: Build APK 
         id: build
