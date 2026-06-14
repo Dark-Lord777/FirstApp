@@ -4,7 +4,7 @@ on:
   workflow_dispatch
 
 env:
-  FLUTTER_VERSION: '3.27.0'  
+  FLUTTER_VERSION: '3.44.1'  
   KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
   KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
   KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
