@@ -49,12 +49,6 @@ jobs:
         with: 
           flutter-version: ${{ env.FLUTTER_VERSION }}
       
-      - name: Fix SDK versions for bee_dynamic_launcher
-        run: |
-          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/g' android/app/build.gradle
-          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/g' android/app/build.gradle
-      
-
       - name: Generate Dynamic Icons 
         continue-on-error: true
         run: |
