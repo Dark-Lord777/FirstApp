@@ -1,14 +1,21 @@
-For Android use this commands for live debagging
-This commands not universaly but for me its good 
-/opt/android-sdk/platform-tools/adb devices
-/opt/android-sdk/platform-tools/adb tcpip 5555
-/opt/android-sdk/platform-tools/adb connect 100.90.246.11:5555
-/opt/android-sdk/platform-tools/adb devices
-flutter run -d 100.90.246.11:5555 --android-skip-build-dependency-validation
+For Android(debug version)
+#Your command should look likes as:
+#Example: adb pair 192.168.1.2:41125
 
-For Web use this commands for live dabagging
-This commands are universally
+adb pair 192.168.
+adb connect 192.168.
+flutter run -d 192.168.
+
+For Web(debug version)
 
 flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0
 
+Also for devellopers:
 
+Generated new icons:
+dart run bee_dynamic_launcher
+
+Install app with usb
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+
+gh workflow run deploy-apk_for_other_branch.yml --ref feature/android-icons-and-sql

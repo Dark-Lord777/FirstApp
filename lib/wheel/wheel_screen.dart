@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:math';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint; 
 
 import 'package:flutter/material.dart';
@@ -27,6 +28,12 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
 
   String titleText = "";
 
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  final Random _random = Random();
+  late List<Map<String, dynamic>> _stars;
+
   @override
   void initState() {
     super.initState();
@@ -42,13 +49,33 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
       },
       onWin: (String prize) async  {
         debugPrint("PRIZE $prize}");
+        _pulseController.forward().then((_) => _pulseController.reset());
         if (!kIsWeb) {
         await DatabaseService.instance.saveSpin(prize, true);
         }
       },
       sectors: sectors,
     );
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.elasticOut),
+    );
+    _generateStars();
   }
+    void _generateStars() {
+      _stars = List.generate(80, (index) {
+        return {
+          'x': _random.nextDouble(),
+          'y': _random.nextDouble(),
+          'opacity': 0.2 + _random.nextDouble() * 0.6,
+          'size': 1 + _random.nextDouble() * 3,
+        };
+      });
+    }
+  
   void _applyConfig() {
     final config = widget.configService.currentConfig;
     setState(() {
@@ -123,7 +150,7 @@ Future<void> _showChangeTitleDialog() async {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      drawer: SettingsDrawer(),
+      drawer: const SettingsDrawer(),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -149,6 +176,21 @@ Future<void> _showChangeTitleDialog() async {
         ),
         child: Stack(
           children: [
+            ..._stars.map((star) {
+              return Positioned(
+              left: (star['x'] as double) * screenWidth,
+              top: (star['y'] as double) * screenHeight,
+              child: Container(
+              width: star['size'] as double,
+              height: star['size'] as double,
+              decoration: BoxDecoration(
+              color: Colors.white.withOpacity(star['opacity'] as double),
+              shape: BoxShape.circle,
+                  ),
+                ),
+              );
+            }).toList(),
+
             Positioned(
               top: topPadding,
               left: 0,
@@ -174,6 +216,15 @@ Future<void> _showChangeTitleDialog() async {
               left: 0,
               right: 0,
               child: Center(
+                child: AnimatedBuilder(
+                      animation: _pulseAnimation,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _pulseAnimation.value,
+                          child: child,
+                        );
+                      },
+                    
                 child: WheelDraw(
                   sectors: sectors,
                   rotationAngle: _currentRotationAngle, 
@@ -181,7 +232,7 @@ Future<void> _showChangeTitleDialog() async {
                 ),
               ),
             ),
-            
+          ),
             Positioned(
               left: leftRightOffset,
               bottom: bottomButtons,

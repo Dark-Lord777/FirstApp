@@ -4,7 +4,7 @@ on:
   workflow_dispatch
 
 env:
-  FLUTTER_VERSION: '3.27.0'  
+  FLUTTER_VERSION: '3.44.1'  
   KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
   KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
   KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -53,13 +53,21 @@ jobs:
         run: |
           sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/g' android/app/build.gradle
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/g' android/app/build.gradle
+      
+
+      - name: Generate Dynamic Icons 
+        continue-on-error: true
+        run: |
+          flutter pub get
+          dart run bee_dynamic_launcher 
+          ./resize_icons.sh 
 
       - name: Build APK 
         id: build
         continue-on-error: true
         run: |
-          flutter pub get 
-          flutter build apk --release
+          flutter build apk --release --target-platform android-arm64
+
 
       - name: Notify Telegram if build failed
         if: steps.build.outcome == 'failure'
@@ -125,38 +133,23 @@ jobs:
             **Automated release for version ${{ steps.git_version.outputs.APP_VERS }}**
               ${{ steps.features.outputs.content }}
           replacesArtifacts: true
-      - name: Send APk to Telegram channel
+          
+
+      - name: Send APK to Telegram channel
         if: steps.build.outcome == 'success'
         run: |
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
           APK_PATH="build/app/outputs/flutter-apk/${{ env.PROJECT }}${VERSION}.apk"
-          ZIP_PATH="build/app/outputs/flutter-apk/${{ env.PROJECT }}${VERSION}.zip"
-
-          ESCAPED_PROJECT=$(echo "${{ env.PROJECT }}" | sed 's/[][_*`()]/\\&/g')
-
-          MESSAGE="**New Build!**%0A"
-          MESSAGE="${MESSAGE}PROJECT: ${ESCAPED_PROJECT}${VERSION}%0A"
-          MESSAGE="${MESSAGE}**What's New?**%0A"
-
-          if [ -f "${{ env.FUTURES }}" ]; then
-            FEATURES=$(cat "${{ env.FUTURES }}" | sed 's/[][_*`()]/\\&/g' | sed 's/$/\\n/g' | tr -d '\n')
-            MESSAGE="${MESSAGE}${FEATURES}%0A"
-          else
-            MESSAGE="${MESSAGE}No Description%0A"
-          fi
           
-          MESSAGE="${MESSAGE}%0ADownload: [GitHub Release](https://github.com/${{ github.repository }}/releases/tag/V${VERSION})"
-          #send message with description own project 
+          FEATURES=$(cat "${{ env.FUTURES }}" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+          
           curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
-            -d text="$MESSAGE" \
-            -d parse_mode="Markdown"
-          #send message with cool apk file of own app
+            -d text="<b>New Build!</b>\nProject: ${{ env.PROJECT }}${VERSION}\n\n${FEATURES}" \
+            -d parse_mode="HTML"
+          
           curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendDocument" \
             -F chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
             -F document="@${APK_PATH}" \
-            -F caption=" ${{ env.PROJECT }} ${VERSION}"
-          
-
-
+            -F caption="${{ env.PROJECT }} ${VERSION}"
 

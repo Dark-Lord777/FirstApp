@@ -4,17 +4,20 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:bee_dynamic_launcher/bee_dynamic_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:bot_toast/bot_toast.dart';
 
 class ChangeIconBtn extends StatelessWidget {
   final String iconName;
   final String label;
-  final IconData iconData;
+  final String previewImagePath;
+  final bool isActive;
 
   const ChangeIconBtn({
     super.key,
     required this.iconName,
     required this.label,
-    required this.iconData,
+    required this.previewImagePath,
+    this.isActive = false,
   });
 
   Future<void> _changeIcon(BuildContext context) async {
@@ -28,48 +31,81 @@ class ChangeIconBtn extends StatelessWidget {
           await prefs.setString('currentIcon', iconName);
           
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Icon changed to $label')),
+            BotToast.showText(
+              text: "Icon changed to $label",
+              duration: const Duration(seconds: 2),
+              textStyle: const TextStyle(color: Colors.white, fontSize: 14),
+              clickClose: true,
             );
           }
         } else {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Variant not available'), backgroundColor: Colors.orange),
+            BotToast.showText(
+              text: "Variant not available",
+              duration: const Duration(seconds: 2),
             );
           }
         }
       } catch (e) {
        debugPrint("Error: $e");
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-          );
+            BotToast.showText(
+              text: "Error $e",
+              duration: const Duration(seconds: 2),
+            );
         }
       }
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Not supported on this platform'), backgroundColor: Colors.red),
-        );
+             BotToast.showText(
+              text: "Mot supported in this platform",
+              duration: const Duration(seconds: 2),
+            );
       }
     }
   }
 
   @override 
   Widget build(BuildContext context) {
-    return BaseAnimatedButton(
-      text: label,
-      
-      onPressed: () => _changeIcon(context),
-      gradientColors: const [
-        Color(0xFF6C5CE7),
-        Color(0xFF8E44AD),
-        Color(0xFF9B59B6),
-      ],
-      textColor: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      fontSize: 16,
+    return GestureDetector(
+      onTap: () => _changeIcon(context),
+      child: Container(
+        width: 100,
+      decoration: BoxDecoration(
+          color: isActive ? Colors.purple.shade800 : Colors.grey.shade900,
+          borderRadius: BorderRadius.circular(16),
+          border: isActive ? Border.all(color: Colors.purple.shade400, width: 2) : null,
+        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+      ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.asset(
+            previewImagePath,
+            width: 56,
+            height: 56,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+                  width: 56,
+                  height: 56,
+                  color: Colors.grey.shade800,
+                  child: Icon(Icons.image_not_supported, color: Colors.grey),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? Colors.purple.shade300 : Colors.white,
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal
+                ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
