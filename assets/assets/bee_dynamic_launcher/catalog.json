@@ -1,0 +1,23 @@
+{
+  "primaryVariantId": "default",
+  "variants": [
+    {
+      "id": "default",
+      "displayName": "Default",
+      "launcherLabel": "Wheel of Fortune",
+      "iconLabel": "Wheel of Fortune"
+    },
+    {
+      "id": "pink",
+      "displayName": "Pink",
+      "launcherLabel": "Wheel of Fortune",
+      "iconLabel": "Wheel of Fortune"
+    },
+    {
+      "id": "777",
+      "displayName": "Fortune",
+      "launcherLabel": "Wheel of Fortune",
+      "iconLabel": "Wheel of Fortune"
+    }
+  ]
+}
