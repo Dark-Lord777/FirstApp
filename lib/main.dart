@@ -6,6 +6,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:bee_dynamic_launcher/bee_dynamic_launcher.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:bot_toast/bot_toast.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,37 +24,6 @@ void main() async {
   final configService = ConfigService();
   await configService.loadConfig();
 
-  // Смена иконки (только Android)
-  if (!kIsWeb && Platform.isAndroid) {
-    try {
-      final variants = await BeeDynamicLauncher.getAvailableVariants();
-      debugPrint('Available variants: $variants');
-
-      final iconName = configService.currentConfig['currentIcon'] ?? 'default';
-
-      if (variants.contains(iconName)) {
-        await BeeDynamicLauncher.applyVariant(iconName);
-        debugPrint(' Icon changed to $iconName');
-      } else {
-        debugPrint(' Variant $iconName not available');
-      }
-    } catch (e) {
-      debugPrint(' Icon error: $e');
-    }
-  } else if (kIsWeb) {
-    debugPrint(' Web mode: icons disabled');
-  } else if (Platform.isIOS) {
-    debugPrint(' iOS: dynamic icons supported with catalog setup');
-  }
-
-  Future.delayed(const Duration(seconds: 5), () async {
-    try {
-      await SyncService.syncData();
-      debugPrint(' Sync completed');
-    } catch (e) {
-      debugPrint(' Sync error: $e');
-    }
-  });
 
   runApp(MyApp(configService: configService));
 }
@@ -69,6 +39,11 @@ Widget build(BuildContext context) {
     debugShowCheckedModeBanner: false,
     theme: ThemeData.dark(),
     home: WheelScreen(configService: configService),
-  );
-}
+      builder: (context, child) {
+        child = BotToastInit()(context, child);
+        return child;
+      },
+      navigatorObservers: [BotToastNavigatorObserver()],
+    );
+  }
 }

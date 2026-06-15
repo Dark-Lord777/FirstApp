@@ -1,0 +1,125 @@
+name: Build Apk(Feature branch)
+
+on: 
+  workflow_dispatch:
+   branches:
+    - feature/android-icons-and-sql
+
+
+env:
+  FLUTTER_VERSION: '3.44.1'  
+  KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+  KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+  KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_bossHQ_bot }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_My_ID }}
+  PROJECT: WheelOfFortune_V 
+  FUTURES: futures.txt
+  RUN_URL: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+
+
+permissions:
+  contents: write
+  actions: write
+  id-token: write 
+
+concurrency: 
+  group: "deploy-${ github.ref }"
+  cancel-in-progress: true
+  
+jobs:
+    build-apk:
+      runs-on: ubuntu-latest
+      outputs: 
+        build_status: ${{ steps.build.outcome }}
+        test_status: ${{ steps.test.outcome }}
+      steps:
+         #Now for debug i do this steps. I understand that doesn't like you but it's neneded.   
+      #And fuck, I am the king of the project here. Hah
+      - uses: actions/checkout@v4
+      
+      - name: Setup keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+          cat > android/key.properties << EOF
+          storeFile=keystore.jks
+          storePassword=${{ env.KEYSTORE_PASSWORD }}
+          keyPassword=${{ env.KEY_PASSWORD }}
+          keyAlias=${{ env.KEY_ALIAS }}
+          EOF
+      
+      - uses: subosito/flutter-action@v2
+        with: 
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+      - name: Generate Dynamic Icons 
+        continue-on-error: true
+        run: |
+          flutter pub get
+          dart run bee_dynamic_launcher 
+          ./resize_icons.sh 
+
+      - name: Build APK 
+        id: build
+        continue-on-error: true
+        run: |
+          flutter build apk --release --target-platform android-arm64
+
+
+      - name: Notify Telegram if build failed
+        if: steps.build.outcome == 'failure'
+        run: |
+          curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
+            -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
+            -d text="[ERROR] *APK Build Failed!*%0A📦 ${{ github.repository }}%0A🔴 Error during Flutter build%0A🔗 [View the failed run](${{ env.RUN_URL }})" \
+            -d parse_mode=Markdown    
+      
+      - name: Cat version from file 
+        if: steps.build.outcome == 'success'
+        id: git_version 
+        run: |
+          APP_VERS=$(tail -n 1 version_of_project | tr -d '\n\r')
+          echo "APP_VERS=$APP_VERS" >> $GITHUB_OUTPUT
+      - name: Rename and zip
+        if: steps.build.outcome == 'success'
+        run: |
+          cd build/app/outputs/flutter-apk/
+          VERSION="${{ steps.git_version.outputs.APP_VERS }}"
+          
+          # Находим любой .apk файл (не важно как называется)
+          APK_FILE=$(ls *.apk | head -1)
+          
+          echo "Found APK: $APK_FILE"
+          mv "$APK_FILE" "${PROJECT}${VERSION}.apk"
+          zip "${PROJECT}${VERSION}.zip" "${PROJECT}${VERSION}.apk"
+      
+
+      - name: Read Features from file
+        if: steps.build.outcome == 'success'
+        id: features
+        run: |
+          if [ -f "${{ env.FUTURES }}" ]; then
+            CONTENT=$(cat "${{ env.FUTURES }}")
+          else
+            CONTENT="No features listed"
+          fi
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Send APK to Telegram channel
+        if: steps.build.outcome == 'success'
+        run: |
+          VERSION="${{ steps.git_version.outputs.APP_VERS }}"
+          APK_PATH="build/app/outputs/flutter-apk/${{ env.PROJECT }}${VERSION}.apk"
+          
+          FEATURES=$(cat "${{ env.FUTURES }}" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+          
+          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
+            -d text="<b>New Build!</b>\nProject: ${{ env.PROJECT }}${VERSION}\n\n${FEATURES}" \
+            -d parse_mode="HTML"
+          
+          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendDocument" \
+            -F chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
+            -F document="@${APK_PATH}" \
+            -F caption="${{ env.PROJECT }} ${VERSION}"

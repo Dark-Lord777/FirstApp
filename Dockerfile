@@ -1,9 +1,10 @@
-From ubuntu:22.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
+# Обновляем систему и ставим ВСЕ утилиты (включая полезные htop, tmux, jq)
 RUN apt-get update && apt-get install -y \
         curl \
         wget \
@@ -27,6 +28,9 @@ RUN apt-get update && apt-get install -y \
         lsof \
         nano \
         vim \
+        htop \
+        tmux \
+        jq \
         && locale-gen en_US.UTF-8 \
         && rm -rf /var/lib/apt/lists/*
 
@@ -39,17 +43,17 @@ RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools \
     && mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest \
     && rm commandlinetools-linux-*_latest.zip
 
-# Принимаем лицензии
+# Принимаем лицензии заранее (включая будущие для NDK)
 RUN yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1
 
-# Устанавливаем нужные компоненты
+# Устанавливаем нужные компоненты И тот самый NDK, который просит Gradle
 RUN $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
     "platform-tools" \
-    "platforms;android-35" \
-    "build-tools;35.0.0" \
+    "platforms;android-36" \
+    "build-tools;36.0.0" \
+    "ndk;28.2.13676358" \
     > /dev/null 2>&1
 
-# Flutter SDK (stable channel, НЕ master)
 ENV FLUTTER_ROOT=/opt/flutter
 ENV PATH=$PATH:$FLUTTER_ROOT/bin
 RUN git clone https://github.com/flutter/flutter.git -b stable $FLUTTER_ROOT \

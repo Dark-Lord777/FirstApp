@@ -1,11 +1,29 @@
-⚠️ **BETA VERSION** ⚠️
-This is not an official release, but just a beta test CI/CD automatisation
+🎡 **What's New in this build:**
 
-**Changes in this build:**
-• CI/CD pipeline test
-• Automated build system
-• Telegram delivery test
-• Automated testing app
+• ✨ Dynamic app icon changer (3 variants: Default, Pink, Lucky 777)
+• 🎨 Beautiful purple gradient theme with glowing wheel effects
+• ⭐ Animated star particles on background
+• 🎯 Smooth wheel spin animation with sound/vibration
+• 💾 SQLite database for history tracking
+• 🔄 Background sync for data persistence
+• 📱 Adaptive UI (works on tablets and landscape mode)
+• 🎛️ Customizable wheel sectors
+• 📋 Spin history and statistics
+• 🔔 Toast notifications for actions
+• 🎨 Material Design with custom purple color scheme
 
+**Tech Stack:**
+• Flutter 3.27.0
+• SQLite for local storage
+• Custom wheel drawing with Canvas API
+• Dynamic icon changer (bee_dynamic_launcher)
 
+**Known issues:**
+• Beta version - some features may be unstable
+• Background sync requires internet connection
 
+**Next planned features:**
+• Cloud backup
+• More wheel themes
+• Sound effects customization
+• and more interesting features

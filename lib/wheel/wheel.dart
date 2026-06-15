@@ -20,10 +20,21 @@ class WheelDraw extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: [
+         BoxShadow(
+            color: Colors.purple.shade700.withOpacity(0.8),
+            blurRadius: 40,
+            spreadRadius: 10,
+          ),
           BoxShadow(
-            color: Colors.purple.shade900,
-            blurRadius: 30,
+            color: Colors.purple.shade500.withOpacity(0.5),
+            blurRadius: 60,
             spreadRadius: 5,
+          ),
+
+          BoxShadow(
+            color: Colors.purple.shade400.withOpacity(0.3),
+            blurRadius: 80,
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -81,6 +92,9 @@ class _WheelPainter extends CustomPainter {
         canvas,
         Offset(center.dx - textPainter.width / 2, center.dy - textPainter.height / 2),
       );
+
+      Paint centerDot = Paint()..color = Colors.white;
+      canvas.drawCircle(center, 5, centerDot);
       return;
     }
     
@@ -116,7 +130,14 @@ class _WheelPainter extends CustomPainter {
       TextPainter textPainter = TextPainter(
         text: TextSpan(
           text: sectors[i],
-          style: TextStyle(color: Colors.white, fontSize: 14),
+          style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold,
+          shadows: [
+            Shadow(color: Colors.black.withOpacity(0.5),
+        blurRadius: 4,
+        offset: Offset(2, 2),
+              ),
+            ],
+          ),
         ),
         textDirection: TextDirection.ltr,
       );
@@ -129,7 +150,11 @@ class _WheelPainter extends CustomPainter {
       startAngle += anglePerSector;
     }
     
-    Paint pointerPaint = Paint()..color = Colors.red.shade700;
+    Paint pointerPaint = Paint()
+    ..shader = LinearGradient(
+      colors: [Colors.amber.shade600, Colors.amber.shade300],
+    ).createShader(Rect.fromLTWH(size.width / 2 - 20, -15, 40, 50));
+
     Path pointerPath = Path();
     double pointerX = size.width / 2;
     double pointerTop = -15;
@@ -146,6 +171,15 @@ class _WheelPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     canvas.drawPath(pointerPath, pointerBorder);
+
+    Paint centerBorder = Paint()
+    ..shader = RadialGradient(
+      colors: [Colors.amber.shade400, Colors.amber.shade800],
+    ).createShader(Rect.fromCircle(center: center, radius: 25));
+
+    Paint centerDot =  Paint()..color = Colors.white;
+    canvas.drawCircle(center, 5, centerDot);
+
   }
 
   @override
