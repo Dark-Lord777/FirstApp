@@ -80,3 +80,9 @@ node_modules
 android/app/src/main/res/mipmap-*/
 android/app/src/main/res/drawable/*_foreground.png
 android/app/src/main/res/drawable-v21/*_foreground.png
+node_modules/
+.wrangler/
+test-results/
+*.log
+cat
+package-lock.json
