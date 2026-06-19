@@ -86,3 +86,16 @@ test-results/
 *.log
 cat
 package-lock.json
+
+my-release-key.keystore
+new_keystore_base64.txt
+
+new_keystore_base64.txt
+plugins/**/example/
+plugins/**/test/
+plugins/**/doc/
+plugins/**/*.md
+plugins/**/ios/
+plugins/**/android/src/test/
+plugins/**/android/src/main/res/mipmap-*
+

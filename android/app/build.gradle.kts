@@ -19,13 +19,36 @@ android {
         targetSdk = 36  // ← ЖЕСТКО СТАВИМ 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders += mapOf(
+            "enableAliases" to "true",
+            "isDebug" to "false"
+        )
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+           signingConfig = signingConfigs.getByName("debug")
+        //   manifestPlaceholders += mapOf("enableAliases" to "true", "isDebug" to "false")
         }
+        debug {
+            //ignore trial errors of anifest related with plagin bee_dynamic_launcher
+            //really. i really i have no words fux....
+//            manifestPlaceholders += mapOf("enableAliases" to "false","isDebug" to "true")
+            }
     }
+         sourceSets {
+            getByName("main") {
+                manifest.srcFile("src/main/AndroidManifest.xml")
+            }
+            getByName("debug") {
+                manifest.srcFile("src/debug/AndroidManifest.xml")
+            }
+            getByName("release") {
+                manifest.srcFile("src/release/AndroidManifest.xml")
+            }
+        }
+
+
 }
 
 kotlin {

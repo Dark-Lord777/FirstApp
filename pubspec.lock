@@ -36,10 +36,9 @@ packages:
   bee_dynamic_launcher:
     dependency: "direct main"
     description:
-      name: bee_dynamic_launcher
-      sha256: "4f060d1589559f9e693e5b20a908a256d707511d39d69b716dff88010254b963"
-      url: "https://pub.dev"
-    source: hosted
+      path: "plugins/bee_dynamic_launcher-1.1.0"
+      relative: true
+    source: path
     version: "1.1.0"
   boolean_selector:
     dependency: transitive

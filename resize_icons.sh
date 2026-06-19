@@ -66,9 +66,13 @@ resize_icon() {
 	done
 }
 
-resize_icon "$ASSETS_DIR/ic_777.png" "ic_launcher_777_foreground.png"
-resize_icon "$ASSETS_DIR/ic_pink.png" "ic_launcher_pink_foreground.png"
-resize_icon "$ASSETS_DIR/ic_default.png" "ic_launcher_default_foreground.png"
+resize_icon "$ASSETS_DIR/ic_777.png" "ic_launcher_777.png"
+resize_icon "$ASSETS_DIR/ic_pink.png" "ic_launcher_pink.png"
+resize_icon "$ASSETS_DIR/ic_default.png" "ic_launcher_default.png"
 resize_icon "$ASSETS_DIR/ic_default.png" "ic_launcher.png"
+
+echo "Removing adaptive icons (mipmap-anydpi-v26)..."
+rm -rf "$RES_DIR/mipmap-anydpi-v26/"
+echo " Removed adaptive icons"
 
 echo "All done"

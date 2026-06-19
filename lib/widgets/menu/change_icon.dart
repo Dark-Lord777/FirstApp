@@ -23,12 +23,21 @@ class ChangeIconBtn extends StatelessWidget {
   Future<void> _changeIcon(BuildContext context) async {
     if (!kIsWeb && Platform.isAndroid) {
       try {
+        debugPrint('Trying to change icon to: $iconName');
+
         final variants = await BeeDynamicLauncher.getAvailableVariants();
+        debugPrint('File: change_icon.dart');
+        debugPrint('Available variants: $variants');
+        
         if (variants.contains(iconName)) {
+          debugPrint('Variant found, aproving');
           await BeeDynamicLauncher.applyVariant(iconName);
-          
+          debugPrint('Approve');          
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('currentIcon', iconName);
+
+          final current = await BeeDynamicLauncher.getCurrentVariant();
+          debugPrint('Current variant after change: $current');
           
           if (context.mounted) {
             BotToast.showText(
@@ -39,6 +48,7 @@ class ChangeIconBtn extends StatelessWidget {
             );
           }
         } else {
+          debugPrint('Variant $iconName not found in $variants');
           if (context.mounted) {
             BotToast.showText(
               text: "Variant not available",
