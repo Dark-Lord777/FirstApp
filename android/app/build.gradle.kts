@@ -47,11 +47,7 @@ android {
                 manifest.srcFile("src/debug/AndroidManifest.xml")
             }
         }
-        flavourDimensions.add("debug")
 
-        profuctFlavors {
-            crea
-        }
 
 }
 
