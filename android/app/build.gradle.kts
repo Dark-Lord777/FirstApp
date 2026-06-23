@@ -42,17 +42,17 @@ android {
                 )
             }
     }
-        sourceSets {
+         sourceSets {
+            getByName("main") {
+                manifest.srcFile("src/main/AndroidManifest.xml")
+            }
             getByName("debug") {
                 manifest.srcFile("src/debug/AndroidManifest.xml")
             }
-        }
-        sourceSets {
             getByName("release") {
-                manifest.srcFile("./src/release/AndroidManifest.xml")
+                manifest.srcFile("src/release/AndroidManifest.xml")
             }
         }
-
 
 
 }
