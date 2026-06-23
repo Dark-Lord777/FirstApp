@@ -1,22 +1,18 @@
-name: Build Apk(test branch)
+name: Build Apk
 
 on: 
-  workflow_dispatch:
-   branches:
-    - feature/android-icons-and-sql
-
+  workflow_dispatch
 
 env:
   FLUTTER_VERSION: '3.44.1'  
   KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
   KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
   KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_bossHQ_bot }}
-  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_My_ID }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_Wheel_of_fortune }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_My_Group }}
   PROJECT: WheelOfFortune_V 
   FUTURES: futures.txt
   RUN_URL: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-
 
 permissions:
   contents: write
@@ -34,8 +30,6 @@ jobs:
         build_status: ${{ steps.build.outcome }}
         test_status: ${{ steps.test.outcome }}
       steps:
-         #Now for debug i do this steps. I understand that doesn't like you but it's neneded.   
-      #And fuck, I am the king of the project here. Hah
       - uses: actions/checkout@v4
       
       - name: Setup keystore
@@ -51,6 +45,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: 
           flutter-version: ${{ env.FLUTTER_VERSION }}
+      
       - name: Generate Dynamic Icons 
         continue-on-error: true
         run: |
@@ -58,10 +53,10 @@ jobs:
           dart run bee_dynamic_launcher 
           ./resize_icons.sh 
 
-      - name: Remove adaptive icons (fix build)
-        continue-on-error: true
+      - name: Remove adaptive icons (fix AAPT errors)
         run: |
           rm -rf android/app/src/main/res/mipmap-anydpi-v26/
+          echo "✅ Removed mipmap-anydpi-v26"
 
       - name: Build APK 
         id: build
@@ -69,11 +64,10 @@ jobs:
         run: |
           flutter build apk --release --target-platform android-arm64
 
-
       - name: Notify Telegram if build failed
         if: steps.build.outcome == 'failure'
         run: |
-          curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          curl -s -X POST https://api.telegram.org/bot$\{\{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
             -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
             -d text="[ERROR] *APK Build Failed!*%0A📦 ${{ github.repository }}%0A🔴 Error during Flutter build%0A🔗 [View the failed run](${{ env.RUN_URL }})" \
             -d parse_mode=Markdown    
@@ -84,20 +78,31 @@ jobs:
         run: |
           APP_VERS=$(tail -n 1 version_of_project | tr -d '\n\r')
           echo "APP_VERS=$APP_VERS" >> $GITHUB_OUTPUT
+      
       - name: Rename and zip
         if: steps.build.outcome == 'success'
         run: |
           cd build/app/outputs/flutter-apk/
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
-          
-          # Находим любой .apk файл (не важно как называется)
-          APK_FILE=$(ls *.apk | head -1)
-          
-          echo "Found APK: $APK_FILE"
-          mv "$APK_FILE" "${PROJECT}${VERSION}.apk"
+          mv app*.apk "${PROJECT}${VERSION}.apk"
           zip "${PROJECT}${VERSION}.zip" "${PROJECT}${VERSION}.apk"
       
-
+      - name: Update README with new version
+        if: steps.build.outcome == 'success'
+        run: |
+          VERSION="${{ steps.git_version.outputs.APP_VERS }}"
+          sed -i "s|${PROJECT}[0-9a-zA-Z.-]*.zip|${PROJECT}${VERSION}.zip|g" README.md
+          sed -i "s|/releases/tag/V[0-9a-zA-Z.-]*|/releases/tag/V${VERSION}|g" README.md
+      
+      - name: Commit and push updated README
+        if: steps.build.outcome == 'success'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git diff --staged --quiet || git commit -m "Update README to version ${{ steps.git_version.outputs.APP_VERS }}"
+          git push
+      
       - name: Read Features from file
         if: steps.build.outcome == 'success'
         id: features
@@ -109,7 +114,22 @@ jobs:
           fi
           echo "content<<EOF" >> $GITHUB_OUTPUT
           echo "$CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT 
+
+      - name: Create Release with version tag
+        if: steps.build.outcome == 'success'
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/flutter-apk/*.zip"
+          tag: "V${{ steps.git_version.outputs.APP_VERS }}"
+          name: "Version ${{ steps.git_version.outputs.APP_VERS }}"
+          allowUpdates: false
+          omitBody: false
+          body: | 
+            **Automated release for version ${{ steps.git_version.outputs.APP_VERS }}**
+            
+            ${{ steps.features.outputs.content }}
+          replacesArtifacts: true
 
       - name: Send APK to Telegram channel
         if: steps.build.outcome == 'success'
@@ -128,133 +148,3 @@ jobs:
             -F chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
             -F document="@${APK_PATH}" \
             -F caption="${{ env.PROJECT }} ${VERSION}"
-
-    debug:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
-          cat > android/key.properties << EOF
-          storeFile=keystore.jks
-          storePassword=${{ env.KEYSTORE_PASSWORD }}
-          keyPassword=${{ env.KEY_PASSWORD }}
-          keyAlias=${{ env.KEY_ALIAS }}
-          EOF
-      
-      - uses: subosito/flutter-action@v2
-        with: 
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-      
-      - name: Generate Dynamic Icons 
-        continue-on-error: true
-        run: |
-          flutter pub get
-          dart run bee_dynamic_launcher 
-          ./resize_icons.sh 
-
-      - name: Remove adaptive icons
-        run: |
-          rm -rf android/app/src/main/res/mipmap-anydpi-v26/
-
-      - name: Build APK 
-        id: build
-        continue-on-error: true
-        run: |
-          flutter build apk --debug --target-platform android-arm64
-
-      - name: Debug - list APK files
-        if: steps.build.outcome == 'success'
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Files in flutter-apk:"
-          ls -la build/app/outputs/flutter-apk/ || echo "Directory not found!"
-
-      - name: Notify Telegram if build failed
-        if: steps.build.outcome == 'failure'
-        run: |
-          curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
-            -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
-            -d text="[ERROR] *APK Build Failed!*%0A📦 ${{ github.repository }}%0A🔴 Error during Flutter build%0A🔗 [View the failed run](${{ env.RUN_URL }})" \
-            -d parse_mode=Markdown
-      
-      - name: Cat version from file 
-        if: steps.build.outcome == 'success'
-        id: git_version 
-        run: |
-          APP_VERS=$(tail -n 1 version_of_project | tr -d '\n\r')
-          echo "APP_VERS=$APP_VERS" >> $GITHUB_OUTPUT
-      
-      - name: Rename and zip
-        if: steps.build.outcome == 'success'
-        run: |
-          cd build/app/outputs/flutter-apk/
-          VERSION="${{ steps.git_version.outputs.APP_VERS }}"
-          
-          echo "All files before rename:"
-          ls -la
-          
-          APK_FILE=$(ls *.apk 2>/dev/null | head -1)
-          
-          if [ -z "$APK_FILE" ]; then
-            echo "ERROR: No APK file found!"
-            exit 1
-          fi
-          
-          echo "Found APK: $APK_FILE"
-          mv "$APK_FILE" "${PROJECT}${VERSION}-debug.apk"
-          
-          echo "After rename:"
-          ls -la
-          
-          zip "${PROJECT}${VERSION}-debug.zip" "${PROJECT}${VERSION}-debug.apk"
-
-      - name: Read Features from file
-        if: steps.build.outcome == 'success'
-        id: features
-        run: |
-          if [ -f "${{ env.FUTURES }}" ]; then
-            CONTENT=$(cat "${{ env.FUTURES }}")
-          else
-            CONTENT="No features listed"
-          fi
-          echo "content<<EOF" >> $GITHUB_OUTPUT
-          echo "$CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Send APK to Telegram channel
-        if: steps.build.outcome == 'success'
-        run: |
-          VERSION="${{ steps.git_version.outputs.APP_VERS }}"
-          APK_PATH="build/app/outputs/flutter-apk/${{ env.PROJECT }}${VERSION}-debug.apk"
-          
-          if [ ! -f "$APK_PATH" ]; then
-            echo "❌ APK not found: $APK_PATH"
-            echo "Files in directory:"
-            ls -la build/app/outputs/flutter-apk/ || echo "Directory not found"
-            exit 1
-          fi
-          
-          SIZE=$(stat -c%s "$APK_PATH" 2>/dev/null || stat -f%z "$APK_PATH" 2>/dev/null)
-          echo "APK size: $SIZE bytes"
-          
-          if [ "$SIZE" -gt 50000000 ]; then
-            echo "❌ APK too large for Telegram: $SIZE bytes (max 50MB)"
-            exit 0
-          fi
-          
-          echo "✅ APK found and size OK: $APK_PATH"
-          
-          FEATURES=$(cat "${{ env.FUTURES }}" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-          
-          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
-            -d text="<b>New DEBUG Build!</b>\nProject: ${{ env.PROJECT }}${VERSION}-debug\n\n${FEATURES}" \
-            -d parse_mode="HTML"
-          
-          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendDocument" \
-            -F chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
-            -F document="@${APK_PATH}" \
-            -F caption="${{ env.PROJECT }} ${VERSION}-debug"
