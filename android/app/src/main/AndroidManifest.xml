@@ -14,10 +14,10 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
             
-            <!--intent-filter>
+            <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter-->
+            </intent-filter>
             
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
@@ -25,46 +25,6 @@
             />
         </activity>
         
-        <!-- LAUNCHER_ACTIVITY_ALIASES_BEGIN -->
-        <activity-alias
-            android:name=".LauncherDefault"
-            android:targetActivity=".MainActivity"
-            android:enabled="${enableAliases}"
-            android:exported="true"
-            android:icon="@mipmap/ic_launcher_default"
-            android:label="@string/launcher_default">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".LauncherPink"
-            android:targetActivity=".MainActivity"
-            android:enabled="${enableAliases}"
-            android:exported="true"
-            android:icon="@mipmap/ic_launcher_pink"
-            android:label="@string/launcher_pink">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:name=".Launcher777"
-            android:targetActivity=".MainActivity"
-            android:enabled="${enableAliases}"
-            android:exported="true"
-            android:icon="@mipmap/ic_launcher_777"
-            android:label="@string/launcher_777">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity-alias>
-        <!-- LAUNCHER_ACTIVITY_ALIASES_END -->
 
         <meta-data
             android:name="flutterEmbedding"

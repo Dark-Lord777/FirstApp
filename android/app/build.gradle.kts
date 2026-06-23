@@ -47,6 +47,12 @@ android {
                 manifest.srcFile("src/debug/AndroidManifest.xml")
             }
         }
+        sourceSets {
+            getByName("release") {
+                manifest.srcFile("./src/release/AndroidManifest.xml")
+            }
+        }
+
 
 
 }
