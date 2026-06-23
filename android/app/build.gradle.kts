@@ -42,6 +42,16 @@ android {
                 )
             }
     }
+        sourceSets {
+            getByName("debug") {
+                manifest.srcFile("src/debug/AndroidManifest.xml")
+            }
+        }
+        flavourDimensions.add("debug")
+
+        profuctFlavors {
+            crea
+        }
 
 }
 
