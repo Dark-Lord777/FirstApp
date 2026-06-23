@@ -128,14 +128,10 @@ jobs:
             -F chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
             -F document="@${APK_PATH}" \
             -F caption="${{ env.PROJECT }} ${VERSION}"
-    debug: 
-      runs-on: ubuntu-latest
-      outputs: 
-          build_status: ${{ steps.build.outcome }}
-          test_status: ${{ steps.test.outcome }}
-      steps:
-         #Now for debug i do this steps. I understand that doesn't like you but it's neneded.   
-      #And fuck, I am the king of the project here. Hah
+
+    debug:
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/checkout@v4
       
       - name: Setup keystore
@@ -151,6 +147,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: 
           flutter-version: ${{ env.FLUTTER_VERSION }}
+      
       - name: Generate Dynamic Icons 
         continue-on-error: true
         run: |
@@ -158,8 +155,7 @@ jobs:
           dart run bee_dynamic_launcher 
           ./resize_icons.sh 
 
-      - name: Remove adaptive icons (fix build)
-        continue-on-error: true
+      - name: Remove adaptive icons
         run: |
           rm -rf android/app/src/main/res/mipmap-anydpi-v26/
 
@@ -167,8 +163,14 @@ jobs:
         id: build
         continue-on-error: true
         run: |
-          flutter build apk --debug --target-platform android-arm64 
+          flutter build apk --debug --target-platform android-arm64
 
+      - name: Debug - list APK files
+        if: steps.build.outcome == 'success'
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Files in flutter-apk:"
+          ls -la build/app/outputs/flutter-apk/ || echo "Directory not found!"
 
       - name: Notify Telegram if build failed
         if: steps.build.outcome == 'failure'
@@ -176,7 +178,7 @@ jobs:
           curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
             -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
             -d text="[ERROR] *APK Build Failed!*%0A📦 ${{ github.repository }}%0A🔴 Error during Flutter build%0A🔗 [View the failed run](${{ env.RUN_URL }})" \
-            -d parse_mode=Markdown    
+            -d parse_mode=Markdown
       
       - name: Cat version from file 
         if: steps.build.outcome == 'success'
@@ -184,19 +186,30 @@ jobs:
         run: |
           APP_VERS=$(tail -n 1 version_of_project | tr -d '\n\r')
           echo "APP_VERS=$APP_VERS" >> $GITHUB_OUTPUT
+      
       - name: Rename and zip
         if: steps.build.outcome == 'success'
         run: |
           cd build/app/outputs/flutter-apk/
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
           
-          # Находим любой .apk файл (не важно как называется)
-          APK_FILE=$(ls *.apk | head -1)
+          echo "All files before rename:"
+          ls -la
+          
+          APK_FILE=$(ls *.apk 2>/dev/null | head -1)
+          
+          if [ -z "$APK_FILE" ]; then
+            echo "ERROR: No APK file found!"
+            exit 1
+          fi
           
           echo "Found APK: $APK_FILE"
-          mv "$APK_FILE" "${PROJECT}${VERSION}.apk"
-          zip "${PROJECT}${VERSION}.zip" "${PROJECT}${VERSION}.apk"
-      
+          mv "$APK_FILE" "${PROJECT}${VERSION}-debug.apk"
+          
+          echo "After rename:"
+          ls -la
+          
+          zip "${PROJECT}${VERSION}-debug.zip" "${PROJECT}${VERSION}-debug.apk"
 
       - name: Read Features from file
         if: steps.build.outcome == 'success'
@@ -215,17 +228,33 @@ jobs:
         if: steps.build.outcome == 'success'
         run: |
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
-          APK_PATH="build/app/outputs/flutter-apk/${{ env.PROJECT }}${VERSION}.apk"
+          APK_PATH="build/app/outputs/flutter-apk/${{ env.PROJECT }}${VERSION}-debug.apk"
+          
+          if [ ! -f "$APK_PATH" ]; then
+            echo "❌ APK not found: $APK_PATH"
+            echo "Files in directory:"
+            ls -la build/app/outputs/flutter-apk/ || echo "Directory not found"
+            exit 1
+          fi
+          
+          SIZE=$(stat -c%s "$APK_PATH" 2>/dev/null || stat -f%z "$APK_PATH" 2>/dev/null)
+          echo "APK size: $SIZE bytes"
+          
+          if [ "$SIZE" -gt 50000000 ]; then
+            echo "❌ APK too large for Telegram: $SIZE bytes (max 50MB)"
+            exit 0
+          fi
+          
+          echo "✅ APK found and size OK: $APK_PATH"
           
           FEATURES=$(cat "${{ env.FUTURES }}" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
           
           curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
-            -d text="<b>New Build!</b>\nProject: ${{ env.PROJECT }}${VERSION}\n\n${FEATURES}" \
+            -d text="<b>New DEBUG Build!</b>\nProject: ${{ env.PROJECT }}${VERSION}-debug\n\n${FEATURES}" \
             -d parse_mode="HTML"
           
           curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendDocument" \
             -F chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
             -F document="@${APK_PATH}" \
-            -F caption="${{ env.PROJECT }} ${VERSION}"
-
+            -F caption="${{ env.PROJECT }} ${VERSION}-debug"
