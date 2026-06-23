@@ -16,7 +16,8 @@ final RegExp _enabledLauncherAliasPattern = RegExp(
 );
 
 void checkAndroidLauncherEntryPoints(Directory root) {
-  final path = '${root.path}/android/app/src/main/AndroidManifest.xml';
+  //final path = '${root.path}/android/app/src/main/AndroidManifest.xml';
+  final path = '${root.path}/android/app/src/release/AndroidManifest.xml';
   final file = File(path);
   if (!file.existsSync()) {
     stderr.writeln('Missing $path');
@@ -109,9 +110,8 @@ String generateAdaptiveIconXml(String id) {
 }
 
 void writeAdaptiveIconXmlFiles(Directory root, LauncherCatalogData catalog) {
-  final anydpiV26 = Directory(
-    '${root.path}/android/app/src/main/res/mipmap-anydpi-v26',
-  );
+  //final anydpiV26 = Directory('${root.path}/android/app/src/main/res/mipmap-anydpi-v26',);
+  final anydpiV26 = Directory('${root.path}/android/app/src/release/res/mipmap-anydpi-v26');
   if (!anydpiV26.existsSync()) {
     anydpiV26.createSync(recursive: true);
   }
@@ -122,7 +122,8 @@ void writeAdaptiveIconXmlFiles(Directory root, LauncherCatalogData catalog) {
 }
 
 void patchAndroidManifest(Directory root, LauncherCatalogData catalog) {
-  final path = '${root.path}/android/app/src/main/AndroidManifest.xml';
+  //final path = '${root.path}/android/app/src/main/AndroidManifest.xml';
+  final path = '${root.path}/android/app/src/release/AndroidManifest.xml';
   final file = File(path);
   if (!file.existsSync()) {
     stderr.writeln('Missing $path');
@@ -158,8 +159,9 @@ void patchAndroidManifest(Directory root, LauncherCatalogData catalog) {
 }
 
 void writeAndroidGeneratedFiles(Directory root, LauncherCatalogData catalog) {
-  final stringsPath =
-      '${root.path}/android/app/src/main/res/values/launcher_strings_generated.xml';
+//  final stringsPath = '${root.path}/android/app/src/main/res/values/launcher_strings_generated.xml';
+  final stringsPath = '${root.path}/android/app/src/release/res/values/launcher_strings_generated.xml';
+  
   File(stringsPath).writeAsStringSync(
     generateLauncherStringsXml(catalog),
   );
