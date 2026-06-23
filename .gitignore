@@ -86,3 +86,4 @@ test-results/
 *.log
 cat
 package-lock.json
+new_keystore_base64.txt
