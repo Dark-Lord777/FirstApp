@@ -87,10 +87,10 @@ String _activityAliasXml(String id, LauncherCatalogData catalog) {
             android:exported="true"
             android:icon="@mipmap/ic_launcher_$id"
             android:label="@string/launcher_$id">
-            <intent-filter>
+            <!--intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
+            </intent-filter-->
         </activity-alias>''';
 }
 

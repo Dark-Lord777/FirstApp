@@ -19,7 +19,7 @@ android {
         targetSdk = 36  // ← ЖЕСТКО СТАВИМ 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders = mapOf(
+        manifestPlaceholders += mapOf(
             "enableAliases" to "true",
             "isDebug" to "false"
         )
@@ -27,8 +27,8 @@ android {
 
     buildTypes {
         release {
-           // signingConfig = signingConfigs.getByName("debug")
-           manifestPlaceholders = mapOf(
+           signingConfig = signingConfigs.getByName("debug")
+           manifestPlaceholders += mapOf(
                "enableAliases" to "true",
                "isDebug" to "false"
            )
@@ -36,7 +36,7 @@ android {
         debug {
             //ignore trial errors of anifest related with plagin bee_dynamic_launcher
             //really. i really i have no words fux....
-            manifestPlaceholders = mapOf(
+            manifestPlaceholders += mapOf(
                     "enableAliases" to "false", 
                     "isDebug" to "true"
                 )
