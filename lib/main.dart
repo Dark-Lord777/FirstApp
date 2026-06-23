@@ -11,11 +11,17 @@ import 'package:bot_toast/bot_toast.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Инициализация bee_dynamic_launcher
+  // initialisation bee_dynamic_launcher
   if (!kIsWeb && Platform.isAndroid) {
     try {
       await BeeDynamicLauncher.initializeFromCatalog();
       debugPrint(' Launcher initialized');
+      final variants = await BeeDynamicLauncher.getAvailableVariants();
+      debugPrint('Available variants: $variants');
+      
+      final current = await BeeDynamicLauncher.getCurrentVariant();
+      debugPrint("Current cariant: $current");
+
     } catch (e) {
       debugPrint(' Init error: $e');
     }
