@@ -122,7 +122,7 @@ void writeAdaptiveIconXmlFiles(Directory root, LauncherCatalogData catalog) {
 }
 
 void patchAndroidManifest(Directory root, LauncherCatalogData catalog) {
-  final path = '${root.path}/android/app/src/main/AndroidManifest.xml';
+  final path = '${root.path}android/app/src/main/AndroidManifest.xml';
   final file = File(path);
   if (!file.existsSync()) {
     stderr.writeln('Missing $path');
