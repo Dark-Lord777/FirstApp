@@ -28,18 +28,12 @@ android {
     buildTypes {
         release {
            signingConfig = signingConfigs.getByName("debug")
-           manifestPlaceholders += mapOf(
-               "enableAliases" to "true",
-               "isDebug" to "false"
-           )
+        //   manifestPlaceholders += mapOf("enableAliases" to "true", "isDebug" to "false")
         }
         debug {
             //ignore trial errors of anifest related with plagin bee_dynamic_launcher
             //really. i really i have no words fux....
-            manifestPlaceholders += mapOf(
-                    "enableAliases" to "false", 
-                    "isDebug" to "true"
-                )
+//            manifestPlaceholders += mapOf("enableAliases" to "false","isDebug" to "true")
             }
     }
          sourceSets {

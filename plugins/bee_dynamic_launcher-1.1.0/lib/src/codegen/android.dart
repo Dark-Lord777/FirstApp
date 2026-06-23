@@ -76,9 +76,9 @@ String generateLauncherStringsXml(LauncherCatalogData catalog) {
 
 String _activityAliasXml(String id, LauncherCatalogData catalog) {
   final classSuffix = pascalCaseForLauncher(id);
-  final enabled = '\${enableAliases}';
- // final enabled = if == catalog.primaryVariantId ? '\${enableAliases}' : 'false';
-//  final enabled = id == catalog.primaryVariantId ? 'true' : 'false';
+//  final enabled = '\${enableAliases}';
+// final enabled = if == catalog.primaryVariantId ? '\${enableAliases}' : 'false';
+  final enabled = id == catalog.primaryVariantId ? 'true' : 'false';
   return '''
         <activity-alias
             android:name=".Launcher$classSuffix"
