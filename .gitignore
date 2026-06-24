@@ -98,4 +98,5 @@ plugins/**/*.md
 plugins/**/ios/
 plugins/**/android/src/test/
 plugins/**/android/src/main/res/mipmap-*
+android/app/src/main/res/mipmap-*/
 
