@@ -19,3 +19,5 @@ Install app with usb
 adb install -r build/app/outputs/flutter-apk/app-release.apk
 
 gh workflow run deploy-apk_for_other_branch.yml --ref feature/android-icons-and-sql
+adb -s 320105629692 install build/app/outputs/flutter-apk/app-release.apk
+adb -s 27ff7b9 install build/app/outputs/flutter-apk/app-release.apk

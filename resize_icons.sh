@@ -32,6 +32,9 @@ if ! command -v bc &>/dev/null; then
 fi
 
 cd /workspace
+mkdir -p "$RES_DIR/values/"
+mkdir -p "$RES_DIR/mipmap-anydpi-v26/"
+
 clear
 flutter pub get
 dart run bee_dynamic_launcher
@@ -47,7 +50,7 @@ resize_icon() {
 		local size=${SIZES[$folder]}
 
 		# МЕНЯЙ ЗДЕСЬ ПРОЦЕНТ (сейчас 0.5 = 50%)
-		local percent=0.5
+		local percent=0.9
 		local inner_size=$(echo "$size * $percent" | bc | cut -d'.' -f1)
 
 		# Защита от нуля

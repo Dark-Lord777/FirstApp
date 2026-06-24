@@ -1,15 +1,22 @@
-name: Build Apk(debug and apk to tg ls test)
+name: Test apk futures branch 
 
 on: 
-  workflow_dispatch
+  workflow_dispatch:
+push: 
+  branches:
+  - 'feature/**'
+  - 'future/**'
+  - 'test/**'
+  - 'dev/**'
+
 
 env:
   FLUTTER_VERSION: '3.44.1'  
   KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
   KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
   KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_Wheel_of_fortune }}
-  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_My_Group }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_bossHQ_bot }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_My_ID }}
   PROJECT: WheelOfFortune_V 
   FUTURES: futures.txt
   RUN_URL: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
@@ -25,6 +32,7 @@ concurrency:
   
 jobs:
     build-apk:
+      if: github.ref != 'main'
       runs-on: ubuntu-latest
       outputs: 
         build_status: ${{ steps.build.outcome }}
@@ -153,6 +161,7 @@ jobs:
             -F caption="${{ env.PROJECT }} ${VERSION}"
 
     debug: 
+      if: github.ref != 'main'
       runs-on: ubuntu-latest
       outputs: 
           build_status: ${{ steps.build.outcome }}

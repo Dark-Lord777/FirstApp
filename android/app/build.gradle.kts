@@ -15,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "com.wheel.wheel_of_fortune"
-        minSdk = flutter.minSdkVersion
+        minSdk = 28
         targetSdk = 36  // ← ЖЕСТКО СТАВИМ 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -25,10 +25,23 @@ android {
         )
     }
 
+    dependencies {
+        implementation("com.google.android.play:core:1.10.3")
+
+    }
+
     buildTypes {
         release {
            signingConfig = signingConfigs.getByName("debug")
+           //del unuse code and do obfuscation
+           isMinifyEnabled = true 
+           //del unuse resources 
+           isShrinkResources = true
         //   manifestPlaceholders += mapOf("enableAliases" to "true", "isDebug" to "false")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
         debug {
             //ignore trial errors of anifest related with plagin bee_dynamic_launcher
