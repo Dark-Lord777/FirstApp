@@ -2,12 +2,12 @@ name: Test apk futures branch
 
 on: 
   workflow_dispatch:
-push: 
-  branches:
-  - 'feature/**'
-  - 'future/**'
-  - 'test/**'
-  - 'dev/**'
+  push: 
+    branches:
+    - 'feature/**'
+    - 'future/**'
+    - 'test/**'
+    - 'dev/**'
 
 
 env:
