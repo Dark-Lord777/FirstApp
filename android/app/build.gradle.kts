@@ -9,6 +9,8 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // Включаем десугаринг для плагина уведомлений
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -16,9 +18,11 @@ android {
     defaultConfig {
         applicationId = "com.wheel.wheel_of_fortune"
         minSdk = 28
-        targetSdk = 36  // ← ЖЕСТКО СТАВИМ 35
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true // С кавычками и равно для Kotlin DSL
+        
         manifestPlaceholders += mapOf(
             "enableAliases" to "true",
             "isDebug" to "false"
@@ -27,41 +31,36 @@ android {
 
     dependencies {
         implementation("com.google.android.play:core:1.10.3")
-
+        // Подключаем сам десугаринг через правильный синтаксис функции
+        coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     }
 
     buildTypes {
         release {
            signingConfig = signingConfigs.getByName("debug")
-           //del unuse code and do obfuscation
            isMinifyEnabled = true 
-           //del unuse resources 
            isShrinkResources = true
-        //   manifestPlaceholders += mapOf("enableAliases" to "true", "isDebug" to "false")
-            proguardFiles(
+           proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
         debug {
-            //ignore trial errors of anifest related with plagin bee_dynamic_launcher
-            //really. i really i have no words fux....
-//            manifestPlaceholders += mapOf("enableAliases" to "false","isDebug" to "true")
-            }
-    }
-         sourceSets {
-            getByName("main") {
-                manifest.srcFile("src/main/AndroidManifest.xml")
-            }
-            getByName("debug") {
-                manifest.srcFile("src/debug/AndroidManifest.xml")
-            }
-            getByName("release") {
-                manifest.srcFile("src/release/AndroidManifest.xml")
-            }
+            // Оставляем пустым, как у тебя и было
         }
+    }
 
-
+    sourceSets {
+        getByName("main") {
+            manifest.srcFile("src/main/AndroidManifest.xml")
+        }
+        getByName("debug") {
+            manifest.srcFile("src/debug/AndroidManifest.xml")
+        }
+        getByName("release") {
+            manifest.srcFile("src/release/AndroidManifest.xml")
+        }
+    }
 }
 
 kotlin {
@@ -73,3 +72,4 @@ kotlin {
 flutter {
     source = "../.."
 }
+

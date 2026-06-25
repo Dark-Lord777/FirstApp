@@ -5,7 +5,7 @@ import './config_service_interface.dart';
 import 'package:flutter/foundation.dart' show debugPrint; 
 
 class ConfigServiceWorker implements ConfigServiceInterface {
-  static const String _workerUrl = 'https://deploy-boss.dark-lord.workers.dev/config';
+  static const String _workerUrl = 'https://firstapp-backend.dark-lord.workers.dev/config';
   static const String _cachedConfigKey = '_cachedConfigKey';
   static const String _cachedVersionKey = '_cachedVersionKey';
 

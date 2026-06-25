@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:wheel_of_fortune/widgets/menu/change_icon.dart';
 import 'package:wheel_of_fortune/widgets/menu/about_btn.dart';
 import 'package:wheel_of_fortune/services/icon_catalog_service.dart';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsDrawer extends StatefulWidget {
@@ -20,10 +22,10 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
 
   Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-    await launchUrl(uri);
-    } else {
-    if (mounted) {
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
       BotToast.showText(text: "Cannot open link");
         }
       }
@@ -123,6 +125,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                           },
                         ),
                       ),
+                     Divider(color: Colors.purple.shade300),
                     const SizedBox(height: 24),
                     const Align(
                       alignment: Alignment.centerLeft,
@@ -138,27 +141,81 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                       leading: Icon(Icons.share, color: Colors.purple),
                       title: Text('Share App'),
                       onTap: () {
-                        BotToast.showText(text: "Coming soon");
+                        Share.share(
+                        'Check out Wheel of Fortune: Stars Edition! Download it here:\n'
+                        'https://wheel-of-fortune-stars-edition.en.uptodown.com/android'
+                          );
+
+                        //BotToast.showText(text: "Coming soon");
                         },
                     ),
                     ListTile(
                       leading: Icon(Icons.description, color: Colors.purple),
                       title: Text('Terms & Conditions'),
                       onTap: () {
-                        BotToast.showText(text: "Coming soon");
-                  //      _launchUrl('https://mysyte.com/terms');
+                   //     BotToast.showText(text: "Coming soon");
+                        _launchUrl('https://dark-lord.pages.dev/projects/fortune/terms');
                       },
                     ),
                     ListTile(
                       leading: Icon(Icons.privacy_tip, color: Colors.purple),
                       title: Text('Privacy Policy'),
                       onTap: () {
-                        BotToast.showText(text: "Coming soon");
-                    //    _launchUrl('https://mysyte.com/privacy');
+                    //    BotToast.showText(text: "Coming soon");
+                      _launchUrl('https://dark-lord.pages.dev/projects/fortune/privacy');
                       },
                     ),
                     const Divider(color: Colors.grey),
-                    const AboutBtn(),
+                  ListTile(
+                    leading: const Icon(Icons.info, color: Colors.purple),
+                    title: const Text('About the app'),
+                    onTap: () {
+                      showAboutDialog(
+                        context: context,
+                        applicationName: 'Wheel of Fortune',
+                        applicationVersion: '1.0.1',
+                        applicationIcon: const Icon(Icons.casino, size: 30),
+                        children: const [
+                          Text('Dynamic icon changer'),
+                          Text('Made with Flutter'),
+                        ],
+                      );
+                    },
+                  ),
+                  const Spacer(),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+                      child: Wrap(
+                      alignment: WrapAlignment.center,
+                      children: [
+                        Text(
+                        'By using this app, you argee to our',
+                        style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                            ),
+                      GestureDetector(
+                          onTap: () => _launchUrl(
+                            'https://dark-lord.pages.dev/projects/fortune/terms'),
+                            child: const Text(
+                                'Terms',
+                            style: TextStyle(color: Colors.purpleAccent, fontSize: 11, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+  
+                            ),
+                          ),
+                          Text(
+                            ' & ',
+                            style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                          ),
+                      GestureDetector(
+                        onTap: () => _launchUrl('https://dark-lord.pages.dev/projects/fortune/privacy'),
+                    child: const Text(
+                      'Privacy Policy',
+                      style: TextStyle(color: Colors.purpleAccent, fontSize: 11, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                                          
+                             ),
+                          ),
+                        ],
+                      ),
+                    ),
                     //end of elements
                   ],
                 ),
