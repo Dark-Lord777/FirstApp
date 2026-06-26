@@ -1,5 +1,6 @@
 import 'package:wheel_of_fortune/services/database_service.dart';
 import 'package:wheel_of_fortune/services/user_id_service.dart';
+import 'package:wheel_of_fortune/services/app_config_service.dart';
 
 import 'dart:convert';
 import 'dart:io';
@@ -8,7 +9,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 
 class SyncService {
   static bool _isSyncing = false;
-  static const String serverUrl = 'https://deploy-boss.dark-lord.workers.dev/analytics';
+  static const String serverUrl = AppConfigService().syncUrl;
 
   static Future<void> syncData() async {
     if (_isSyncing) return;
