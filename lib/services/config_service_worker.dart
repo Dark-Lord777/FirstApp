@@ -35,7 +35,7 @@ class ConfigServiceWorker implements ConfigServiceInterface {
   Future<void> _checkServerForUpdate() async {
     try {
       final response = await http
-          .get(Uri.parse(_workerUrl))
+          .post(Uri.parse(_workerUrl))
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {

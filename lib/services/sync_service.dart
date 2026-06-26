@@ -1,7 +1,9 @@
+import 'package:wheel_of_fortune/services/database_service.dart';
+import 'package:wheel_of_fortune/services/user_id_service.dart';
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:wheel_of_fortune/services/database_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 
 class SyncService {
@@ -25,10 +27,15 @@ class SyncService {
         debugPrint(' Nothing to sync');
         return;
       }
+      
+      final userInfo = await UserIdService.getUserInfo();
+      data['userId'] = userInfo['userId'];
+      data['deviceId'] = userInfo['deviceId'];
 
       final jsonString = jsonEncode(data);
       final bytes = utf8.encode(jsonString);
       final compressed = gzip.encode(bytes);
+
       
       debugPrint('📤 Sending ${data['spins'].length} spins, ${data['sectors'].length} sectors...');
 

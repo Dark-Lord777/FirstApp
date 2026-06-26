@@ -1,15 +1,19 @@
 import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
 import 'package:wheel_of_fortune/services/config_service.dart';
 import 'package:wheel_of_fortune/services/sync_service.dart';
+import 'package:wheel_of_fortune/services/user_id_service.dart';
+import 'package:wheel_of_fortune/services/notification_service.dart';
 
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:bee_dynamic_launcher/bee_dynamic_launcher.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+ //   await FirebaseMessaging.ensureInitialized();
 
   // initialisation bee_dynamic_launcher
   if (!kIsWeb && Platform.isAndroid) {
@@ -29,6 +33,22 @@ void main() async {
 
   final configService = ConfigService();
   await configService.loadConfig();
+
+  final userId = await UserIdService.getUserId();
+  final deviceId = await UserIdService.getDeviceId();
+  debugPrint('User ID: $userId');
+  debugPrint('Device Id $deviceId');
+
+  String? fcmToken;
+  try {
+    fcmToken = await FirebaseMessaging.instance.getToken();
+    debugPrint('FCM TOKEN: $fcmToken');
+  } catch (e) {
+    debugPrint("Failed to get FCM Token: $e");
+  }
+  if (fcmToken != null) {
+    await NotificationService.registerDevice(fcmToken);
+  }
 
 
   runApp(MyApp(configService: configService));

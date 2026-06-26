@@ -6,18 +6,24 @@ adb pair 192.168.
 adb connect 192.168.
 flutter run -d 192.168.
 
-For Web(debug version)
+#For Web(debug version)
 
 flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0
 
-Also for devellopers:
+#Also for devellopers:
 
-Generated new icons:
+#Generated new icons:
 dart run bee_dynamic_launcher
 
-Install app with usb
+#Do deploy 
+gh workflow run deploy-apk_for_other_branch.yml --ref feature/android-icons-and-sql
+
+#Install app with usb
 adb install -r build/app/outputs/flutter-apk/app-release.apk
 
-gh workflow run deploy-apk_for_other_branch.yml --ref feature/android-icons-and-sql
 adb -s 320105629692 install build/app/outputs/flutter-apk/app-release.apk
 adb -s 27ff7b9 install build/app/outputs/flutter-apk/app-release.apk
+
+#See a logs of my app 
+adb logcat --pid=$(adb shell pidof -s com.wheel.wheel_of_fortune)
+
