@@ -9,7 +9,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 
 class SyncService {
   static bool _isSyncing = false;
-  static const String serverUrl = AppConfigService().syncUrl;
+  static String get serverUrl = AppConfigService().syncUrl;
 
   static Future<void> syncData() async {
     if (_isSyncing) return;
