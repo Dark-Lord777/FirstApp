@@ -1,8 +1,8 @@
 import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
-import 'package:wheel_of_fortune/services/config_service.dart';
 import 'package:wheel_of_fortune/services/sync_service.dart';
 import 'package:wheel_of_fortune/services/user_id_service.dart';
 import 'package:wheel_of_fortune/services/notification_service.dart';
+import 'package:wheel_of_fortune/services/app_config_service.dart';
 
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
@@ -50,20 +50,19 @@ void main() async {
   }
 
 
-  runApp(MyApp(configService: configService));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final ConfigService configService;
 
-  const MyApp({required this.configService, super.key});
+  const MyApp({ super.key});
 
   @override
 Widget build(BuildContext context) {
   return MaterialApp(
     debugShowCheckedModeBanner: false,
     theme: ThemeData.dark(),
-    home: WheelScreen(configService: configService),
+    home: const WheelScreen(),
       builder: (context, child) {
         child = BotToastInit()(context, child);
         return child;

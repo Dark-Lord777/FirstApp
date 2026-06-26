@@ -9,7 +9,6 @@ import 'package:wheel_of_fortune/widgets/add_btn.dart';
 import 'package:wheel_of_fortune/widgets/modalka.dart';
 import 'package:wheel_of_fortune/wheel/wheel.dart';
 import 'package:wheel_of_fortune/wheel/logic.dart'; 
-import 'package:wheel_of_fortune/services/config_service_interface.dart';
 import 'package:wheel_of_fortune/services/database_service.dart';
 import 'package:wheel_of_fortune/screen/hamburger_menu.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
