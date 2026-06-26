@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart'; // Нужен для kReleaseMode
+import 'package:flutter/foundation.dart'; // needed for kReleaseMode 
 import 'package:wheel_of_fortune/widgets/menu/change_icon.dart';
 import 'package:wheel_of_fortune/services/icon_catalog_service.dart';
+import 'package:wheel_of_fortune/services/app_config_service.dart';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -146,18 +147,20 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                           leading: const Icon(Icons.share, color: Colors.purple),
                           title: const Text('Share App'),
                           onTap: () {
-                            Share.share('Check out Wheel of Fortune: Stars Edition! Download it here:\nhttps://uptodown.com');
+                            Share.share(AppConfigService().shareUrl);
+//                        Share.share('Check out Wheel of Fortune: Stars Edition! Download it here:\nhttps://uptodown.com');
+
                           },
                         ),
                         ListTile(
                           leading: const Icon(Icons.description, color: Colors.purple),
                           title: const Text('Terms & Conditions'),
-                          onTap: () => _launchUrl('https://pages.dev'),
+                          onTap: () => _launchUrl(AppConfigService().termsUrl),
                         ),
                         ListTile(
                           leading: const Icon(Icons.privacy_tip, color: Colors.purple),
                           title: const Text('Privacy Policy'),
-                          onTap: () => _launchUrl('https://pages.dev'),
+                          onTap: () => _launchUrl(AppConfigService().privacyUrl),
                         ),
                         const Divider(color: Colors.grey),
                         ListTile(
@@ -198,7 +201,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                               style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
                             ),
                             GestureDetector(
-                              onTap: () => _launchUrl('https://pages.dev'),
+                              onTap: () => _launchUrl(AppConfigService().termsUrl),
                               child: const Text(
                                 'Terms',
                                 style: TextStyle(

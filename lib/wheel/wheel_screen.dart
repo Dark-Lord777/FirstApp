@@ -12,10 +12,10 @@ import 'package:wheel_of_fortune/wheel/logic.dart';
 import 'package:wheel_of_fortune/services/config_service_interface.dart';
 import 'package:wheel_of_fortune/services/database_service.dart';
 import 'package:wheel_of_fortune/screen/hamburger_menu.dart';
+import 'package:wheel_of_fortune/services/app_config_service.dart';
 
 class WheelScreen extends StatefulWidget {
-  final ConfigServiceInterface configService;
-  const WheelScreen({required this.configService, super.key});
+  const WheelScreen({super.key});
 
   @override
   State<WheelScreen> createState() => _WheelScreenState();
@@ -77,9 +77,8 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     }
   
   void _applyConfig() {
-    final config = widget.configService.currentConfig;
     setState(() {
-      titleText = config['titleText'] ?? "";
+      titleText = AppConfigService().titleText; 
     });
   }
 

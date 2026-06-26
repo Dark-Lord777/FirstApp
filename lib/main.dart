@@ -14,6 +14,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
  //   await FirebaseMessaging.ensureInitialized();
+  await AppConfigService().init(); 
 
   // initialisation bee_dynamic_launcher
   if (!kIsWeb && Platform.isAndroid) {
@@ -31,8 +32,6 @@ void main() async {
     }
   }
 
-  final configService = ConfigService();
-  await configService.loadConfig();
 
   final userId = await UserIdService.getUserId();
   final deviceId = await UserIdService.getDeviceId();
