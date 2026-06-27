@@ -14,6 +14,8 @@ import 'package:wheel_of_fortune/widgets/spin_btn.dart';
 import 'package:wheel_of_fortune/widgets/star.dart';
 import 'package:wheel_of_fortune/wheel/logic.dart';
 import 'package:wheel_of_fortune/wheel/wheel.dart';
+import 'package:wheel_of_fortune/widgets/star_background.dart';
+
 
 class WheelScreen extends StatefulWidget {
   const WheelScreen({super.key});
@@ -38,14 +40,17 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
   Timer? _timer;
   Timer? _respawnTimer;
 
+  bool _isAttracting = false;
+  bool _isTouching = false;
+
   @override
   void initState() {
     super.initState();
-    
-    _respawnTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+
+    _respawnTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       _respawnStars();
-      });
-      
+    });
+
     _applyConfig();
 
     _wheelLogic = WheelLogic(
@@ -95,55 +100,51 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
       };
     });
   }
-bool _isAttracting = false;
-bool _isTouching = false;
-  void _handleTapDown(TapDownDetails details) {
+
+  void _handleTapDown(Offset position) {
     _isTouching = true;
-    attractStars(details.localPosition);
+    attractStars(position);
   }
-  void _handleTapUp(TapUpDetails details) {
+
+  void _handleTapUp() {
     _isTouching = false;
-    Future.delayed(Duration(milliseconds: 400), () {
-      if (!_isTouching) {
-      _isAttracting = false;
-      }
-    });
+    _isAttracting = false;
+    scatterStars();
   }
+
   void _handleTapCancel() {
     _isTouching = false;
     _isAttracting = false;
   }
+
   void _respawnStars() {
     for (int i = 0; i < _stars.length; i++) {
-    if (_stars[i]['speedX'] == 0 && _stars[i]['speedY'] == 0) {
-          _stars[i]['x'] = _random.nextDouble();
-          _stars[i]['y'] = _random.nextDouble();
-          _stars[i]['speedX'] = (-1 + _random.nextDouble() * 2) * 0.0008;
-          _stars[i]['speedY'] = (-1 + _random.nextDouble() * 2) * 0.0008;
-  
-        }
-     }
+      if ((_stars[i]['speedX'] as double).abs() < 0.00002 &&
+          (_stars[i]['speedY'] as double).abs() < 0.00002) {
+        _stars[i]['x'] = _random.nextDouble();
+        _stars[i]['y'] = _random.nextDouble();
+        _stars[i]['speedX'] = (-1 + _random.nextDouble() * 2) * 0.0008;
+        _stars[i]['speedY'] = (-1 + _random.nextDouble() * 2) * 0.0008;
+      }
+    }
+  }
+
+  void scatterStars() {
+    for (var star in _stars) {
+      star['speedX'] = (-1 + _random.nextDouble() * 2) * 0.01;
+      star['speedY'] = (-1 + _random.nextDouble() * 2) * 0.01;
+    }
   }
 
   void _updateStars() {
     setState(() {
       for (var star in _stars) {
-        // Двигаем звезды
         star['x'] = (star['x'] as double) + (star['speedX'] as double);
         star['y'] = (star['y'] as double) + (star['speedY'] as double);
 
-        // Затухание скорости
         star['speedX'] = (star['speedX'] as double) * 0.99;
         star['speedY'] = (star['speedY'] as double) * 0.99;
-/*
-      if (!_isAttracting) {
-        star['speedX'] = (star['speedX'] as double) + (-1 + _random.nextDouble() * 2) * 0.005;
-        star['speedY'] = (star['speedY'] as double) + (-1 + _random.nextDouble() * 2) * 0.005;
-        }
 
-*/      double maxSpeed = 0.005;
-
-        // Отскок от краев (по X)
         if ((star['x'] as double) > 1) {
           star['x'] = 1.0;
           star['speedX'] = -(star['speedX'] as double);
@@ -153,7 +154,6 @@ bool _isTouching = false;
           star['speedX'] = -(star['speedX'] as double);
         }
 
-        // Отскок от краев (по Y)
         if ((star['y'] as double) > 1) {
           star['y'] = 1.0;
           star['speedY'] = -(star['speedY'] as double);
@@ -162,30 +162,18 @@ bool _isTouching = false;
           star['y'] = 0.0;
           star['speedY'] = -(star['speedY'] as double);
         }
+
         double size = star['size'] as double;
         if (size < 0.5) {
           star['size'] = 0.5;
+        }
+        if (size > 20) {
+          star['size'] = 20;
+        }
 
-        }
-      if (size > 20) {
-        star['size'] = 20;
-      }
-      double opacity = star['opacity'] as double;
-      if (opacity > 1.0) star['opacity'] = 1.0;
-      if (opacity < 1.0) star['opacity'] = 0.1;
-/*        // Пульсация прозрачности
-       star['phase'] = (star['phase'] as double) + 0.05;
-        final double pulse = 0.7 + 0.3 * sin(star['phase'] as double);
-        star['opacity'] = (star['opacity'] as double) * pulse;
-        if ((star['opacity'] as double) > 1.0) {
-          star['opacity'] = 0.9;
-        }
-        if ((star['opacity'] as double) < 0.1) {
-          star['opacity'] = 0.1;
-        } */ 
-   /*   Future.delayed(Duration(milliseconds: 180), () {
-        _respawnStars()
-          }); */ 
+        double opacity = star['opacity'] as double;
+        if (opacity > 1.0) star['opacity'] = 1.0;
+        if (opacity < 0.1) star['opacity'] = 0.1;
       }
     });
   }
@@ -193,7 +181,7 @@ bool _isTouching = false;
   void attractStars(Offset touchPoint) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     _isAttracting = true;
     setState(() {
       for (var star in _stars) {
@@ -210,9 +198,6 @@ bool _isTouching = false;
           star['speedY'] = (dy / distance) * speed;
         }
       }
-    });
-    Future.delayed(Duration(milliseconds: 800), () {
-      _isAttracting = false;
     });
   }
 
@@ -256,7 +241,7 @@ bool _isTouching = false;
     }
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
@@ -288,169 +273,165 @@ bool _isTouching = false;
         return Scaffold(
           resizeToAvoidBottomInset: false,
           drawer: const SettingsDrawer(),
-          body: GestureDetector(
-            onTapDown: _handleTapDown,
-            onTapUp: _handleTapUp,
-            onTapCancel: _handleTapCancel,
-            behavior: HitTestBehavior.opaque,
-                        
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF1A1A1A),
-                    const Color(0xFF201A30),
-                    const Color(0xFF2A1A3A),
-                    const Color(0xFF321D4F),
-                    const Color(0xFF3D1F6D),
-                    const Color(0xFF48247B),
-                    const Color(0xFF552A8A),
-                    const Color(0xFF613099),
-                    const Color(0xFF7038A8),
-                    const Color(0xFF7D41B8),
-                    const Color(0xFF8B4BC8),
-                    const Color(0xFF9858D4),
-                    const Color(0xFFA865E0),
-                    const Color(0xFFB874EC),
-                  ],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              // ========== 1. ГРАДИЕНТНЫЙ ФОН ==========
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: const [
+                      Color(0xFF1A1A1A),
+                      Color(0xFF201A30),
+                      Color(0xFF2A1A3A),
+                      Color(0xFF321D4F),
+                      Color(0xFF3D1F6D),
+                      Color(0xFF48247B),
+                      Color(0xFF552A8A),
+                      Color(0xFF613099),
+                      Color(0xFF7038A8),
+                      Color(0xFF7D41B8),
+                      Color(0xFF8B4BC8),
+                      Color(0xFF9858D4),
+                      Color(0xFFA865E0),
+                      Color(0xFFB874EC),
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
                 ),
               ),
-              child: Stack(
-                children: [
-                  // Звёзды
-                  ..._stars.map((star) {
-                    return Positioned(
-                      left: (star['x'] as double) * screenWidth,
-                      top: (star['y'] as double) * screenHeight,
-                      child: Star(
-                        size: star['size'] as double,
-                        opacity: star['opacity'] as double,
-                      ),
-                    );
-                  }).toList(),
 
-                  // Заголовок
-                  Positioned(
-                    top: topPadding,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: GestureDetector(
-                        onTap: _showChangeTitleDialog,
-                        child: Text(
-                          titleText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.yellow.shade500,
-                            fontSize: titleFontSize,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Колесо
-                  Positioned(
-                    top: wheelTop,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: AnimatedBuilder(
-                        animation: _pulseAnimation,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _pulseAnimation.value,
-                            child: child,
-                          );
-                        },
-                        child: WheelDraw(
-                          sectors: sectors,
-                          rotationAngle: _currentRotationAngle,
-                          availableWidth: availableWidth,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Кнопка Reset
-                  Positioned(
-                    left: leftRightOffset,
-                    bottom: bottomButtons,
-                    child: ResetButton(
-                      onPressed: () {
-                        setState(() {
-                          sectors.clear();
-                          _wheelLogic.updateSectors(sectors);
-                        });
-                      },
-                    ),
-                  ),
-
-                  // Кнопка Add
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: addButtonBottom,
-                    child: Center(
-                      child: AddBtn(
-                        onPressed: _showAddSectorDialog,
-                      ),
-                    ),
-                  ),
-
-                  // Кнопка Spin
-                  Positioned(
-                    right: leftRightOffset,
-                    bottom: bottomButtons,
-                    child: SpinBtn(
-                      onPressed: () {
-                        if (sectors.isEmpty) {
-                          return;
-                        }
-                        _wheelLogic.spin();
-                      },
-                    ),
-                  ),
-
-                  // Гамбургер меню
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 8,
-                    left: 16,
-                    child: Builder(
-                      builder: (context) => GestureDetector(
-                        onTap: () => Scaffold.of(context).openDrawer(),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.menu,
-                            color: Colors.yellow.shade500,
-                            size: 28,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              // ========== 2. ЗВЁЗДЫ (СВЕРХУ ФОНА) ==========
+              StarBackground(
+                stars: _stars,
+                onTapDown: _handleTapDown,
+                onTapUp: _handleTapUp,
+                onTapCancel: _handleTapCancel,
               ),
-            ),
+
+              // ========== 3. ВСЁ ОСТАЛЬНОЕ (КНОПКИ, ЗАГОЛОВОК, КОЛЕСО) ==========
+              // Заголовок
+              Positioned(
+                top: topPadding,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: _showChangeTitleDialog,
+                    child: Text(
+                      titleText,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.yellow.shade500,
+                        fontSize: titleFontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Колесо
+              Positioned(
+                top: wheelTop,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _pulseAnimation.value,
+                        child: child,
+                      );
+                    },
+                    child: WheelDraw(
+                      sectors: sectors,
+                      rotationAngle: _currentRotationAngle,
+                      availableWidth: availableWidth,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Кнопка Reset
+              Positioned(
+                left: leftRightOffset,
+                bottom: bottomButtons,
+                child: ResetButton(
+                  onPressed: () {
+                    setState(() {
+                      sectors.clear();
+                      _wheelLogic.updateSectors(sectors);
+                    });
+                  },
+                ),
+              ),
+
+              // Кнопка Add
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: addButtonBottom,
+                child: Center(
+                  child: AddBtn(
+                    onPressed: _showAddSectorDialog,
+                  ),
+                ),
+              ),
+
+              // Кнопка Spin
+              Positioned(
+                right: leftRightOffset,
+                bottom: bottomButtons,
+                child: SpinBtn(
+                  onPressed: () {
+                    if (sectors.isEmpty) {
+                      return;
+                    }
+                    _wheelLogic.spin();
+                  },
+                ),
+              ),
+
+              // Гамбургер меню
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 8,
+                left: 16,
+                child: Builder(
+                  builder: (context) => GestureDetector(
+                    onTap: () => Scaffold.of(context).openDrawer(),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.menu,
+                        color: Colors.yellow.shade500,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
+
   @override
   void dispose() {
     _timer?.cancel();
+    _respawnTimer?.cancel();
     _wheelLogic.dispose();
     _pulseController.dispose();
     super.dispose();
   }
 }
+
