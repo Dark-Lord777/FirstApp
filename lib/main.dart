@@ -9,11 +9,18 @@ import 'package:flutter/material.dart';
 import 'package:bee_dynamic_launcher/bee_dynamic_launcher.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
  //   await FirebaseMessaging.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+    debugPrint('Firebase initialized succesfully');
+  } catch (e) {
+    debugPrint('Firebase init failed $e');
+  }
   await AppConfigService().init(); 
 
   // initialisation bee_dynamic_launcher

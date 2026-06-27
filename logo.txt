@@ -1,0 +1,94 @@
+Вариант Б: Последовательность кадров (как гифка)
+
+Создай android/app/src/main/res/drawable/splash_animation.xml:
+xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:oneshot="false">
+    <item android:drawable="@drawable/frame1" android:duration="100" />
+    <item android:drawable="@drawable/frame2" android:duration="100" />
+    <item android:drawable="@drawable/frame3" android:duration="100" />
+    <!-- ... -->
+</animation-list>
+
+
+. Создай кастомный Splash Activity (Kotlin)
+
+Файл: android/app/src/main/kotlin/com/wheel/wheel_of_fortune/SplashActivity.kt
+
+
+package com.wheel.wheel_of_fortune
+
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ObjectAnimator
+import android.os.Bundle
+import android.view.animation.AccelerateDecelerateInterpolator
+import androidx.appcompat.app.AppCompatActivity
+import android.widget.ImageView
+
+class SplashActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_splash)
+
+        val logo = findViewById<ImageView>(R.id.logo)
+
+        // Вращение лого
+        val animator = ObjectAnimator.ofFloat(logo, "rotation", 0f, 360f)
+        animator.duration = 2000
+        animator.interpolator = AccelerateDecelerateInterpolator()
+        animator.repeatCount = ObjectAnimator.INFINITE
+        animator.start()
+
+        // Через 2.5 секунды переходим в MainActivity
+        logo.postDelayed({
+            startActivity(Intent(this, MainActivity::class.java))
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+            finish()
+        }, 2500)
+    }
+}
+
+
+3. Создай layout для Splash
+
+Файл: android/app/src/main/res/layout/activity_splash.xml
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1A2E">
+
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_centerInParent="true"
+        android:src="@drawable/logo" />
+
+</RelativeLayout>
+
+4. Обнови AndroidManifest.xml
+
+Замени MainActivity на SplashActivity как LAUNCHER:
+
+<activity
+    android:name=".SplashActivity"
+    android:exported="true"
+    android:theme="@style/LaunchTheme">
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+    </intent-filter>
+</activity>
+
+<activity
+    android:name=".MainActivity"
+    android:exported="true"
+    android:theme="@style/NormalTheme" />
+

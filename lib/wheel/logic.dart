@@ -97,7 +97,7 @@ class WheelLogic {
     
     _startAngle = _currentAngle;
     
-    int fullRotations = _random.nextInt(15, 30);  
+    int fullRotations = _random.nextInt(6, 20);  
     double landingAngle = _random.nextDouble() * 2 * pi;
     _targetDelta = fullRotations * 2 * pi + landingAngle;
     
