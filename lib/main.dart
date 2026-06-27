@@ -7,7 +7,7 @@ import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:bee_dynamic_launcher/bee_dynamic_launcher.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint, kReleaseMode;
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -21,7 +21,12 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase init failed $e');
   }
+
   await AppConfigService().init(); 
+
+    if (kReleaseMode) {
+      debugPrint = (String? message, {int? wrapWidth}) {};
+    }
 
   // initialisation bee_dynamic_launcher
   if (!kIsWeb && Platform.isAndroid) {
