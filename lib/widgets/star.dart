@@ -32,8 +32,10 @@ class StarPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size canvasSize) {
+    final double safeSize = size.clamp(0.5, 20);
+    final double safeOpacity = opacity.clamp(0.1, 1.0);
     final Paint paint = Paint()
-      ..color = Colors.white.withOpacity(opacity)
+      ..color = Colors.white.withOpacity(opacity * 1.2)
       ..style = PaintingStyle.fill;
 
     final Path path = Path();
