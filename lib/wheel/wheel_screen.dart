@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'dart:math';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint; 
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:wheel_of_fortune/widgets/spin_btn.dart';
@@ -12,6 +13,7 @@ import 'package:wheel_of_fortune/wheel/logic.dart';
 import 'package:wheel_of_fortune/services/database_service.dart';
 import 'package:wheel_of_fortune/screen/hamburger_menu.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
+import 'package:wheel_of_fortune/widgets/star.dart';
 
 class WheelScreen extends StatefulWidget {
   const WheelScreen({super.key});
@@ -32,7 +34,8 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
 
   final Random _random = Random();
   late List<Map<String, dynamic>> _stars;
-
+  
+  Timer? _timer;
   @override
   void initState() {
     super.initState();
@@ -63,17 +66,80 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
       CurvedAnimation(parent: _pulseController, curve: Curves.elasticOut),
     );
     _generateStars();
+    _startStarAnimation();
+  }
+  void _startStarAnimation() {
+    _timer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+      _updateStars();
+  });
   }
     void _generateStars() {
-      _stars = List.generate(80, (index) {
+      _stars = List.generate(150, (index) {
         return {
           'x': _random.nextDouble(),
           'y': _random.nextDouble(),
           'opacity': 0.2 + _random.nextDouble() * 0.6,
-          'size': 1 + _random.nextDouble() * 3,
+          'direction': 1,
+          'size': 3 + _random.nextDouble() * 6,
+          'speedX': (-1 + _random.nextDouble() * 2) * 0.0008,
+          'speedY': (-1 + _random.nextDouble() * 2) * 0.0008,
+          'phase': _random.nextDouble() * 2 * pi,
         };
       });
+  }
+    void _updateStars() {
+  setState(() {
+    for (var star in _stars) {
+      // Двигаем звезды
+      star['x'] = (star['x'] as double) + (star['speedX'] as double);
+      star['y'] = (star['y'] as double) + (star['speedY'] as double);
+
+      star['speedX'] = (star['speedX'] as double) * 0.99;
+      star['speedY'] = (star['speedY'] as double) * 0.99;
+
+      // Отскок от краев (по X)
+      if ((star['x'] as double) > 1) {
+        star['x'] = 1.0;
+        star['speedX'] = -(star['speedX'] as double);
+      }
+      if ((star['x'] as double) < 0) {
+        star['x'] = 0.0;
+        star['speedX'] = -(star['speedX'] as double);
+      }
+
+      // Отскок от краев (по Y)
+      if ((star['y'] as double) > 1) {
+        star['y'] = 1.0;
+        star['speedY'] = -(star['speedY'] as double);
+      }
+      if ((star['y'] as double) < 0) {
+        star['y'] = 0.0;
+        star['speedY'] = -(star['speedY'] as double);
+      }
     }
+  });
+}
+   void attractStars(Offset touchPoint) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.of(context).size.height;
+
+    setState(() {
+      for (var star in _stars) {
+      double starX = (star['x'] as double) * screenWidth;
+      double starY = (star['y'] as double) * screenHeight;
+
+      double dx = touchPoint.dx - starX;
+      double dy = touchPoint.dy = starY;
+      double distance = sqrt(dx * dx + dy * dy);
+
+      if (distance > 1) {
+      double speed = 0.02
+      star['speedX'] = (dx / distance) * speed;
+      star['speedY'] = (dy / distance) * speed;
+        }
+      }
+    });
+  }
   
   void _applyConfig() {
     setState(() {
@@ -172,22 +238,26 @@ Future<void> _showChangeTitleDialog() async {
             end: Alignment.topCenter,
           ),
         ),
+        GestureDetector(
+              onTapDown: (details) {
+                attractStars(details.localPosition);
+              }
+            
         child: Stack(
           children: [
             ..._stars.map((star) {
               return Positioned(
               left: (star['x'] as double) * screenWidth,
               top: (star['y'] as double) * screenHeight,
-              child: Container(
-              width: star['size'] as double,
-              height: star['size'] as double,
-              decoration: BoxDecoration(
-              color: Colors.white.withOpacity(star['opacity'] as double),
-              shape: BoxShape.circle,
-                  ),
+              child: Star(
+                      size: star['size'] as double,
+                      opacity: star['opacity'] as double,
+          //    color: Colors.white.withOpacity(star['opacity'] as double),
+                  // ),
                 ),
               );
             }).toList(),
+            
 
             Positioned(
               top: topPadding,
@@ -301,6 +371,7 @@ Future<void> _showChangeTitleDialog() async {
 
   @override
   void dispose() {
+     _timer?.cancel();
     _wheelLogic.dispose();
     super.dispose();
   }

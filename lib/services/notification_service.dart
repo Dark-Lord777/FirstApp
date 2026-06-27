@@ -14,6 +14,6 @@ class NotificationService {
         'fcmToken': fcmToken,
       }),
     );
-    print('📨 Registration response: ${response.statusCode}');
+    print(' Registration response: ${response.statusCode}');
   }
 }

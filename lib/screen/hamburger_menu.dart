@@ -8,6 +8,8 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:simple_icons/simple_icons.dart';
+
 
 class SettingsDrawer extends StatefulWidget {
   const SettingsDrawer({super.key});
@@ -138,6 +140,29 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                           child: Padding(
                             padding: EdgeInsets.only(left: 8, bottom: 8),
                             child: Text(
+                              'Community',
+                              style: TextStyle(color: Colors.purple, fontSize: 14, fontWeight: FontWeight.bold),
+
+                            ),
+                          ),
+                        ),
+                        ListTile(
+                          leading: const Icon(SimpleIcons.telegram, color: Colors.purple),
+                          title: const Text('Subscribe to telegram channel'),
+                          onTap: () => _launchUrl(AppConfigService().tgChannel),
+                        ),
+                        ListTile(
+                          leading: const Icon(SimpleIcons.buymeacoffee, color: Colors.purple),
+                          title: Text('Buy me a coffee'),
+                          onTap: () => _launchUrl(AppConfigService().donateUrl),
+                        ),
+                        Divider(color: Colors.purple.shade300),
+                        const SizedBox(height: 24),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 8, bottom: 8),
+                            child: Text(
                               'System',
                               style: TextStyle(color: Colors.purple, fontSize: 14, fontWeight: FontWeight.bold),
                             ),
@@ -162,7 +187,6 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                           title: const Text('Privacy Policy'),
                           onTap: () => _launchUrl(AppConfigService().privacyUrl),
                         ),
-                        const Divider(color: Colors.grey),
                         ListTile(
                           leading: const Icon(Icons.info, color: Colors.purple),
                           title: const Text('About the app'),

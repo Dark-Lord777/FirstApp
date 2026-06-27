@@ -93,8 +93,8 @@ class _WheelPainter extends CustomPainter {
         Offset(center.dx - textPainter.width / 2, center.dy - textPainter.height / 2),
       );
 
-      Paint centerDot = Paint()..color = Colors.white;
-      canvas.drawCircle(center, 5, centerDot);
+ //     Paint centerDot = Paint()..color = Colors.white;
+   //   canvas.drawCircle(center, 5, centerDot);
       return;
     }
     
