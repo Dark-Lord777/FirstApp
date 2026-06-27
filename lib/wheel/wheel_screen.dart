@@ -36,11 +36,16 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
   late List<Map<String, dynamic>> _stars;
 
   Timer? _timer;
+  Timer? _respawnTimer;
 
   @override
   void initState() {
     super.initState();
-
+    
+    _respawnTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+      _respawnStars();
+      });
+      
     _applyConfig();
 
     _wheelLogic = WheelLogic(
@@ -91,6 +96,34 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     });
   }
 bool _isAttracting = false;
+bool _isTouching = false;
+  void _handleTapDown(TapDownDetails details) {
+    _isTouching = true;
+    attractStars(details.localPosition);
+  }
+  void _handleTapUp(TapUpDetails details) {
+    _isTouching = false;
+    Future.delayed(Duration(milliseconds: 400), () {
+      if (!_isTouching) {
+      _isAttracting = false;
+      }
+    });
+  }
+  void _handleTapCancel() {
+    _isTouching = false;
+    _isAttracting = false;
+  }
+  void _respawnStars() {
+    for (int i = 0; i < _stars.length; i++) {
+    if (_stars[i]['speedX'] == 0 && _stars[i]['speedY'] == 0) {
+          _stars[i]['x'] = _random.nextDouble();
+          _stars[i]['y'] = _random.nextDouble();
+          _stars[i]['speedX'] = (-1 + _random.nextDouble() * 2) * 0.0008;
+          _stars[i]['speedY'] = (-1 + _random.nextDouble() * 2) * 0.0008;
+  
+        }
+     }
+  }
 
   void _updateStars() {
     setState(() {
@@ -107,7 +140,9 @@ bool _isAttracting = false;
         star['speedX'] = (star['speedX'] as double) + (-1 + _random.nextDouble() * 2) * 0.005;
         star['speedY'] = (star['speedY'] as double) + (-1 + _random.nextDouble() * 2) * 0.005;
         }
+
 */      double maxSpeed = 0.005;
+
         // Отскок от краев (по X)
         if ((star['x'] as double) > 1) {
           star['x'] = 1.0;
@@ -148,6 +183,9 @@ bool _isAttracting = false;
         if ((star['opacity'] as double) < 0.1) {
           star['opacity'] = 0.1;
         } */ 
+   /*   Future.delayed(Duration(milliseconds: 180), () {
+        _respawnStars()
+          }); */ 
       }
     });
   }
@@ -251,9 +289,11 @@ bool _isAttracting = false;
           resizeToAvoidBottomInset: false,
           drawer: const SettingsDrawer(),
           body: GestureDetector(
-            onTapDown: (details) {
-              attractStars(details.localPosition);
-            },
+            onTapDown: _handleTapDown,
+            onTapUp: _handleTapUp,
+            onTapCancel: _handleTapCancel,
+            behavior: HitTestBehavior.opaque,
+                        
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
