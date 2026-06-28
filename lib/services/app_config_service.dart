@@ -17,7 +17,15 @@ class AppConfigService {
   String _titleText = 'Are you lucky today?';
   String _tgChannel = '';
   String _donateUrl = '';
+  bool _musicEnabled = false;
+  List<String> _musicTracks = [];
+  String _spinSound = '';
+  String _winSound = '';
 
+  bool _spinSoundEnabled = true;
+  bool _winSoundEnabled = true;
+  bool _backgroundMusicEnabled = true;
+  
   // Геттеры
   String get workerUrl => _workerUrl;
   String get syncUrl => _syncUrl;
@@ -28,12 +36,39 @@ class AppConfigService {
   String get titleText => _titleText;
   String get tgChannel => _tgChannel;
   String get donateUrl => _donateUrl;
+  bool get musicEnabled => _musicEnabled;
+  List<String> get musicTracks => _musicTracks;
+  String get spinSound => _spinSound;
+  String get winSound => _winSound;
+  
+  bool get spinSoundEnabled => _spinSoundEnabled;
+  bool get winSoundEnabled => _winSoundEnabled;
+  bool get backgroundMusicEnabled => _backgroundMusicEnabled;
   bool _starsEnabled = false;
   bool get starsEnabled => _starsEnabled;
   set starsEnabled(bool value) {
     _starsEnabled = value;
     SharedPreferences.getInstance().then((prefs) {
       prefs.setBool('stars_enabled', value);
+    });
+  }
+  
+  set spinSoundEnabled(bool value) {
+    _spinSoundEnabled = value;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('spin_sound_enabled', value);
+    });
+  }
+  set winSoundEnabled(bool value) {
+    _winSoundEnabled = value;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('win_sound_enabled', value);
+    });
+  }
+  set backgroundMusicEnabled(bool value) {
+    _backgroundMusicEnabled = value;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('background_music_enabled', value);
     });
   }
 
@@ -54,6 +89,9 @@ class AppConfigService {
       _tgChannel = prefs.getString('cached_tg_channel') ?? _tgChannel;
       _donateUrl = prefs.getString('cached_donate_url') ?? _donateUrl;
       _starsEnabled = prefs.getBool('stars_enabled') ?? false;
+      _spinSoundEnabled = prefs.getBool('spin_sound_enabled') ?? true;
+      _winSoundEnabled = prefs.getBool('win_sound_enabled') ?? true;
+      _backgroundMusicEnabled = prefs.getBool('background_music_enabled') ?? true;
     } catch (e) {
       debugPrint('Error when readed a cache: $e');
     }

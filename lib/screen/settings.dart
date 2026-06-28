@@ -10,11 +10,17 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _starsEnabled = false;
+  bool _spinSoundEnabled = true;
+  bool _winSoundEnabled = true;
+  bool _backgroundMusicEnabled = true;
 
   @override
   void initState() {
   super.initState();
   _starsEnabled = AppConfigService().starsEnabled;
+  _spinSoundEnabled = AppConfigService().spinSoundEnabled;
+  _winSoundEnabled = AppConfigService().winSoundEnabled;
+  _backgroundMusicEnabled = AppConfigService().backgroundMusicEnabled;
   }
   @override 
   Widget build(BuildContext context) {
@@ -32,6 +38,97 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
           children: [
+        //  const SizedBox(height: 16),
+            const Text (
+              'Music',
+              style: TextStyle(color: Colors.white, fontSize: 16),// FontWeight.bold),
+            ),
+          Card(
+              color: const Color(0xFF2D1B4E),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ), 
+              child: SwitchListTile(
+                title: const Text(
+                  'Spin Sound',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+                value: _spinSoundEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    _spinSoundEnabled = value;
+                    AppConfigService().spinSoundEnabled = value;
+                    });
+                  },
+                activeColor: Colors.purple,
+                secondary: Icon(
+                  _spinSoundEnabled ? Icons.volume_up : Icons.volume_off,
+                  color: _spinSoundEnabled ? Colors.pink : Colors.grey,
+                  ),
+                ),
+            ),
+            const SizedBox(height: 16),
+             Card(
+              color: const Color(0xFF2D1B4E),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ), 
+              child: SwitchListTile(
+                title: const Text(
+                  'Win Sound',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+                value: _winSoundEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    _winSoundEnabled = value;
+                    AppConfigService().winSoundEnabled = value;
+                    });
+                  },
+                activeColor: Colors.purple,
+                secondary: Icon(
+                  _winSoundEnabled ? Icons.volume_up : Icons.volume_off,
+                  color: _winSoundEnabled ? Colors.pink : Colors.grey,
+                  ),
+                ),
+            ),
+
+            const SizedBox(height: 16),
+                    Card(
+              color: const Color(0xFF2D1B4E),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ), 
+              child: SwitchListTile(
+                title: const Text(
+                  'Background Music',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+                          subtitle: const Text(
+              'Plays random tracks',
+              style: TextStyle(color: Colors.white54,fontSize: 12),
+            ),
+
+                value: _backgroundMusicEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    _backgroundMusicEnabled = value;
+                    AppConfigService().backgroundMusicEnabled = value;
+                    });
+                  },
+                activeColor: Colors.purple,
+                secondary: Icon(
+                  _backgroundMusicEnabled ? Icons.volume_up : Icons.volume_off,
+                  color: _backgroundMusicEnabled ? Colors.pink : Colors.grey,
+                  ),
+                ),
+            ),
+          const SizedBox(height: 16),
+          const Text (
+            'Experimental settings',
+           style: TextStyle(color: Colors.white, fontSize: 16),// FontWeight.bold),
+           ),
+
           Card(
             color: const Color(0xFF2D1B4E),
             shape: RoundedRectangleBorder(
@@ -39,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           child: SwitchListTile(
             title: const Text(
-              'Experemental stars',
+              'Experimental stars',
               style: TextStyle(color: Colors.white54, fontSize: 12),
             ),
             subtitle: const Text(
@@ -69,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 border: Border.all(color: Colors.red.shade400),
               ),
               child: const Text(
-                'Experimental features may cause lag and crashes. Enable at your own risk',
+                'Experimental features may cause lag and crashes. \nEnable at your own risk.\nBut hey, beauty requires sacrifice... ',
               style: TextStyle(color: Colors.white70, fontSize: 12),
                      ),
                  ),

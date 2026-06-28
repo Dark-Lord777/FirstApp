@@ -3,6 +3,7 @@ import 'package:wheel_of_fortune/services/sync_service.dart';
 import 'package:wheel_of_fortune/services/user_id_service.dart';
 import 'package:wheel_of_fortune/services/notification_service.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
+import 'package:wheel_of_fortune/services/music_service.dart';
 
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugPrint, kReleaseMode;
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,8 +45,16 @@ void main() async {
       debugPrint(' Init error: $e');
     }
   }
-
-
+  /*
+  final config = AppConfigService().currentConfig;
+  await MusicService.loadMusic(config);
+*/
+  await MusicService.loadMusic(
+    enabled: AppConfigService().musicEnabled,
+    tracks: AppConfigService().musicTracks,
+    spinSound: AppConfigService().spinSound,
+    winSound: AppConfigService().winSound,
+  );
   final userId = await UserIdService.getUserId();
   final deviceId = await UserIdService.getDeviceId();
   debugPrint('User ID: $userId');

@@ -36,7 +36,7 @@ class _StarFieldState extends State<StarField> {
       return {
         'x': _random.nextDouble(),
         'y': _random.nextDouble(),
-        'opacity': 0.4 + _random.nextDouble() * 0.2,
+        'opacity': 0.8 + _random.nextDouble() * 0.2,
         'size': 2 + _random.nextDouble() * 6,
         'speedX': (-1 + _random.nextDouble() * 2) * 0.0008,
         'speedY': (-1 + _random.nextDouble() * 2) * 0.0008,

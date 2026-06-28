@@ -12,12 +12,23 @@ class Star extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return SizedBox(
+  width: size,
+  height: size,
+  child: CustomPaint(
+    painter: StarPainter(
+      size: size,
+      opacity: opacity,
+    ),
+  ),
+);
+    /*
     return CustomPaint(
       painter: StarPainter(
         size: size,
         opacity: opacity,
       ),
-    );
+    ); */
   }
 }
 
@@ -34,9 +45,13 @@ class StarPainter extends CustomPainter {
   void paint(Canvas canvas, Size canvasSize) {
     final double safeSize = size.clamp(0.5, 20);
     final double safeOpacity = opacity.clamp(0.1, 1.0);
+    assert(opacity >= 0 && opacity <= 1); 
     final Paint paint = Paint()
-      ..color = Colors.white.withOpacity(opacity * 1.2)
-      ..style = PaintingStyle.fill;
+  ..color = Colors.white;
+    /*
+    final Paint paint = Paint()
+      ..color = Colors.white.withOpacity(opacity * 1.2) */ 
+     // ..style = PaintingStyle.fill;
 
     final Path path = Path();
     final Offset center = Offset(canvasSize.width / 2, canvasSize.height / 2);

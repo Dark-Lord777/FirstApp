@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
-
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
+
 import 'package:wheel_of_fortune/screen/hamburger_menu.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/services/database_service.dart';
@@ -16,6 +17,7 @@ import 'package:wheel_of_fortune/wheel/logic.dart';
 import 'package:wheel_of_fortune/wheel/wheel.dart';
 //import 'package:wheel_of_fortune/widgets/star_background.dart'; 
 import 'package:wheel_of_fortune/widgets/star_field.dart';
+import 'package:wheel_of_fortune/services/music_service.dart';
 
 
 
@@ -27,6 +29,7 @@ class WheelScreen extends StatefulWidget {
 }
 
 class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin {
+ // final AudioPlayer _audioPlayer = AudioPlayer();
   List<String> sectors = [];
   late WheelLogic _wheelLogic;
   double _currentRotationAngle = 0.0;
@@ -58,17 +61,30 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     _wheelLogic = WheelLogic(
       vsync: this,
       onAngleChanged: () {
-        setState(() {
-          _currentRotationAngle = _wheelLogic.currentAngle;
-        });
-      },
-      onWin: (String prize) async {
-        debugPrint("PRIZE $prize}");
-        _pulseController.forward().then((_) => _pulseController.reset());
-        if (!kIsWeb) {
-          await DatabaseService.instance.saveSpin(prize, true);
-        }
-      },
+      setState(() {
+        _currentRotationAngle = _wheelLogic.currentAngle;
+        MusicService.playSpinSound();
+      });
+      if (_wheelLogic.isSpinning) {
+        MusicService.setBackgroundVolume(0.3);
+        MusicService.playSpinSound();
+      } else {
+        MusicService.setBackgroundVolume(1.0);
+      }
+    },
+
+    onWin: (String prize) async {
+      debugPrint("PRIZE $prize");
+      _pulseController.forward().then((_) => _pulseController.reset());
+      MusicService.setBackgroundVolume(0.3);
+      MusicService.playWinSound();
+
+      if (!kIsWeb) {
+        await DatabaseService.instance.saveSpin(prize, true);
+      }
+      MusicService.setBackgroundVolume(1.0);
+    },
+
       sectors: sectors,
     );
     _pulseController = AnimationController(
@@ -187,7 +203,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                   ),
                 ),
               ),
-
+              //stars
               // ========== 2. ЗВЁЗДЫ (СВЕРХУ ФОНА) ==========
               const StarField( 
                /* 
@@ -252,6 +268,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                     setState(() {
                       sectors.clear();
                       _wheelLogic.updateSectors(sectors);
+                      titleText = AppConfigService().titleText;
                     });
                   },
                 ),

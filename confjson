@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "titleText": "Are you lucky today?",
+  "music": {
+    "enabled": true,
+    "tracks": [
+      "https://your-cdn.com/track1.mp3",
+      "https://your-cdn.com/track2.mp3"
+    ],
+    "winSound": "https://your-cdn.com/win.mp3",
+    "spinSound": "https://your-cdn.com/spin.mp3",
+    "deleteReason": ""
+  }
+}
