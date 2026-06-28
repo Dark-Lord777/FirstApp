@@ -14,7 +14,9 @@ import 'package:wheel_of_fortune/widgets/spin_btn.dart';
 import 'package:wheel_of_fortune/widgets/star.dart';
 import 'package:wheel_of_fortune/wheel/logic.dart';
 import 'package:wheel_of_fortune/wheel/wheel.dart';
-import 'package:wheel_of_fortune/widgets/star_background.dart';
+//import 'package:wheel_of_fortune/widgets/star_background.dart'; 
+import 'package:wheel_of_fortune/widgets/star_field.dart';
+
 
 
 class WheelScreen extends StatefulWidget {
@@ -36,21 +38,21 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
 
   final Random _random = Random();
   late List<Map<String, dynamic>> _stars;
-
+/*
   Timer? _timer;
   Timer? _respawnTimer;
 
   bool _isAttracting = false;
   bool _isTouching = false;
-
+ */ 
   @override
   void initState() {
     super.initState();
-
+/*
     _respawnTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       _respawnStars();
     });
-
+ */ 
     _applyConfig();
 
     _wheelLogic = WheelLogic(
@@ -76,130 +78,14 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.elasticOut),
     );
+/*
     _generateStars();
     _startStarAnimation();
+    */ 
+ 
   }
 
-  void _startStarAnimation() {
-    _timer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
-      _updateStars();
-    });
-  }
 
-  void _generateStars() {
-    _stars = List.generate(150, (index) {
-      return {
-        'x': _random.nextDouble(),
-        'y': _random.nextDouble(),
-        'opacity': 0.3 + _random.nextDouble() * 0.4,
-        'direction': 1,
-        'size': 2 + _random.nextDouble() * 6,
-        'speedX': (-1 + _random.nextDouble() * 2) * 0.0008,
-        'speedY': (-1 + _random.nextDouble() * 2) * 0.0008,
-        'phase': _random.nextDouble() * 2 * pi,
-      };
-    });
-  }
-
-  void _handleTapDown(Offset position) {
-    _isTouching = true;
-    attractStars(position);
-  }
-
-  void _handleTapUp() {
-    _isTouching = false;
-    _isAttracting = false;
-    scatterStars();
-  }
-
-  void _handleTapCancel() {
-    _isTouching = false;
-    _isAttracting = false;
-  }
-
-  void _respawnStars() {
-    for (int i = 0; i < _stars.length; i++) {
-      if ((_stars[i]['speedX'] as double).abs() < 0.00002 &&
-          (_stars[i]['speedY'] as double).abs() < 0.00002) {
-        _stars[i]['x'] = _random.nextDouble();
-        _stars[i]['y'] = _random.nextDouble();
-        _stars[i]['speedX'] = (-1 + _random.nextDouble() * 2) * 0.0008;
-        _stars[i]['speedY'] = (-1 + _random.nextDouble() * 2) * 0.0008;
-      }
-    }
-  }
-
-  void scatterStars() {
-    for (var star in _stars) {
-      star['speedX'] = (-1 + _random.nextDouble() * 2) * 0.01;
-      star['speedY'] = (-1 + _random.nextDouble() * 2) * 0.01;
-    }
-  }
-
-  void _updateStars() {
-    setState(() {
-      for (var star in _stars) {
-        star['x'] = (star['x'] as double) + (star['speedX'] as double);
-        star['y'] = (star['y'] as double) + (star['speedY'] as double);
-
-        star['speedX'] = (star['speedX'] as double) * 0.99;
-        star['speedY'] = (star['speedY'] as double) * 0.99;
-
-        if ((star['x'] as double) > 1) {
-          star['x'] = 1.0;
-          star['speedX'] = -(star['speedX'] as double);
-        }
-        if ((star['x'] as double) < 0) {
-          star['x'] = 0.0;
-          star['speedX'] = -(star['speedX'] as double);
-        }
-
-        if ((star['y'] as double) > 1) {
-          star['y'] = 1.0;
-          star['speedY'] = -(star['speedY'] as double);
-        }
-        if ((star['y'] as double) < 0) {
-          star['y'] = 0.0;
-          star['speedY'] = -(star['speedY'] as double);
-        }
-
-        double size = star['size'] as double;
-        if (size < 0.5) {
-          star['size'] = 0.5;
-        }
-        if (size > 20) {
-          star['size'] = 20;
-        }
-
-        double opacity = star['opacity'] as double;
-        if (opacity > 1.0) star['opacity'] = 1.0;
-        if (opacity < 0.1) star['opacity'] = 0.1;
-      }
-    });
-  }
-
-  void attractStars(Offset touchPoint) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    _isAttracting = true;
-    setState(() {
-      for (var star in _stars) {
-        double starX = (star['x'] as double) * screenWidth;
-        double starY = (star['y'] as double) * screenHeight;
-
-        double dx = touchPoint.dx - starX;
-        double dy = touchPoint.dy - starY;
-        double distance = sqrt(dx * dx + dy * dy);
-
-        if (distance > 1) {
-          double speed = 0.002;
-          star['speedX'] = (dx / distance) * speed;
-          star['speedY'] = (dy / distance) * speed;
-        }
-      }
-    });
-  }
 
   void _applyConfig() {
     setState(() {
@@ -303,11 +189,13 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
               ),
 
               // ========== 2. ЗВЁЗДЫ (СВЕРХУ ФОНА) ==========
-              StarBackground(
+              const StarField( 
+               /* 
                 stars: _stars,
                 onTapDown: _handleTapDown,
                 onTapUp: _handleTapUp,
                 onTapCancel: _handleTapCancel,
+      */
               ),
 
               // ========== 3. ВСЁ ОСТАЛЬНОЕ (КНОПКИ, ЗАГОЛОВОК, КОЛЕСО) ==========
@@ -427,8 +315,10 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
 
   @override
   void dispose() {
+    /*
     _timer?.cancel();
     _respawnTimer?.cancel();
+    */
     _wheelLogic.dispose();
     _pulseController.dispose();
     super.dispose();

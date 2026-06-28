@@ -28,6 +28,14 @@ class AppConfigService {
   String get titleText => _titleText;
   String get tgChannel => _tgChannel;
   String get donateUrl => _donateUrl;
+  bool _starsEnabled = false;
+  bool get starsEnabled => _starsEnabled;
+  set starsEnabled(bool value) {
+    _starsEnabled = value;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('stars_enabled', value);
+    });
+  }
 
   Future<void> init() async {
     await _loadFromLocalPrefs();
@@ -45,6 +53,7 @@ class AppConfigService {
       _workerUrl = prefs.getString('cached_worker_url') ?? _workerUrl;
       _tgChannel = prefs.getString('cached_tg_channel') ?? _tgChannel;
       _donateUrl = prefs.getString('cached_donate_url') ?? _donateUrl;
+      _starsEnabled = prefs.getBool('stars_enabled') ?? false;
     } catch (e) {
       debugPrint('Error when readed a cache: $e');
     }

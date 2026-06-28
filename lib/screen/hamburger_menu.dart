@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart'; // needed for kReleaseMode
 import 'package:wheel_of_fortune/widgets/menu/change_icon.dart';
 import 'package:wheel_of_fortune/services/icon_catalog_service.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
+import 'package:wheel_of_fortune/screen/settings.dart';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -133,6 +134,31 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                               },
                             ),
                           ),
+                        Divider(color: Colors.purple.shade300),
+
+                        const SizedBox(height: 24),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 8, bottom: 8), 
+                            child: Text(
+                              'Settings',
+                              style: TextStyle(color: Colors.purple, fontSize: 14, fontWeight: FontWeight.bold),
+                                  ),
+                              ),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.settings, color: Colors.purple),
+                          title: const Text(
+                            'Settings'
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                             );
+                          },
+                        ),
                         Divider(color: Colors.purple.shade300),
                         const SizedBox(height: 24),
                         const Align(
