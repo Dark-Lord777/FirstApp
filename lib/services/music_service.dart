@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
@@ -6,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:bot_toast/bot_toast.dart';
+
 
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/widgets/modalka.dart';
@@ -28,6 +31,13 @@ class MusicService {
       if (!AppConfigService().backgroundMusicEnabled) {
         await stopMusic();
         return;
+      }
+      final dir = await getApplicationDocumentsDirectory();
+      final musicDir = Directory('${dir.path}/music');
+      final bool isFirstDownload = !await musicDir.exists();
+
+      if (isFirstDownload) {
+        BotToast.showText(text: 'Download a music...');
       }
       
 //check a function delete tracks
@@ -82,7 +92,12 @@ class MusicService {
           _winSoundPath = localFile.path;
         }
       }
+       if (isFirstDownload && _tracks.isNotEmpty) {
+          BotToast.showText(text: 'Music was downloaded');
+        }
+
     } catch (e) {
+      BotToast.showText(text: 'Error downloaded a music');
       debugPrint('Music service error: $e');
     }
   }
@@ -131,7 +146,8 @@ class MusicService {
   static Future<void> _playRandomTrack() async {
     if (_tracks.isEmpty) return;
     
-    _currentTrackIndex = DateTime.now().millisecondsSinceEpoch % _tracks.length;
+    final random = Random();
+    _currentTrackIndex = random.nextInt(_tracks.length);
     final trackName = _tracks[_currentTrackIndex];
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}/music/$trackName');
@@ -140,6 +156,13 @@ class MusicService {
       await _bgPlayer.play(DeviceFileSource(file.path));
       _bgPlayer.setVolume(1.0);
       _isPlaying = true;
+
+      _bgPlayer.onPlayerComplete.listen((event) {
+        debugPrint('rack ended, playing next...')
+        _playRandomTrack();
+      });
+    } else {
+      debugPrint('File not found: $trackName');
     }
   }
 
