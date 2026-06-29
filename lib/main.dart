@@ -14,9 +14,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:audioplayers/audioplayers.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
- //   await FirebaseMessaging.ensureInitialized();
+  
   try {
     await Firebase.initializeApp();
     debugPrint('Firebase initialized succesfully');
@@ -26,39 +27,29 @@ void main() async {
 
   await AppConfigService().init(); 
 
-    if (kReleaseMode) {
-      debugPrint = (String? message, {int? wrapWidth}) {};
-    }
+  if (kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  }
 
   // initialisation bee_dynamic_launcher
   if (!kIsWeb && Platform.isAndroid) {
     try {
       await BeeDynamicLauncher.initializeFromCatalog();
-      debugPrint(' Launcher initialized');
+      debugPrint('Launcher initialized');
       final variants = await BeeDynamicLauncher.getAvailableVariants();
       debugPrint('Available variants: $variants');
       
       final current = await BeeDynamicLauncher.getCurrentVariant();
-      debugPrint("Current cariant: $current");
-
+      debugPrint("Current variant: $current");
     } catch (e) {
-      debugPrint(' Init error: $e');
+      debugPrint('Init error: $e');
     }
   }
-  /*
-  final config = AppConfigService().currentConfig;
-  await MusicService.loadMusic(config);
-*/
-  await MusicService.loadMusic(
-    enabled: AppConfigService().musicEnabled,
-    tracks: AppConfigService().musicTracks,
-    spinSound: AppConfigService().spinSound,
-    winSound: AppConfigService().winSound,
-  );
+
   final userId = await UserIdService.getUserId();
   final deviceId = await UserIdService.getDeviceId();
   debugPrint('User ID: $userId');
-  debugPrint('Device Id $deviceId');
+  debugPrint('Device Id: $deviceId');
 
   String? fcmToken;
   try {
@@ -71,20 +62,50 @@ void main() async {
     await NotificationService.registerDevice(fcmToken);
   }
 
-
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
-
-  const MyApp({ super.key});
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
 
   @override
-Widget build(BuildContext context) {
-  return MaterialApp(
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData.dark(),
-    home: const WheelScreen(),
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Загружаем музыку после инициализации виджета
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadMusic();
+    });
+  }
+
+  Future<void> _loadMusic() async {
+    try {
+      // Получаем контекст через navigatorKey или используем context из build
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        await MusicService.loadMusic(context: context);
+      } else {
+        debugPrint('Context not available for music loading');
+      }
+    } catch (e) {
+      debugPrint('Failed to load music: $e');
+    }
+  }
+
+  // Создаем GlobalKey для доступа к контексту
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
+      theme: ThemeData.dark(),
+      home: const WheelScreen(),
       builder: (context, child) {
         child = BotToastInit()(context, child);
         return child;

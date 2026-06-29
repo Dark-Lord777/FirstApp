@@ -8,6 +8,7 @@ class AppConfigService {
   factory AppConfigService() => _instance;
   AppConfigService._internal();
 
+//config .json which have on server 
   String _workerUrl = 'https://firstapp-backend.dark-lord.workers.dev';
   String _syncUrl = '';
   String _termsUrl = 'https://dark-lord.pages.dev/projects/fortune/terms';
@@ -21,12 +22,14 @@ class AppConfigService {
   List<String> _musicTracks = [];
   String _spinSound = '';
   String _winSound = '';
+  bool _forceUpdate = false;
+  String _musicReason = '';
 
   bool _spinSoundEnabled = true;
   bool _winSoundEnabled = true;
   bool _backgroundMusicEnabled = true;
   
-  // Геттеры
+  // getters 
   String get workerUrl => _workerUrl;
   String get syncUrl => _syncUrl;
   String get termsUrl => _termsUrl;
@@ -44,8 +47,13 @@ class AppConfigService {
   bool get spinSoundEnabled => _spinSoundEnabled;
   bool get winSoundEnabled => _winSoundEnabled;
   bool get backgroundMusicEnabled => _backgroundMusicEnabled;
+  bool get forceUpdate => _forceUpdate;
+  String get musicReason => _musicReason;
   bool _starsEnabled = false;
   bool get starsEnabled => _starsEnabled;
+
+//setters 
+
   set starsEnabled(bool value) {
     _starsEnabled = value;
     SharedPreferences.getInstance().then((prefs) {
@@ -71,6 +79,18 @@ class AppConfigService {
       prefs.setBool('background_music_enabled', value);
     });
   }
+  set forceUpdate(bool value) {
+    _forceUpdate = value;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('force_update', value);
+    });
+  }
+  set musicReason(String value) {
+    _musicReason = value;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString('music_reason', value);
+    });
+  }
 
   Future<void> init() async {
     await _loadFromLocalPrefs();
@@ -92,6 +112,8 @@ class AppConfigService {
       _spinSoundEnabled = prefs.getBool('spin_sound_enabled') ?? true;
       _winSoundEnabled = prefs.getBool('win_sound_enabled') ?? true;
       _backgroundMusicEnabled = prefs.getBool('background_music_enabled') ?? true;
+      _forceUpdate = prefs.getBool('force_update') ?? false;
+      _musicReason = prefs.getString('music_reason') ?? '';
     } catch (e) {
       debugPrint('Error when readed a cache: $e');
     }
@@ -117,6 +139,7 @@ class AppConfigService {
           _tgChannel = config['tgChannel'] ?? _tgChannel;
           _donateUrl = config['donateUrl'] ?? _donateUrl;
           _appVersion = serverVersion;
+          
 
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('cached_terms_url', _termsUrl);
