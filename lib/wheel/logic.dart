@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 
+import 'package:wheel_of_fortune/services/music_service.dart';
+
 
 class _FortuneRandom {
   int _seed;
@@ -104,6 +106,7 @@ class WheelLogic {
   debugPrint('🎡 Вращение: $fullRotations оборотов, длительность: ${SPIN_DURATION_SECONDS} сек');
     
     _isSpinning = true;
+    MusicService.playSpinSound();
     _controller.forward(from: 0.0);
   }
   

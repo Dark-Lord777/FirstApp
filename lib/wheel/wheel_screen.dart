@@ -63,14 +63,15 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
       onAngleChanged: () {
       setState(() {
         _currentRotationAngle = _wheelLogic.currentAngle;
-        MusicService.playSpinSound();
+     //   MusicService.playSpinSound();
       });
+/*        
       if (_wheelLogic.isSpinning) {
         MusicService.setBackgroundVolume(0.3);
         MusicService.playSpinSound();
       } else {
         MusicService.setBackgroundVolume(1.0);
-      }
+      } */ 
     },
 
     onWin: (String prize) async {

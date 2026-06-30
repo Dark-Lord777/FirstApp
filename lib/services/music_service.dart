@@ -16,17 +16,29 @@ import 'package:wheel_of_fortune/widgets/base_anim_btn.dart';
 
 
 class MusicService {
-  static final AudioPlayer _bgPlayer = AudioPlayer(); 
-  static final AudioPlayer _sfxPlayer = AudioPlayer();
-  
+  static final AudioPlayer __backgroundPlayer = AudioPlayer(); 
+  static final AudioPlayer _effectPlayer = AudioPlayer();
+
+  static bool _initializated = false;
+  static bool _musicLoaded = false;
+  static String _musicVersion = "";
   static List<String> _tracks = [];
-  static int _currentTrackIndex = 0;
-  static bool _isPlaying = false;
   static String? _spinSoundPath;
   static String? _winSoundPath;
+  
 
   static Future<void> loadMusic({required BuildContext context}) async {
     try {
+      
+      if (_musicLoaded) {
+        debugPrint('Music already loaded');
+        return;
+      }
+      _initializated = true;
+      __backgroundPlayer.onPlayerComplete.listen((_) {
+        debugPrint('Track completed');
+        _playRandomTrack();
+      });
 //check background music 
       if (!AppConfigService().backgroundMusicEnabled) {
         await stopMusic();
@@ -106,11 +118,11 @@ class MusicService {
         }
       //logs temporary 
       debugPrint('📁 BG Files: $bgFiles');
-debugPrint('📁 Spin Files: $spinFiles');
-debugPrint('📁 Win Files: $winFiles');
-debugPrint('📁 Spin path: $_spinSoundPath');
-debugPrint('📁 Win path: $_winSoundPath');
-
+      debugPrint('📁 Spin Files: $spinFiles');
+      debugPrint('📁 Win Files: $winFiles');
+      debugPrint('📁 Spin path: $_spinSoundPath');
+      debugPrint('📁 Win path: $_winSoundPath');
+      _musicLoaded = true;
     } catch (e) {
       BotToast.showText(text: 'Error downloaded a music');
       debugPrint('Music service error: $e');
@@ -158,59 +170,59 @@ debugPrint('📁 Win path: $_winSoundPath');
       return null;
     }
   }
-    
+  
+  static Future<void> stopSpinSound() async {
+    await _effectPlayer.stop();
+  }
 
   static Future<void> _playRandomTrack() async {
-    if (_tracks.isEmpty) return;
+    if (_tracks.isEmpty) {
+      debugPrint('No tracks');
+      return;
+    }
     
     final random = Random();
-    _currentTrackIndex = random.nextInt(_tracks.length);
-    final fullTrackName = _tracks[_currentTrackIndex];
-    final justFileName = fullTrackName.split('/').last;
+    final fileName = _tracks[random.nextInt(_tracks.length)];
+    final justFileName = fileName.split('/').last;
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}/music/$justFileName');
 
-    if (await file.exists()) {
-      await _bgPlayer.play(DeviceFileSource(file.path));
-      _bgPlayer.setVolume(1.0);
-      _isPlaying = true;
+    if (!await file.exists()) {
+      debugPrint('Track not found ${file.path}');
+      return;
+    } 
+    await __backgroundPlayer.stop();
+    await __backgroundPlayer.play(DeviceFileSource(file.path));
+    await __backgroundPlayer.setVolume(1);
 
-      _bgPlayer.onPlayerComplete.listen((event) {
-        debugPrint('rack ended, playing next...');
-        _playRandomTrack();
-      });
-    } else {
-      debugPrint('File not found: $justFileName');
-    }
   }
 
   static Future<void> playSpinSound() async {
     if (_spinSoundPath != null) {
-      await _sfxPlayer.play(DeviceFileSource(_spinSoundPath!));
-      _sfxPlayer.setVolume(1.0);
+      await _effectPlayer.play(DeviceFileSource(_spinSoundPath!));
+      _effectPlayer.setVolume(1.0);
     }
   }
 
   static Future<void> playWinSound() async {
     if (_winSoundPath != null) {
-      await _sfxPlayer.play(DeviceFileSource(_winSoundPath!));
-      _sfxPlayer.setVolume(1.0);
+      await _effectPlayer.play(DeviceFileSource(_winSoundPath!));
+      _effectPlayer.setVolume(1.0);
     }
   }
 
   static Future<void> setBackgroundVolume(double volume) async {
-    await _bgPlayer.setVolume(volume);
+    await _backgroundPlayer.setVolume(volume);
   }
 
   static Future<void> stopMusic() async {
-    await _bgPlayer.stop();
-    await _sfxPlayer.stop();
-    _isPlaying = false;
+    await _backgroundPlayer.stop();
+    await _effectPlayer.stop();
   }
 
   static void dispose() {
-    _bgPlayer.dispose();
-    _sfxPlayer.dispose();
+    _backgroundPlayer.dispose();
+    _effectPlayer.dispose();
   }
 
 
