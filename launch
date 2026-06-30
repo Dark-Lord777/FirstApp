@@ -27,3 +27,4 @@ adb -s 27ff7b9 install build/app/outputs/flutter-apk/app-release.apk
 #See a logs of my app 
 adb logcat --pid=$(adb shell pidof -s com.wheel.wheel_of_fortune)
 
+flutter build apk --release --target-platform android-arm64

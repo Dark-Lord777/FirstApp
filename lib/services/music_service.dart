@@ -35,7 +35,14 @@ class MusicService {
       final dir = await getApplicationDocumentsDirectory();
       final musicDir = Directory('${dir.path}/music');
       final bool isFirstDownload = !await musicDir.exists();
-
+      
+      if (!await musicDir.exists()) {
+        await musicDir.create(recursive: true);
+        final files = await musicDir.list().toList();
+        debugPrint('Files in music/: $files');
+      } else {
+        debugPrint('music/ folder does not exist');
+      }
       if (isFirstDownload) {
         BotToast.showText(text: 'Download a music...');
       }
@@ -71,6 +78,7 @@ class MusicService {
       final spinFiles = await _getFileList('spin');
       if (spinFiles.isNotEmpty) {
         final fileName = spinFiles.first['name'];
+        final justFileName = fileName.split('/').last;
         final dir = await getApplicationDocumentsDirectory();
         final localFile = File('${dir.path}/music/$fileName');
         if (!await localFile.exists()) {
@@ -84,6 +92,7 @@ class MusicService {
       final winFiles = await _getFileList('win');
       if (winFiles.isNotEmpty) {
         final fileName = winFiles.first['name'];
+        final justFileName = fileName.split('/').last;
         final dir = await getApplicationDocumentsDirectory();
         final localFile = File('${dir.path}/music/$fileName');
         if (!await localFile.exists()) {
@@ -95,6 +104,12 @@ class MusicService {
        if (isFirstDownload && _tracks.isNotEmpty) {
           BotToast.showText(text: 'Music was downloaded');
         }
+      //logs temporary 
+      debugPrint('📁 BG Files: $bgFiles');
+debugPrint('📁 Spin Files: $spinFiles');
+debugPrint('📁 Win Files: $winFiles');
+debugPrint('📁 Spin path: $_spinSoundPath');
+debugPrint('📁 Win path: $_winSoundPath');
 
     } catch (e) {
       BotToast.showText(text: 'Error downloaded a music');
@@ -121,36 +136,39 @@ class MusicService {
       final response = await http.get(
         Uri.parse('${AppConfigService().workerUrl}/music?action=download&type=$type&file=$fileName'),
       );
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final fileUrl = data['url'];
-        
-        final fileResponse = await http.get(Uri.parse(fileUrl));
-        if (fileResponse.statusCode == 200) {
-          final dir = await getApplicationDocumentsDirectory();
-          final musicDir = Directory('${dir.path}/music');
-          if (!await musicDir.exists()) {
-            await musicDir.create();
-          }
-          final file = File('${musicDir.path}/$fileName');
-          await file.writeAsBytes(fileResponse.bodyBytes);
-          return file.path;
-        }
+      debugPrint('Worker status: ${response.statusCode}');
+
+      if (response.statusCode != 200) {
+        return null;
       }
+
+      final dir = await getApplicationDocumentsDirectory();
+      final musicDir = Directory('${dir.path}/music');
+
+      final justFileName = fileName.split('/').last;
+      final file = File('${musicDir.path}/$justFileName');
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(response.bodyBytes);
+
+      debugPrint('Saved ${file.path}');
+
+      return file.path;
     } catch (e) {
-      debugPrint('Failed to download file: $e');
+      debugPrint('Failed to download: $e');
+      return null;
     }
-    return null;
   }
+    
 
   static Future<void> _playRandomTrack() async {
     if (_tracks.isEmpty) return;
     
     final random = Random();
     _currentTrackIndex = random.nextInt(_tracks.length);
-    final trackName = _tracks[_currentTrackIndex];
+    final fullTrackName = _tracks[_currentTrackIndex];
+    final justFileName = fullTrackName.split('/').last;
     final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/music/$trackName');
+    final file = File('${dir.path}/music/$justFileName');
 
     if (await file.exists()) {
       await _bgPlayer.play(DeviceFileSource(file.path));
@@ -158,11 +176,11 @@ class MusicService {
       _isPlaying = true;
 
       _bgPlayer.onPlayerComplete.listen((event) {
-        debugPrint('rack ended, playing next...')
+        debugPrint('rack ended, playing next...');
         _playRandomTrack();
       });
     } else {
-      debugPrint('File not found: $trackName');
+      debugPrint('File not found: $justFileName');
     }
   }
 
