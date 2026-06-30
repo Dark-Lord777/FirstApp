@@ -38,8 +38,8 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
   @override
   void initState() {
     super.initState();
-    _loadIconVariants();
-    _loadCurrentIcon();
+   // _loadIconVariants();
+  //  _loadCurrentIcon();
   }
 
   Future<void> _loadCurrentIcon() async {
@@ -100,6 +100,8 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                     padding: const EdgeInsets.all(16),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
+
+                  /*
                         const Align(
                           alignment: Alignment.centerLeft,
                           child: Padding(
@@ -134,7 +136,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                               },
                             ),
                           ),
-                        Divider(color: Colors.purple.shade300),
+                        Divider(color: Colors.purple.shade300), */ 
 
                         const SizedBox(height: 24),
                         const Align(

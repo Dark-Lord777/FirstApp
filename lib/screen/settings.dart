@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:wheel_of_fortune/services/app_config_service.dart';
+import 'package:wheel_of_fortune/services/icon_catalog_service.dart';
+import 'package:wheel_of_fortune/widgets/menu/change_icon.dart';
+import 'package:wheel_of_fortune/services/music_service.dart';
+
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,14 +20,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _winSoundEnabled = true;
   bool _backgroundMusicEnabled = true;
 
+  List<Map<String, dynamic>> _iconVariants = [];
+  bool _isLoading = true;
+  String _currentIcon = 'default';
+
   @override
   void initState() {
   super.initState();
+    _loadIconVariants();
+    _loadCurrentIcon();
   _starsEnabled = AppConfigService().starsEnabled;
   _spinSoundEnabled = AppConfigService().spinSoundEnabled;
   _winSoundEnabled = AppConfigService().winSoundEnabled;
   _backgroundMusicEnabled = AppConfigService().backgroundMusicEnabled;
   }
+    Future<void> _loadCurrentIcon() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currentIcon = prefs.getString('currentIcon') ?? 'default';
+    });
+  }
+
+  Future<void> _loadIconVariants() async {
+    final variants = await IconCatalogService.getIconVariants();
+    setState(() {
+      _iconVariants = variants;
+      _isLoading = false;
+    });
+  }
+
   @override 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,6 +65,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
           children: [
+
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 8, bottom: 8),
+                            child: Text(
+                              'App Icon',
+                              style: TextStyle(color: Colors.purple, fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                        if (_isLoading)
+                          const Center(child: CircularProgressIndicator())
+                        else
+                          SizedBox(
+                            height: 100,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _iconVariants.length,
+                              separatorBuilder: (_, __) => const SizedBox(width: 16),
+                              itemBuilder: (context, index) {
+                                final variant = _iconVariants[index];
+                                final String id = variant['id'];
+                                final String displayName = variant['displayName'] ?? id;
+                                final String imagePath = 'assets/bee_dynamic_launcher/icons/ic_${id}.png';
+                                
+                                return ChangeIconBtn(
+                                  iconName: id,
+                                  label: displayName,  
+                                  previewImagePath: imagePath,
+                                  isActive: _currentIcon == id,
+                                );
+                              },
+                            ),
+                          ),
+                        Divider(color: Colors.purple.shade300), 
+
         //  const SizedBox(height: 16),
             const Text (
               'Music',
@@ -58,6 +122,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() {
                     _spinSoundEnabled = value;
                     AppConfigService().spinSoundEnabled = value;
+                    if (!value) {
+                      MusicService.stopMusic();
+                    } else {
+                      MusicService.loadMusic(context: context);
+                    }
                     });
                   },
                 activeColor: Colors.purple,
@@ -83,6 +152,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() {
                     _winSoundEnabled = value;
                     AppConfigService().winSoundEnabled = value;
+                    if (!value) {
+                      MusicService.stopMusic();
+                    } else {
+                      MusicService.loadMusic(context: context);
+                    }
+
                     });
                   },
                 activeColor: Colors.purple,
@@ -114,6 +189,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() {
                     _backgroundMusicEnabled = value;
                     AppConfigService().backgroundMusicEnabled = value;
+                    if (!value) {
+                      MusicService.stopMusic();
+                    } else {
+                      MusicService.loadMusic(context: context);
+                    }
+
                     });
                   },
                 activeColor: Colors.purple,
