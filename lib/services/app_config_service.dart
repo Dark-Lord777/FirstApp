@@ -96,6 +96,31 @@ class AppConfigService {
     await _loadFromLocalPrefs();
     await _fetchRemoteConfig();
   }
+  
+  // В конец класса AppConfigService, перед последней скобкой }
+
+  void resetToDefaults() {
+    _starsEnabled = false;
+    _spinSoundEnabled = true;
+    _winSoundEnabled = true;
+    _backgroundMusicEnabled = true;
+    _forceUpdate = false;
+    _musicReason = '';
+    
+    // Также можно сбросить кешированные значения
+    _appVersion = '0';
+    _titleText = 'Are you lucky today?';
+    
+    // Сохраняем в SharedPreferences
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('stars_enabled', _starsEnabled);
+      prefs.setBool('spin_sound_enabled', _spinSoundEnabled);
+      prefs.setBool('win_sound_enabled', _winSoundEnabled);
+      prefs.setBool('background_music_enabled', _backgroundMusicEnabled);
+      prefs.setBool('force_update', _forceUpdate);
+      prefs.setString('music_reason', _musicReason);
+    });
+  }
 
   Future<void> _loadFromLocalPrefs() async {
     try {

@@ -420,6 +420,22 @@ class MusicService {
     debugPrint("-----------------------------");
   }
 
+  // ===== ОЧИСТКА КЕША МУЗЫКИ =====
+static Future<void> clearMusicCache() async {
+  try {
+    final dir = await _musicDirectory();
+    if (await dir.exists()) {
+      await dir.delete(recursive: true);
+      debugPrint('🗑️ Music cache cleared');
+    }
+    _musicLoaded = false;
+    _backgroundTracks.clear();
+    _sounds.clear();
+  } catch (e) {
+    debugPrint('Error clearing music cache: $e');
+  }
+}
+
   // ===== DIALOG =====
   static Future<void> _showDeleteDialog(
     String reason,

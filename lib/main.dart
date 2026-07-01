@@ -15,6 +15,8 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
+
 
 // Глобальный доступ к navigatorKey (нужен для GameEventsService)
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -22,6 +24,15 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+   // НАЧАЛО ВСТАВКИ: убираем белую полосу снизу (исправленный регистр букв)
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent, // Делаем панель прозрачной
+    systemNavigationBarDividerColor: Colors.transparent, // Убираем разделитель
+    systemNavigationBarIconBrightness: Brightness.light, // Иконки будут светлыми
+  ));
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge); // Разрешаем приложению заходить под полоску
+  // КОНЕЦ ВСТАВКИ
+ 
   try {
     await Firebase.initializeApp();
     debugPrint('Firebase initialized succesfully');

@@ -3,9 +3,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:bot_toast/bot_toast.dart';
+
 
 import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
+
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -144,7 +147,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 28),
                   child: Transform.translate(
-                    offset: const Offset(0, -40), // 👈 ПОДНЯТЬ ВСЁ ВВЕРХ
+                    offset: const Offset(0, 10), // 
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -222,7 +225,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           ),
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 40),
 
                         // ===== ЗАГОЛОВОК =====
                         FadeTransition(
@@ -361,7 +364,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                             ),
                                           )
                                         : const Text(
-                                            'Continue 🚀',
+                                            'Continue',
                                             style: TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.w600,
@@ -385,49 +388,52 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             ),
                           ),
                         ),
-
-                        // ===== ПРИЖИМАЕМ ПОДПИСЬ К НИЗУ =====
                         const Spacer(),
-
                         // ===== ПОДПИСЬ =====
                         FadeTransition(
                           opacity: _fadeIn,
                           child: Padding(
                             padding: const EdgeInsets.only(bottom: 16),
-                            child: Wrap(
-                              alignment: WrapAlignment.center,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 4,
-                              runSpacing: 4,
-                              children: [
-                                Text(
-                                  'By clicking "Continue" you agree to the',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.white.withOpacity(0.3),
-                                  ),
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white.withOpacity(0.3),
                                 ),
-                                GestureDetector(
-                                  onTap: () => _launchUrl(
-                                      AppConfigService().termsUrl),
-                                  child: Text(
-                                    'Terms',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.purpleAccent,
-                                      fontWeight: FontWeight.bold,
-                                      decoration: TextDecoration.underline,
+                                children: [
+                                  const TextSpan(
+                                    text: 'By clicking "Continue" you agree to the ',
+                                  ),
+                                  WidgetSpan(
+                                    alignment: PlaceholderAlignment.baseline,
+                                    baseline: TextBaseline.alphabetic,
+                                    child: GestureDetector(
+                                      behavior: HitTestBehavior.translucent,
+                                      onTap: () => _launchUrl(
+                                          AppConfigService().termsUrl),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 10,
+                                        ), // Расширяем невидимую зону клика
+                                        child: const Text(
+                                          'Terms',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.purpleAccent,
+                                            fontWeight: FontWeight.bold,
+                                            decoration: TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  'of use',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.white.withOpacity(0.3),
+                                  const TextSpan(
+                                    text: ' of use',
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -472,29 +478,63 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   // ===== МЕТОДЫ =====
-
-  Future<void> _launchUrl(String url) async {
+    
+    Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
     try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.platformDefault);
-      }
+      await launchUrl(uri, mode: LaunchMode.platformDefault);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Cannot open link'),
-            backgroundColor: Colors.red.shade900,
-          ),
-        );
-      }
+      BotToast.showCustomText(
+        duration: const Duration(seconds: 3),
+        align: const Alignment(0, -0.8),
+        toastBuilder: (cancelFunc) {
+          return Card(
+            color: Colors.red.shade900,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Text(
+                'Cannot open link',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          );
+        },
+      );
     }
   }
 
-  Future<void> _handleAuth() async {
+    Future<void> _handleAuth() async {
     final nick = _nickController.text.trim();
     if (nick.isEmpty) {
-      _showError('Enter a nickname');
+      BotToast.showCustomText(
+        duration: const Duration(seconds: 2),
+        align: const Alignment(0, -0.3), // Вылетит сверху
+        toastBuilder: (cancelFunc) {
+          return Card(
+            color: const Color(0xFF4A148C), // Фиолетовый под стиль Wheel
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Colors.purpleAccent, width: 1),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Text(
+                'Enter a nickname',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          );
+        },
+      );
       return;
     }
 
@@ -505,11 +545,32 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       await prefs.setString('user_nickname', nick);
       await _goToWheel();
     } catch (e) {
-      _showError('Error: $e');
+      BotToast.showCustomText(
+        duration: const Duration(seconds: 3),
+        align: const Alignment(0, -0.8),
+        toastBuilder: (cancelFunc) {
+          return Card(
+            color: Colors.red.shade900,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Text(
+                'Error: $e',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          );
+        },
+      );
     } finally {
       setState(() => _isLoading = false);
     }
   }
+
 
   Future<void> _handleGuest() async {
     final guestNick = 'Guest_${DateTime.now().millisecondsSinceEpoch % 10000}';

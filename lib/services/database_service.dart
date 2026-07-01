@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
@@ -107,4 +108,18 @@ class DatabaseService {
     }
     return deviceId;
   }
+  // В конец класса DatabaseService
+
+// ===== ОЧИСТКА ВСЕХ ДАННЫХ =====
+Future<void> clearAllData() async {
+  try {
+    final db = await database;
+    await db.delete('spins');
+    await db.delete('sectors');
+    await db.delete('events');
+    debugPrint('🗑️ All database tables cleared');
+  } catch (e) {
+    debugPrint('Error clearing database: $e');
+  }
+}
 }
