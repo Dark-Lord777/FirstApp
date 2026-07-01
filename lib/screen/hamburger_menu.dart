@@ -27,7 +27,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
   Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await launchUrl(uri, mode: LaunchMode.platformDefault);
     } catch (e) {
       if (mounted) {
         BotToast.showText(text: "Cannot open link");

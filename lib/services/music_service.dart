@@ -1,310 +1,669 @@
 import 'dart:convert';
-import 'dart:math';
 import 'dart:io';
+import 'dart:math';
+
 import 'package:audioplayers/audioplayers.dart';
+import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:bot_toast/bot_toast.dart';
-
 
 import 'package:wheel_of_fortune/services/app_config_service.dart';
-import 'package:wheel_of_fortune/widgets/modalka.dart';
 import 'package:wheel_of_fortune/widgets/base_anim_btn.dart';
 
-
 class MusicService {
-  static final AudioPlayer __backgroundPlayer = AudioPlayer(); 
+
+  // players
+
+  static final AudioPlayer _backgroundPlayer = AudioPlayer();
   static final AudioPlayer _effectPlayer = AudioPlayer();
 
-  static bool _initializated = false;
-  static bool _musicLoaded = false;
-  static String _musicVersion = "";
-  static List<String> _tracks = [];
-  static String? _spinSoundPath;
-  static String? _winSoundPath;
-  
+  // state
 
-  static Future<void> loadMusic({required BuildContext context}) async {
+  static bool _initialized = false;
+  static bool _musicLoaded = false;
+  static bool _isDownloading = false;
+
+  static String _musicVersion = "";
+
+  static final Random _random = Random();
+
+  // local cache
+
+  static final List<String> _backgroundTracks = [];
+
+  static final Map<String, String> _sounds = {};
+
+  // ============================================================
+  // Public API
+  // ============================================================
+
+  static Future<void> initialize({
+    required BuildContext context,
+  }) async {
+
+    if (_initialized) {
+      return;
+    }
+
+    _initialized = true;
+
+    _backgroundPlayer.onPlayerComplete.listen((_) {
+      _playRandomBackground();
+    });
+
+    await loadMusic(context: context);
+  }
+
+  static Future<void> loadMusic({
+    required BuildContext context,
+  }) async {
+
+    if (_musicLoaded) {
+      debugPrint("Music already loaded");
+      return;
+    }
+
+    if (_isDownloading) {
+      debugPrint("Music download already running");
+      return;
+    }
+
+    _isDownloading = true;
+
     try {
-      
-      if (_musicLoaded) {
-        debugPrint('Music already loaded');
-        return;
-      }
-      _initializated = true;
-      __backgroundPlayer.onPlayerComplete.listen((_) {
-        debugPrint('Track completed');
-        _playRandomTrack();
-      });
-//check background music 
+
       if (!AppConfigService().backgroundMusicEnabled) {
         await stopMusic();
         return;
       }
-      final dir = await getApplicationDocumentsDirectory();
-      final musicDir = Directory('${dir.path}/music');
-      final bool isFirstDownload = !await musicDir.exists();
-      
-      if (!await musicDir.exists()) {
-        await musicDir.create(recursive: true);
-        final files = await musicDir.list().toList();
-        debugPrint('Files in music/: $files');
-      } else {
-        debugPrint('music/ folder does not exist');
-      }
-      if (isFirstDownload) {
-        BotToast.showText(text: 'Download a music...');
-      }
-      
-//check a function delete tracks
-      
-      final forceUpdate = AppConfigService().forceUpdate;
-      final reason = AppConfigService().musicReason;
-      if (forceUpdate) {
-        await _showDeleteDialog(reason, context);
-        await _downloadAllMusic(context);
-        //rm flag as don't remove music on the other try
-        await _resetForceUpdateFlag();
-        return;
+
+      final musicFolder = await _musicDirectory();
+
+      final firstStart = !await musicFolder.exists();
+
+      if (firstStart) {
+
+        await musicFolder.create(recursive: true);
+
+        BotToast.showText(
+          text: "Downloading music...",
+        );
       }
 
-//check a background Music
-      final bgFiles = await _getFileList('bg');
-      if (bgFiles.isNotEmpty) {
-        for (var file in bgFiles) {
-          final fileName = file['name'];
-          final dir = await getApplicationDocumentsDirectory();
-          final localFile = File('${dir.path}/music/$fileName');
-          if (!await localFile.exists()) {
-            await _downloadFileViaWorker('bg', fileName);
-          }
-        }
-        _tracks = bgFiles.map((file) => file['name'] as String).toList();
-        await _playRandomTrack();
-      }
+      await _checkForceUpdate(context);
 
-//check a spin music 
-      final spinFiles = await _getFileList('spin');
-      if (spinFiles.isNotEmpty) {
-        final fileName = spinFiles.first['name'];
-        final justFileName = fileName.split('/').last;
-        final dir = await getApplicationDocumentsDirectory();
-        final localFile = File('${dir.path}/music/$fileName');
-        if (!await localFile.exists()) {
-          _spinSoundPath = await _downloadFileViaWorker('spin', fileName);
-        } else {
-          _spinSoundPath = localFile.path;
-        }
-      }
+      await _loadBackgroundMusic();
 
-//check a win music 
-      final winFiles = await _getFileList('win');
-      if (winFiles.isNotEmpty) {
-        final fileName = winFiles.first['name'];
-        final justFileName = fileName.split('/').last;
-        final dir = await getApplicationDocumentsDirectory();
-        final localFile = File('${dir.path}/music/$fileName');
-        if (!await localFile.exists()) {
-          _winSoundPath = await _downloadFileViaWorker('win', fileName);
-        } else {
-          _winSoundPath = localFile.path;
-        }
-      }
-       if (isFirstDownload && _tracks.isNotEmpty) {
-          BotToast.showText(text: 'Music was downloaded');
-        }
-      //logs temporary 
-      debugPrint('📁 BG Files: $bgFiles');
-      debugPrint('📁 Spin Files: $spinFiles');
-      debugPrint('📁 Win Files: $winFiles');
-      debugPrint('📁 Spin path: $_spinSoundPath');
-      debugPrint('📁 Win path: $_winSoundPath');
+      await _loadEffects();
+
       _musicLoaded = true;
-    } catch (e) {
-      BotToast.showText(text: 'Error downloaded a music');
-      debugPrint('Music service error: $e');
-    }
-  }
 
-  static Future<List<Map<String, dynamic>>> _getFileList(String type) async {
-    try {
-      final response = await http.get(
-        Uri.parse('${AppConfigService().workerUrl}/music?action=check&type=$type'),
-      );
-      if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
-      }
-    } catch (e) {
-      debugPrint('Failed to get file list: $e');
-    }
-    return [];
-  }
+      if (firstStart && _backgroundTracks.isNotEmpty) {
 
-  static Future<String?> _downloadFileViaWorker(String type, String fileName) async {
-    try {
-      final response = await http.get(
-        Uri.parse('${AppConfigService().workerUrl}/music?action=download&type=$type&file=$fileName'),
-      );
-      debugPrint('Worker status: ${response.statusCode}');
-
-      if (response.statusCode != 200) {
-        return null;
+        BotToast.showText(
+          text: "Music downloaded",
+        );
       }
 
-      final dir = await getApplicationDocumentsDirectory();
-      final musicDir = Directory('${dir.path}/music');
+      debugPrint("Music initialized");
 
-      final justFileName = fileName.split('/').last;
-      final file = File('${musicDir.path}/$justFileName');
-      await file.parent.create(recursive: true);
-      await file.writeAsBytes(response.bodyBytes);
-
-      debugPrint('Saved ${file.path}');
-
-      return file.path;
     } catch (e) {
-      debugPrint('Failed to download: $e');
-      return null;
+
+      debugPrint(e.toString());
+
+      BotToast.showText(
+        text: "Music loading failed",
+      );
+
+    } finally {
+
+      _isDownloading = false;
+
     }
   }
-  
-  static Future<void> stopSpinSound() async {
-    await _effectPlayer.stop();
-  }
 
-  static Future<void> _playRandomTrack() async {
-    if (_tracks.isEmpty) {
-      debugPrint('No tracks');
+  static Future<void> play(String sound) async {
+
+    final path = _sounds[sound];
+
+    if (path == null) {
+      debugPrint("Unknown sound: $sound");
       return;
     }
-    
-    final random = Random();
-    final fileName = _tracks[random.nextInt(_tracks.length)];
-    final justFileName = fileName.split('/').last;
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/music/$justFileName');
 
-    if (!await file.exists()) {
-      debugPrint('Track not found ${file.path}');
-      return;
-    } 
-    await __backgroundPlayer.stop();
-    await __backgroundPlayer.play(DeviceFileSource(file.path));
-    await __backgroundPlayer.setVolume(1);
+    try {
+
+      await _effectPlayer.stop();
+
+      await _effectPlayer.play(
+        DeviceFileSource(path),
+      );
+
+      await _effectPlayer.setVolume(1);
+
+    } catch (e) {
+
+      debugPrint(e.toString());
+
+    }
 
   }
 
   static Future<void> playSpinSound() async {
-    if (_spinSoundPath != null) {
-      await _effectPlayer.play(DeviceFileSource(_spinSoundPath!));
-      _effectPlayer.setVolume(1.0);
-    }
+
+    await play("spin");
+
   }
 
   static Future<void> playWinSound() async {
-    if (_winSoundPath != null) {
-      await _effectPlayer.play(DeviceFileSource(_winSoundPath!));
-      _effectPlayer.setVolume(1.0);
-    }
+
+    await play("win");
+
   }
 
-  static Future<void> setBackgroundVolume(double volume) async {
-    await _backgroundPlayer.setVolume(volume);
+  static Future<void> stopSpinSound() async {
+
+    await _effectPlayer.stop();
+
   }
 
   static Future<void> stopMusic() async {
+
     await _backgroundPlayer.stop();
     await _effectPlayer.stop();
+
+  }
+
+  static Future<void> setBackgroundVolume(
+    double volume,
+  ) async {
+
+    await _backgroundPlayer.setVolume(volume);
+
   }
 
   static void dispose() {
+
     _backgroundPlayer.dispose();
     _effectPlayer.dispose();
+
   }
 
+  // Background music
 
-  static Future<void> _showDeleteDialog(String reason, BuildContext context) async {
-    return showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF2A1A3A), Color(0xFF1A1A2E)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 30,
-                  spreadRadius: 5,
-                ),
-                BoxShadow(
-                  color: Color(0xFFB874EC).withOpacity(0.2),
-                  blurRadius: 20,
-                  spreadRadius: -5,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 48),
-                const SizedBox(height: 16),
-                const Text(
-                  'Update a music',
-                  style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  reason,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: BaseAnimatedButton(
-                    text: 'Continue',
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    gradientColors: [Color(0xFFB874EC), Color(0xFF7D41B8)],
-                    textColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  static Future<void> _loadBackgroundMusic() async {
 
-  static Future<void> _resetForceUpdateFlag() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('force_update_done', true);
-  }
+    _backgroundTracks.clear();
 
-  static Future<void> _downloadAllMusic(BuildContext context) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final musicDir = Directory('${dir.path}/music');
-    if (await musicDir.exists()) {
-      await musicDir.delete(recursive: true);
+    final files = await _getFileList("bg");
+
+    if (files.isEmpty) {
+      debugPrint("No background music");
+      return;
     }
-    await loadMusic(context: context);
+
+    for (final item in files) {
+
+      final name = item["name"] as String;
+
+      final path = await _ensureDownloaded(
+        type: "bg",
+        fileName: name,
+      );
+
+      if (path != null) {
+        _backgroundTracks.add(path);
+      }
+
+    }
+
+    if (_backgroundTracks.isNotEmpty) {
+      await _playRandomBackground();
+    }
+
+  }
+
+  static Future<void> _playRandomBackground() async {
+
+    if (_backgroundTracks.isEmpty) {
+      return;
+    }
+
+    final path =
+        _backgroundTracks[_random.nextInt(_backgroundTracks.length)];
+
+    final file = File(path);
+
+    if (!await file.exists()) {
+
+      debugPrint("Missing music file");
+
+      return;
+
+    }
+
+    try {
+
+      await _backgroundPlayer.stop();
+
+      await _backgroundPlayer.play(
+        DeviceFileSource(path),
+      );
+
+      await _backgroundPlayer.setVolume(1);
+
+    } catch (e) {
+
+      debugPrint(e.toString());
+
+    }
+
+  }
+
+  // Effects
+
+  static Future<void> _loadEffects() async {
+
+    await _loadEffect("spin");
+    await _loadEffect("win");
+
+  }
+
+  static Future<void> _loadEffect(
+    String type,
+  ) async {
+
+    final files = await _getFileList(type);
+
+    if (files.isEmpty) {
+
+      debugPrint("$type effect not found");
+
+      return;
+
+    }
+
+    final name = files.first["name"] as String;
+
+    final path = await _ensureDownloaded(
+
+      type: type,
+
+      fileName: name,
+
+    );
+
+    if (path != null) {
+
+      _sounds[type] = path;
+
+    }
+
+  }
+
+  // Download
+
+  static Future<String?> _ensureDownloaded({
+
+    required String type,
+
+    required String fileName,
+
+  }) async {
+
+    final directory = await _musicDirectory();
+
+    final localName = fileName.split("/").last;
+
+    final file = File(
+      "${directory.path}/$localName",
+    );
+
+    if (await file.exists()) {
+
+      return file.path;
+
+    }
+
+    return await _downloadFile(
+
+      type: type,
+
+      fileName: fileName,
+
+    );
+
+  }
+
+  static Future<String?> _downloadFile({
+
+    required String type,
+
+    required String fileName,
+
+  }) async {
+
+    try {
+
+      final response = await http.get(
+
+        Uri.parse(
+          "${AppConfigService().workerUrl}"
+          "/music?action=download"
+          "&type=$type"
+          "&file=$fileName",
+        ),
+
+      );
+
+      if (response.statusCode != 200) {
+
+        debugPrint(
+          "Download failed $fileName",
+        );
+
+        return null;
+
+      }
+
+      final directory = await _musicDirectory();
+
+      final localName = fileName.split("/").last;
+
+      final file = File(
+        "${directory.path}/$localName",
+      );
+
+      await file.parent.create(
+        recursive: true,
+      );
+
+      await file.writeAsBytes(
+        response.bodyBytes,
+      );
+
+      debugPrint("Downloaded $localName");
+
+      return file.path;
+
+    } catch (e) {
+
+      debugPrint(e.toString());
+
+      return null;
+
+    }
+
+  }
+
+  static Future<List<Map<String, dynamic>>> _getFileList(
+    String type,
+  ) async {
+
+    try {
+
+      final response = await http.get(
+
+        Uri.parse(
+          "${AppConfigService().workerUrl}"
+          "/music?action=check"
+          "&type=$type",
+        ),
+
+      );
+
+      if (response.statusCode != 200) {
+
+        return [];
+
+      }
+
+      return List<Map<String, dynamic>>.from(
+
+        jsonDecode(response.body),
+
+      );
+
+    } catch (e) {
+
+      debugPrint(e.toString());
+
+      return [];
+
+    }
+
+  }
+
+  // Cache
+
+  static Future<Directory> _musicDirectory() async {
+
+    final dir = await getApplicationDocumentsDirectory();
+
+    return Directory("${dir.path}/music");
+
+  }
+
+  static Future<void> _loadCache() async {
+
+    final prefs = await SharedPreferences.getInstance();
+
+    _musicVersion = prefs.getString("music_version") ?? "";
+
+  }
+
+  static Future<void> _saveMusicVersion(
+    String version,
+  ) async {
+
+    _musicVersion = version;
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString(
+      "music_version",
+      version,
+    );
+
+  }
+
+  // Force update
+
+  static Future<void> _checkForceUpdate(
+    BuildContext context,
+  ) async {
+
+    if (!AppConfigService().forceUpdate) {
+      return;
+    }
+
+    final reason = AppConfigService().musicReason;
+
+    await _showDeleteDialog(
+      reason,
+      context,
+    );
+
+    await _deleteAllMusic();
+
+    _backgroundTracks.clear();
+    _sounds.clear();
+
+  }
+
+  static Future<void> _deleteAllMusic() async {
+
+    final dir = await _musicDirectory();
+
+    if (await dir.exists()) {
+
+      await dir.delete(
+        recursive: true,
+      );
+
+    }
+
+    await dir.create(
+      recursive: true,
+    );
+
+  }
+
+  // Debug
+
+  static void printState() {
+
+    debugPrint("----------- MUSIC -----------");
+
+    debugPrint("initialized : $_initialized");
+
+    debugPrint("loaded      : $_musicLoaded");
+
+    debugPrint("version     : $_musicVersion");
+
+    debugPrint("tracks      : ${_backgroundTracks.length}");
+
+    debugPrint("effects     : ${_sounds.keys.toList()}");
+
+    debugPrint("-----------------------------");
+
+  }
+
+  // Dialog
+
+  static Future<void> _showDeleteDialog(
+    String reason,
+    BuildContext context,
+  ) async {
+
+    return showDialog(
+
+      context: context,
+
+      barrierDismissible: false,
+
+      builder: (_) {
+
+        return Dialog(
+
+          backgroundColor: Colors.transparent,
+
+          child: Container(
+
+            padding: const EdgeInsets.all(24),
+
+            decoration: BoxDecoration(
+
+              gradient: const LinearGradient(
+
+                colors: [
+
+                  Color(0xFF2A1A3A),
+
+                  Color(0xFF1A1A2E),
+
+                ],
+
+              ),
+
+              borderRadius: BorderRadius.circular(24),
+
+            ),
+
+            child: Column(
+
+              mainAxisSize: MainAxisSize.min,
+
+              children: [
+
+                const Icon(
+                  Icons.music_note,
+                  color: Colors.orange,
+                  size: 46,
+                ),
+
+                const SizedBox(height: 16),
+
+                const Text(
+
+                  "Music update",
+
+                  style: TextStyle(
+
+                    color: Colors.white,
+
+                    fontWeight: FontWeight.bold,
+
+                    fontSize: 22,
+
+                  ),
+
+                ),
+
+                const SizedBox(height: 14),
+
+                Text(
+
+                  reason,
+
+                  textAlign: TextAlign.center,
+
+                  style: const TextStyle(
+
+                    color: Colors.white70,
+
+                    fontSize: 16,
+
+                  ),
+
+                ),
+
+                const SizedBox(height: 20),
+
+                SizedBox(
+
+                  width: double.infinity,
+
+                  child: BaseAnimatedButton(
+
+                    text: "Continue",
+
+                    onPressed: () {
+
+                      Navigator.pop(context);
+
+                    },
+
+                    gradientColors: const [
+
+                      Color(0xFFB874EC),
+
+                      Color(0xFF7D41B8),
+
+                    ],
+
+                    textColor: Colors.white,
+
+                  ),
+
+                ),
+
+              ],
+
+            ),
+
+          ),
+
+        );
+
+      },
+
+    );
+
   }
 
 }
+

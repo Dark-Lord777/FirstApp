@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/services/icon_catalog_service.dart';
 import 'package:wheel_of_fortune/widgets/menu/change_icon.dart';
 import 'package:wheel_of_fortune/services/music_service.dart';
+import 'package:wheel_of_fortune/services/game_message.dart';
 
 
 class SettingsScreen extends StatefulWidget {
@@ -118,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: TextStyle(color: Colors.white54, fontSize: 12),
                 ),
                 value: _spinSoundEnabled,
-                onChanged: (value) {
+                onChanged: (value) async {
                   setState(() {
                     _spinSoundEnabled = value;
                     AppConfigService().spinSoundEnabled = value;
@@ -148,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: TextStyle(color: Colors.white54, fontSize: 12),
                 ),
                 value: _winSoundEnabled,
-                onChanged: (value) {
+                onChanged: (value) async {
                   setState(() {
                     _winSoundEnabled = value;
                     AppConfigService().winSoundEnabled = value;
@@ -185,18 +188,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
 
                 value: _backgroundMusicEnabled,
-                onChanged: (value) {
+                onChanged: (value) async {
                   setState(() {
                     _backgroundMusicEnabled = value;
                     AppConfigService().backgroundMusicEnabled = value;
+                  });
                     if (!value) {
                       MusicService.stopMusic();
+                      if (!await GameMessage.wasShown("music_disabled")) {
+                      
+                      await GameMessage.show(
+                        context: context,
+                        title: "Really? You turned off the music? 🥲",
+                        text: "Vote for your favourite tracks in my Telegram channel and help improve the soundtrack!",
+                        icon: MessageIcon.warning,
+                        gradient: MessageGradient.dark,
+                        alignment: MessageButtonsAlignment.spaceBetween,
+                        buttons: [
+                          MessageButton.tgchannel(),
+                          MessageButton.continueButton(),
+                        ],
+                      );
+                      await GameMessage.markShown("music_disabled");
+                      }
                     } else {
                       MusicService.loadMusic(context: context);
                     }
-
-                    });
-                  },
+                 },
                 activeColor: Colors.purple,
                 secondary: Icon(
                   _backgroundMusicEnabled ? Icons.volume_up : Icons.volume_off,
