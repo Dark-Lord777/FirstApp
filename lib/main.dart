@@ -4,7 +4,8 @@ import 'package:wheel_of_fortune/services/user_id_service.dart';
 import 'package:wheel_of_fortune/services/notification_service.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/services/music_service.dart';
-import 'package:wheel_of_fortune/services/game_events.dart'; // <-- ДОБАВИТЬ
+import 'package:wheel_of_fortune/services/game_events.dart'; 
+import 'package:wheel_of_fortune/screen/welcome.dart';
 
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
@@ -125,7 +126,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       theme: ThemeData.dark(),
-      home: const WheelScreen(),
+      home: const WelcomeScreen(),
       builder: (context, child) {
         child = BotToastInit()(context, child);
         return child;

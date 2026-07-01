@@ -7,6 +7,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 class UserIdService {
   static const String _uuidKey = 'user_uuid';
   static const String _deviceIdKey = 'device_id';
+  static const String _nickKey = 'user_nikname';
 
   static Future<String> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -53,5 +54,13 @@ class UserIdService {
       'userId': userId,
       'deviceId': deviceId,
     };
+  }
+  static Future<String> getNickname() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_nickKey) ?? 'Guest';
+  }
+    static Future<void> setNickname(String nick) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_nickKey, nick);
   }
 }
