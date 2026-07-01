@@ -100,3 +100,4 @@ plugins/**/android/src/test/
 plugins/**/android/src/main/res/mipmap-*
 android/app/src/main/res/mipmap-*/
 
+ android/app/google-services.json

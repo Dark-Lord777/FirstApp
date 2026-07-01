@@ -70,14 +70,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
 
                         const Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 8, bottom: 8),
+                          alignment: Alignment.center,
+             //             child: Padding(
+                           // padding: EdgeInsets.only(left: 8, bottom: 8),
                             child: Text(
                               'App Icon',
-                              style: TextStyle(color: Colors.purple, fontSize: 14, fontWeight: FontWeight.bold),
+                              style: TextStyle(color: Colors.white, fontSize: 16),
                             ),
-                          ),
+                        //  ),
                         ),
                         if (_isLoading)
                           const Center(child: CircularProgressIndicator())
@@ -125,11 +125,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() {
                     _spinSoundEnabled = value;
                     AppConfigService().spinSoundEnabled = value;
+                    MusicService.setSpinSoundEnabled(value);
+                    /*
                     if (!value) {
                       MusicService.stopMusic();
                     } else {
                       MusicService.loadMusic(context: context);
                     }
+                    */ 
                     });
                   },
                 activeColor: Colors.purple,
@@ -155,12 +158,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() {
                     _winSoundEnabled = value;
                     AppConfigService().winSoundEnabled = value;
+                    MusicService.setWinSoundEnabled(value);
+                  /*
                     if (!value) {
                       MusicService.stopMusic();
                     } else {
                       MusicService.loadMusic(context: context);
                     }
-
+                    */ 
                     });
                   },
                 activeColor: Colors.purple,
@@ -212,7 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       await GameMessage.markShown("music_disabled");
                       }
                     } else {
-                      MusicService.loadMusic(context: context);
+                      MusicService.reloadMusic(context: context);
                     }
                  },
                 activeColor: Colors.purple,

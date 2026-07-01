@@ -4,6 +4,7 @@ import 'package:wheel_of_fortune/services/user_id_service.dart';
 import 'package:wheel_of_fortune/services/notification_service.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/services/music_service.dart';
+import 'package:wheel_of_fortune/services/game_events.dart'; // <-- ДОБАВИТЬ
 
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
@@ -14,6 +15,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:audioplayers/audioplayers.dart';
 
+// Глобальный доступ к navigatorKey (нужен для GameEventsService)
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +29,9 @@ void main() async {
   }
 
   await AppConfigService().init(); 
+
+  // ИНИЦИАЛИЗАЦИЯ GameEventsService
+  await GameEventsService().init();
 
   if (kReleaseMode) {
     debugPrint = (String? message, {int? wrapWidth}) {};
@@ -72,10 +78,12 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    
     // Загружаем музыку после инициализации виджета
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadMusic();
@@ -84,7 +92,6 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _loadMusic() async {
     try {
-      // Получаем контекст через navigatorKey или используем context из build
       final context = navigatorKey.currentContext;
       if (context != null) {
         await MusicService.loadMusic(context: context);
@@ -96,8 +103,21 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  // Создаем GlobalKey для доступа к контексту
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || 
+        state == AppLifecycleState.detached) {
+      // Сохраняем всё при сворачивании
+      GameEventsService().endSession();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    GameEventsService().dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

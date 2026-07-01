@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "550027366345",
+    "project_id": "wheel-of-fortune-53eb2",
+    "storage_bucket": "wheel-of-fortune-53eb2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:550027366345:android:36768b733c05490cafa218",
+        "android_client_info": {
+          "package_name": "com.wheel.wheel_of_fortune"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYbfOKa-dmulJGvWcTTm2lawyaPjMU1eA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

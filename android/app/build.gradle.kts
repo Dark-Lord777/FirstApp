@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    id("com.google.gms.google-services")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -29,11 +30,6 @@ android {
         )
     }
 
-    dependencies {
-        implementation("com.google.android.play:core:1.10.3")
-        // Подключаем сам десугаринг через правильный синтаксис функции
-        coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    }
 
     buildTypes {
         release {
@@ -68,6 +64,13 @@ kotlin {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
+    dependencies {
+        implementation(platform("com.google.firebase:firebase-bom:34.15.0"))
+        implementation("com.google.firebase:firebase-analytics")
+        implementation("com.google.android.play:core:1.10.3")
+        // Подключаем сам десугаринг через правильный синтаксис функции
+        coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    }
 
 flutter {
     source = "../.."

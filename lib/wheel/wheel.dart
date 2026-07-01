@@ -64,6 +64,7 @@ class _WheelPainter extends CustomPainter {
         text: TextSpan(
           style: TextStyle(color: Colors.white, fontSize: 16),
           children: [
+            TextSpan(text: "Change the title at the top\n and\n"),
             TextSpan(text: "Click on button\n"),
             TextSpan(
               text: "Add Sectors",

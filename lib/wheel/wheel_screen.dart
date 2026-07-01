@@ -18,6 +18,8 @@ import 'package:wheel_of_fortune/wheel/wheel.dart';
 //import 'package:wheel_of_fortune/widgets/star_background.dart'; 
 import 'package:wheel_of_fortune/widgets/star_field.dart';
 import 'package:wheel_of_fortune/services/music_service.dart';
+import 'package:wheel_of_fortune/services/game_events.dart';
+//import 'package:wheel_of_fortune/./../services/game_events.dart';
 
 
 
@@ -76,6 +78,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
 
     onWin: (String prize) async {
       debugPrint("PRIZE $prize");
+          GameEventsService().recordSpin(prize, true);
       _pulseController.forward().then((_) => _pulseController.reset());
       MusicService.setBackgroundVolume(0.3);
       MusicService.playWinSound();
