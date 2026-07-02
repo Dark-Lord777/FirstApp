@@ -123,6 +123,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    MusicService.setAppLifecycleState(state);
+
     if (state == AppLifecycleState.paused || 
         state == AppLifecycleState.detached) {
       // Сохраняем всё при сворачивании

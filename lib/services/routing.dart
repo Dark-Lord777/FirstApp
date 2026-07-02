@@ -31,12 +31,17 @@ class RoutingService {
     _isGuest = prefs.getBool(_keyIsGuest) ?? false;
     _isRegistered = prefs.getBool(_keyIsRegistered) ?? false;
 
-    if (_nickname != null && _nickname!.isNotEmpty && _isRegistered) {
+    if (_nickname != null && _nickname!.isNotEmpty) {
+      if (_isRegistered) {
       _isRegistered = true;
-    } else {
+    } else  if (_isGuest) {
       _isRegistered = false;
-      _isGuest = false;
+      _isGuest = true;
     }
+  } else {
+    _isRegistered = false;
+    _isGuest = false;
+  }
     _isInitialized = true;
     debugPrint("RoutingService Initialized: registered=$_isRegistered, guest=$_isGuest, nick=$_nickname");
   }
@@ -104,6 +109,7 @@ class RoutingService {
     MaterialPageRoute(builder: (context) => const WheelScreen()),
     );
   }
+
 
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();

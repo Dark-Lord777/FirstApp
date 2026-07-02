@@ -28,6 +28,7 @@ class MusicService {
   static String _musicVersion = "";
 
   static final Random _random = Random();
+  static bool _isAppInBackground = false;
 
   // ===== GETTERS =====
   static bool get spinSoundEnabled => _spinSoundEnabled;
@@ -61,6 +62,7 @@ class MusicService {
 
     _backgroundPlayer.onPlayerComplete.listen((_) {
       debugPrint('Track finished, playing next...');
+      debugPrint('COMPLITE');
       _playRandomBackground();
     });
     _backgroundPlayer.onPlayerStateChanged.listen((state) {
@@ -71,9 +73,6 @@ _backgroundPlayer.onDurationChanged.listen((d) {
   debugPrint("DURATION: $d");
 });
 
-_backgroundPlayer.onPlayerComplete.listen((_) {
-  debugPrint("COMPLETE");
-});
     await loadMusic(context: context);
   }
     
@@ -128,6 +127,11 @@ _backgroundPlayer.onPlayerComplete.listen((_) {
           text: "Music downloaded",
         );
       }
+    
+      //start a music after as app was in background 
+      if (_backgroundTracks.isNotEmpty && !_isAppInBackground) {
+        await _playRandomBackground();
+      }
 
       debugPrint("Music initialized");
     } catch (e) {
@@ -160,6 +164,22 @@ _backgroundPlayer.onPlayerComplete.listen((_) {
       debugPrint(e.toString());
     }
   }
+
+// when your app in background your music playsand this fnc help you 
+
+  static void setAppLifecycleState(AppLifecycleState state) {
+    if (state ==  AppLifecycleState.paused || 
+        state ==  AppLifecycleState.detached) {
+        _isAppInBackground = true;
+        _backgroundPlayer.stop();
+        debugPrint('Music paused (app in background)');
+        } else if (state ==  AppLifecycleState.resumed) {
+          if (_backgroundTracks.isNotEmpty && AppConfigService().backgroundMusicEnabled) {
+          _playRandomBackground();
+          }
+          debugPrint("Music resumed (app in foreground)");
+        }
+      }
 
   static Future<void> playSpinSound() async {
     if (!_spinSoundEnabled) return;
@@ -221,7 +241,7 @@ _backgroundPlayer.onPlayerComplete.listen((_) {
 
     if (_backgroundTracks.isNotEmpty) {
       debugPrint('loaded ${_backgroundTracks.length} tracks');
-      await _playRandomBackground();
+     // await _playRandomBackground();
     }
   }
 
