@@ -7,6 +7,7 @@ import 'package:wheel_of_fortune/services/music_service.dart';
 import 'package:wheel_of_fortune/services/game_events.dart'; 
 import 'package:wheel_of_fortune/services/routing.dart'; 
 import 'package:wheel_of_fortune/screen/welcome.dart';
+import 'package:wheel_of_fortune/screen/splash_screen.dart';
 
 import 'dart:async';
 import 'dart:io' show Platform;
@@ -26,15 +27,8 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-   // НАЧАЛО ВСТАВКИ: убираем белую полосу снизу (исправленный регистр букв)
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    systemNavigationBarColor: Colors.transparent, // Делаем панель прозрачной
-    systemNavigationBarDividerColor: Colors.transparent, // Убираем разделитель
-    systemNavigationBarIconBrightness: Brightness.light, // Иконки будут светлыми
-  ));
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge); // Разрешаем приложению заходить под полоску
   // КОНЕЦ ВСТАВКИ
-    await RoutingService().init();
+ //   await RoutingService().init();
     runApp(const MyApp());
     unawaited(_initializeServices());
 
@@ -46,6 +40,15 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase init failed $e');
   }
+     // НАЧАЛО ВСТАВКИ: убираем белую полосу снизу (исправленный регистр букв)
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent, // Делаем панель прозрачной
+    systemNavigationBarDividerColor: Colors.transparent, // Убираем разделитель
+    systemNavigationBarIconBrightness: Brightness.light, // Иконки будут светлыми
+  ));
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge); // Разрешаем приложению заходить под полоску
+
+      await RoutingService().init();
 
   await AppConfigService().init(); 
 
@@ -145,7 +148,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       theme: ThemeData.dark(),
-      home: RoutingService().getInitialScreen(),
+       home: const SplashScreen(),
+    //  home: RoutingService().getInitialScreen(),
       //home: const RoutingService(),
       builder: (context, child) {
         child = BotToastInit()(context, child);
