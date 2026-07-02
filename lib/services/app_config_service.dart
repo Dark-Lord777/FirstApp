@@ -8,7 +8,7 @@ class AppConfigService {
   factory AppConfigService() => _instance;
   AppConfigService._internal();
 
-//config .json which have on server 
+  // ===== ПОЛЯ =====
   String _workerUrl = 'https://firstapp-backend.dark-lord.workers.dev';
   String _syncUrl = '';
   String _termsUrl = 'https://dark-lord.pages.dev/projects/fortune/terms';
@@ -29,7 +29,12 @@ class AppConfigService {
   bool _winSoundEnabled = true;
   bool _backgroundMusicEnabled = true;
   
-  // getters 
+  bool _starsEnabled = false;
+  
+  // 👇 НОТИФАЙЕР — ЭТО ПОЛЕ КЛАССА!
+  final ValueNotifier<bool> starsNotifier = ValueNotifier(false);
+
+  // ===== ГЕТТЕРЫ =====
   String get workerUrl => _workerUrl;
   String get syncUrl => _syncUrl;
   String get termsUrl => _termsUrl;
@@ -49,13 +54,12 @@ class AppConfigService {
   bool get backgroundMusicEnabled => _backgroundMusicEnabled;
   bool get forceUpdate => _forceUpdate;
   String get musicReason => _musicReason;
-  bool _starsEnabled = false;
   bool get starsEnabled => _starsEnabled;
 
-//setters 
-
+  // ===== СЕТТЕРЫ =====
   set starsEnabled(bool value) {
     _starsEnabled = value;
+    starsNotifier.value = value; // 👈 ОПОВЕЩАЕМ ПОДПИСЧИКОВ
     SharedPreferences.getInstance().then((prefs) {
       prefs.setBool('stars_enabled', value);
     });
@@ -67,24 +71,28 @@ class AppConfigService {
       prefs.setBool('spin_sound_enabled', value);
     });
   }
+  
   set winSoundEnabled(bool value) {
     _winSoundEnabled = value;
     SharedPreferences.getInstance().then((prefs) {
       prefs.setBool('win_sound_enabled', value);
     });
   }
+  
   set backgroundMusicEnabled(bool value) {
     _backgroundMusicEnabled = value;
     SharedPreferences.getInstance().then((prefs) {
       prefs.setBool('background_music_enabled', value);
     });
   }
+  
   set forceUpdate(bool value) {
     _forceUpdate = value;
     SharedPreferences.getInstance().then((prefs) {
       prefs.setBool('force_update', value);
     });
   }
+  
   set musicReason(String value) {
     _musicReason = value;
     SharedPreferences.getInstance().then((prefs) {
@@ -92,26 +100,25 @@ class AppConfigService {
     });
   }
 
+  // ===== ИНИЦИАЛИЗАЦИЯ =====
   Future<void> init() async {
     await _loadFromLocalPrefs();
     await _fetchRemoteConfig();
+    starsNotifier.value = _starsEnabled; // 👈 СИНХРОНИЗИРУЕМ
   }
-  
-  // В конец класса AppConfigService, перед последней скобкой }
 
+  // ===== СБРОС =====
   void resetToDefaults() {
     _starsEnabled = false;
+    starsNotifier.value = false;
     _spinSoundEnabled = true;
     _winSoundEnabled = true;
     _backgroundMusicEnabled = true;
     _forceUpdate = false;
     _musicReason = '';
-    
-    // Также можно сбросить кешированные значения
     _appVersion = '0';
     _titleText = 'Are you lucky today?';
     
-    // Сохраняем в SharedPreferences
     SharedPreferences.getInstance().then((prefs) {
       prefs.setBool('stars_enabled', _starsEnabled);
       prefs.setBool('spin_sound_enabled', _spinSoundEnabled);
@@ -122,6 +129,7 @@ class AppConfigService {
     });
   }
 
+  // ===== ЗАГРУЗКА ИЗ ЛОКАЛЬНОГО ХРАНИЛИЩА =====
   Future<void> _loadFromLocalPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -144,6 +152,7 @@ class AppConfigService {
     }
   }
 
+  // ===== ЗАГРУЗКА С СЕРВЕРА =====
   Future<void> _fetchRemoteConfig() async {
     try {
       final response = await http.get(
@@ -153,7 +162,6 @@ class AppConfigService {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> config = jsonDecode(response.body);
-        
         final String serverVersion = config['version']?.toString() ?? '0';
 
         if (serverVersion != _appVersion) {
@@ -164,7 +172,6 @@ class AppConfigService {
           _tgChannel = config['tgChannel'] ?? _tgChannel;
           _donateUrl = config['donateUrl'] ?? _donateUrl;
           _appVersion = serverVersion;
-          
 
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('cached_terms_url', _termsUrl);

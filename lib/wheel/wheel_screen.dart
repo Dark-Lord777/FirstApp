@@ -15,13 +15,58 @@ import 'package:wheel_of_fortune/widgets/spin_btn.dart';
 import 'package:wheel_of_fortune/widgets/star.dart';
 import 'package:wheel_of_fortune/wheel/logic.dart';
 import 'package:wheel_of_fortune/wheel/wheel.dart';
-//import 'package:wheel_of_fortune/widgets/star_background.dart'; 
 import 'package:wheel_of_fortune/widgets/star_field.dart';
 import 'package:wheel_of_fortune/services/music_service.dart';
 import 'package:wheel_of_fortune/services/game_events.dart';
-//import 'package:wheel_of_fortune/./../services/game_events.dart';
 
+// ===== КЛАСС ЧАСТИЦЫ (ВНЕ КЛАССА WheelScreen!) =====
+class _Particle {
+  static final _random = _SecureRandom();
 
+  double x, y;
+  double size;
+  double speed;
+  double opacity;
+  Color color;
+  double dx, dy;
+
+  _Particle({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.speed,
+    required this.opacity,
+    required this.color,
+    required this.dx,
+    required this.dy,
+  });
+
+  void update() {
+    x += dx * 0.005;
+    y += dy * 0.005;
+    if (x > 1) x = 0;
+    if (x < 0) x = 1;
+    if (y > 1) y = 0;
+    if (y < 0) y = 1;
+  }
+}
+
+class _SecureRandom {
+  final _random = _Random();
+  double nextDouble() => _random.nextDouble();
+}
+
+class _Random {
+  int _seed = DateTime.now().millisecondsSinceEpoch;
+
+  double nextDouble() {
+    _seed = (_seed * 9301 + 49297) % 233280;
+    return _seed / 233280.0;
+  }
+
+  int nextInt(int max) => (nextDouble() * max).floor();
+}
+// ===== КОНЕЦ КЛАССА ЧАСТИЦЫ =====
 
 class WheelScreen extends StatefulWidget {
   const WheelScreen({super.key});
@@ -31,7 +76,6 @@ class WheelScreen extends StatefulWidget {
 }
 
 class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin {
- // final AudioPlayer _audioPlayer = AudioPlayer();
   List<String> sectors = [];
   late WheelLogic _wheelLogic;
   double _currentRotationAngle = 0.0;
@@ -41,56 +85,40 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
-  final Random _random = Random();
-  late List<Map<String, dynamic>> _stars;
-/*
-  Timer? _timer;
-  Timer? _respawnTimer;
+  // 👇 ЛЁГКИЕ ЧАСТИЦЫ ДЛЯ СТАРЫХ УСТРОЙСТВ
+  late final List<_Particle> _particles = [];
+  late AnimationController _particleController;
 
-  bool _isAttracting = false;
-  bool _isTouching = false;
- */ 
+  final Random _random = Random();
+
   @override
   void initState() {
     super.initState();
-/*
-    _respawnTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      _respawnStars();
-    });
- */ 
+
     _applyConfig();
 
     _wheelLogic = WheelLogic(
       vsync: this,
       onAngleChanged: () {
-      setState(() {
-        _currentRotationAngle = _wheelLogic.currentAngle;
-     //   MusicService.playSpinSound();
-      });
-/*        
-      if (_wheelLogic.isSpinning) {
+        setState(() {
+          _currentRotationAngle = _wheelLogic.currentAngle;
+        });
+      },
+      onWin: (String prize) async {
+        debugPrint("PRIZE $prize");
+        GameEventsService().recordSpin(prize, true);
+        _pulseController.forward().then((_) => _pulseController.reset());
         MusicService.setBackgroundVolume(0.3);
-        MusicService.playSpinSound();
-      } else {
+        MusicService.playWinSound();
+
+        if (!kIsWeb) {
+          await DatabaseService.instance.saveSpin(prize, true);
+        }
         MusicService.setBackgroundVolume(1.0);
-      } */ 
-    },
-
-    onWin: (String prize) async {
-      debugPrint("PRIZE $prize");
-          GameEventsService().recordSpin(prize, true);
-      _pulseController.forward().then((_) => _pulseController.reset());
-      MusicService.setBackgroundVolume(0.3);
-      MusicService.playWinSound();
-
-      if (!kIsWeb) {
-        await DatabaseService.instance.saveSpin(prize, true);
-      }
-      MusicService.setBackgroundVolume(1.0);
-    },
-
+      },
       sectors: sectors,
     );
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -98,14 +126,73 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.elasticOut),
     );
-/*
-    _generateStars();
-    _startStarAnimation();
-    */ 
- 
+
+    // 👇 ИНИЦИАЛИЗАЦИЯ ЧАСТИЦ
+    _particleController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+
+    _initParticles();
+        AppConfigService().starsNotifier.addListener(_onStarsChanged);
+  }
+  void _onStarsChanged() {
+    if (mounted) {
+      setState(() {}); 
+    }
+  }
+  
+  void _initParticles() {
+    final random = _Particle._random;
+    for (int i = 0; i < 50; i++) {
+      final colorIndex = (random.nextDouble() * 4).floor();
+      _particles.add(_Particle(
+        x: random.nextDouble(),
+        y: random.nextDouble(),
+        size: random.nextDouble() * 5 + 1.5,
+        speed: random.nextDouble() * 0.5 + 0.2,
+        opacity: random.nextDouble() * 0.3 + 0.7,
+        color: [
+                Colors.orange.shade400,   // 🟧 ЯРКИЙ
+        Colors.white,     // 🩰 РОЗОВЫЙ
+        Colors.white,     // 💎 БИРЮЗОВЫЙ
+        Colors.white,     // 🟩 САЛАТОВЫЙ
+        Colors.yellow, // 🟪 ФИОЛЕТОВЫЙ
+        Colors.yellow,   // 🟨 ЖЁЛТЫЙ
+
+        ][colorIndex],
+        dx: (random.nextDouble() - 0.5) * 0.5,
+        dy: (random.nextDouble() - 0.5) * 0.5,
+      ));
+    }
   }
 
-
+  Widget _buildParticle(_Particle p, Size size) {
+    return Positioned(
+      left: p.x * size.width,
+      top: (p.y * size.height) % size.height,
+      child: AnimatedBuilder(
+        animation: _particleController,
+        builder: (context, child) {
+          p.update();
+          return Transform.translate(
+            offset: Offset(
+              p.dx * _particleController.value * 50,
+              p.dy * _particleController.value * 50,
+            ),
+            child: Container(
+              width: p.size,
+              height: p.size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: p.color.withOpacity(p.opacity),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   void _applyConfig() {
     setState(() {
@@ -147,10 +234,11 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     }
   }
 
-    @override
+  @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final size = MediaQuery.of(context).size; // 👈 ДЛЯ ЧАСТИЦ
     final isLandscape = screenWidth > screenHeight;
     final isTablet = screenWidth > 600;
     final isSmallWindow = screenWidth < 500;
@@ -207,18 +295,14 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                   ),
                 ),
               ),
-              //stars
-              // ========== 2. ЗВЁЗДЫ (СВЕРХУ ФОНА) ==========
-              const StarField( 
-               /* 
-                stars: _stars,
-                onTapDown: _handleTapDown,
-                onTapUp: _handleTapUp,
-                onTapCancel: _handleTapCancel,
-      */
-              ),
 
-              // ========== 3. ВСЁ ОСТАЛЬНОЕ (КНОПКИ, ЗАГОЛОВОК, КОЛЕСО) ==========
+              // ========== 2. ЗВЁЗДЫ ИЛИ ЧАСТИЦЫ ==========
+              if (AppConfigService().starsEnabled)
+                const StarField()
+              else
+                ..._particles.map((p) => _buildParticle(p, size)),
+
+              // ========== 3. ВСЁ ОСТАЛЬНОЕ ==========
               // Заголовок
               Positioned(
                 top: topPadding,
@@ -333,16 +417,12 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
     );
   }
 
-
   @override
   void dispose() {
-    /*
-    _timer?.cancel();
-    _respawnTimer?.cancel();
-    */
     _wheelLogic.dispose();
     _pulseController.dispose();
+    _particleController.dispose();
+        AppConfigService().starsNotifier.removeListener(_onStarsChanged);
     super.dispose();
   }
 }
-
