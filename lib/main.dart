@@ -5,6 +5,7 @@ import 'package:wheel_of_fortune/services/notification_service.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/services/music_service.dart';
 import 'package:wheel_of_fortune/services/game_events.dart'; 
+import 'package:wheel_of_fortune/services/routing.dart'; 
 import 'package:wheel_of_fortune/screen/welcome.dart';
 
 import 'dart:async';
@@ -33,6 +34,7 @@ void main() async {
   ));
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge); // Разрешаем приложению заходить под полоску
   // КОНЕЦ ВСТАВКИ
+    await RoutingService().init();
     runApp(const MyApp());
     unawaited(_initializeServices());
 
@@ -141,7 +143,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       theme: ThemeData.dark(),
-      home: const WelcomeScreen(),
+      home: RoutingService().getInitialScreen(),
+      //home: const RoutingService(),
       builder: (context, child) {
         child = BotToastInit()(context, child);
         return child;

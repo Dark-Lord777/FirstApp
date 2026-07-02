@@ -8,6 +8,7 @@ import 'package:bot_toast/bot_toast.dart';
 
 import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
+import 'package:wheel_of_fortune/services/routing.dart';
 
 
 class WelcomeScreen extends StatefulWidget {
@@ -541,9 +542,13 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     setState(() => _isLoading = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_nickname', nick);
-      await _goToWheel();
+      _nickFocusNode.unfocus();
+      await Future.delayed(const Duration(milliseconds: 300));
+//      final prefs = await SharedPreferences.getInstance();
+  //    await prefs.setString('user_nickname', nick);
+      await RoutingService().registerUser(nick);
+      RoutingService().navigateToWheel(context);
+//      await _goToWheel();
     } catch (e) {
       BotToast.showCustomText(
         duration: const Duration(seconds: 3),
@@ -575,12 +580,14 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   Future<void> _handleGuest() async {
     final guestNick = 'Guest_${DateTime.now().millisecondsSinceEpoch % 10000}';
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_nickname', guestNick);
-    await prefs.setBool('is_guest', true);
-
-    await _goToWheel();
+//    final prefs = await SharedPreferences.getInstance();
+ //   await prefs.setString('user_nickname', guestNick);
+  //  await prefs.setBool('is_guest', true);
+    await RoutingService().registerGuest(guestNick);
+    RoutingService().navigateToWheel(context);
+   // await _goToWheel();
   }
+/*
 
   Future<void> _goToWheel() async {
     Navigator.pushReplacement(
@@ -590,7 +597,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       ),
     );
   }
-
+*/ 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
