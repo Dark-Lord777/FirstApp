@@ -7,6 +7,7 @@ import 'package:wheel_of_fortune/services/music_service.dart';
 import 'package:wheel_of_fortune/services/game_events.dart'; 
 import 'package:wheel_of_fortune/screen/welcome.dart';
 
+import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:bee_dynamic_launcher/bee_dynamic_launcher.dart';
@@ -32,7 +33,11 @@ void main() async {
   ));
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge); // Разрешаем приложению заходить под полоску
   // КОНЕЦ ВСТАВКИ
- 
+    runApp(const MyApp());
+    unawaited(_initializeServices());
+
+}
+  Future<void> _initializeServices() async {
   try {
     await Firebase.initializeApp();
     debugPrint('Firebase initialized succesfully');
@@ -79,9 +84,8 @@ void main() async {
   if (fcmToken != null) {
     await NotificationService.registerDevice(fcmToken);
   }
-
-  runApp(const MyApp());
 }
+
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -106,7 +110,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     try {
       final context = navigatorKey.currentContext;
       if (context != null) {
-        await MusicService.loadMusic(context: context);
+        await MusicService.initialize(context: context);
       } else {
         debugPrint('Context not available for music loading');
       }

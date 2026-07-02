@@ -60,9 +60,20 @@ class MusicService {
     _initialized = true;
 
     _backgroundPlayer.onPlayerComplete.listen((_) {
+      debugPrint('Track finished, playing next...');
       _playRandomBackground();
     });
+    _backgroundPlayer.onPlayerStateChanged.listen((state) {
+  debugPrint("STATE: $state");
+});
 
+_backgroundPlayer.onDurationChanged.listen((d) {
+  debugPrint("DURATION: $d");
+});
+
+_backgroundPlayer.onPlayerComplete.listen((_) {
+  debugPrint("COMPLETE");
+});
     await loadMusic(context: context);
   }
     
@@ -143,7 +154,9 @@ class MusicService {
         DeviceFileSource(path),
       );
       await _effectPlayer.setVolume(1);
+      printState();
     } catch (e) {
+      debugPrint('Error in function play: $e');
       debugPrint(e.toString());
     }
   }
@@ -207,20 +220,32 @@ class MusicService {
     }
 
     if (_backgroundTracks.isNotEmpty) {
+      debugPrint('loaded ${_backgroundTracks.length} tracks');
       await _playRandomBackground();
     }
   }
 
   static Future<void> _playRandomBackground() async {
     if (_backgroundTracks.isEmpty) {
+    debugPrint('No tracks available');
       return;
     }
 
+    if (!AppConfigService().backgroundMusicEnabled) {
+      debugPrint('Bakcground music disabled, skiping');
+      return;
+    }
+  /*
+    if (_isDownloading) {
+      debugPrint('Downloading in progress, skipping');
+      return;
+    }
+*/ 
     final path = _backgroundTracks[_random.nextInt(_backgroundTracks.length)];
     final file = File(path);
 
     if (!await file.exists()) {
-      debugPrint("Missing music file");
+      debugPrint("Missing music file $path");
       return;
     }
 
@@ -230,7 +255,9 @@ class MusicService {
         DeviceFileSource(path),
       );
       await _backgroundPlayer.setVolume(1);
+      debugPrint("Playing: ${path.split('/').last}");
     } catch (e) {
+      debugPrint('Error playing background: $e');
       debugPrint(e.toString());
     }
   }
@@ -417,6 +444,7 @@ class MusicService {
     debugPrint("version     : $_musicVersion");
     debugPrint("tracks      : ${_backgroundTracks.length}");
     debugPrint("effects     : ${_sounds.keys.toList()}");
+    debugPrint("bgMusicEnabled   : ${AppConfigService().backgroundMusicEnabled}");
     debugPrint("-----------------------------");
   }
 
