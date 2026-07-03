@@ -9,6 +9,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/services/routing.dart';
+import 'package:wheel_of_fortune/screen/splash_screen.dart';
 
 
 class WelcomeScreen extends StatefulWidget {
@@ -546,9 +547,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       await Future.delayed(const Duration(milliseconds: 300));
 //      final prefs = await SharedPreferences.getInstance();
   //    await prefs.setString('user_nickname', nick);
-      await RoutingService().registerUser(nick);
-      RoutingService().navigateToWheel(context);
+ //     await SplashScreen().registerUser(nick);
+//      SplashScreen().navigateToWheel(context);
 //      await _goToWheel();
+    await RoutingService().registerUser(nick);
+    RoutingService().navigateToWheel(context);
     } catch (e) {
       BotToast.showCustomText(
         duration: const Duration(seconds: 3),

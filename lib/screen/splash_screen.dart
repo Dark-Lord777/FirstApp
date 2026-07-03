@@ -1,8 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 //import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
 import 'package:wheel_of_fortune/screen/welcome.dart';
+import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
 
 
 class SplashScreen extends StatefulWidget {
@@ -62,10 +64,36 @@ class _SplashScreenState extends State<SplashScreen>
     _positionController.forward();
 
     Future.delayed(const Duration(seconds: 2), () {
-      _navigateToWelcome();
+      _navigateToNextScreen();
     });
   }
+  void _navigateToNextScreen() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isRegistered = prefs.getBool('is_registered') ?? false;
+    final isGuest = prefs.getBool('is_guest') ?? false;
 
+    Widget nextScreen;
+    if (isRegistered || isGuest) {
+      nextScreen = const WheelScreen();
+    } else {
+      nextScreen = const WelcomeScreen();
+    }
+    Navigator.pushReplacement(
+      context,
+    MaterialPageRoute(builder: (_) => nextScreen),
+    );
+  }
+  
+/*
+  Widget getInitialScreen() {
+    if(_isRegistered || _isGuest) {
+      debugPrint('User Already: nickname=$nickname, going to Wheelscreen');
+      return const WheelScreen();
+    } else {
+      debugPrint('No user found, showing WelcomeScreen');
+      return const WelcomeScreen();
+    }
+  }
   void _navigateToWelcome() {
     Navigator.pushReplacement(
       context,
@@ -86,7 +114,7 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
   }
-
+*/ 
   @override
   void dispose() {
     _rotationController.dispose();
