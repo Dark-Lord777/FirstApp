@@ -1,7 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-
+import 'package:archive/archive_io.dart';
+import 'package:path/path.dart' as p;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/widgets/base_anim_btn.dart';
+import 'package:wheel_of_fortune/services/game_message.dart';
 
 class MusicService {
   // ===== PLAYERS =====
@@ -26,6 +27,7 @@ class MusicService {
   static bool _musicLoaded = false;
   static bool _isDownloading = false;
   static String _musicVersion = "";
+  static const String _tempArchive = "music.zip";
 
   static final Random _random = Random();
   static bool _isAppInBackground = false;
@@ -117,7 +119,8 @@ _backgroundPlayer.onDurationChanged.listen((d) {
         );
       }
       
-      await _checkForceUpdate(context);
+ //     await _checkForceUpdate(context);
+      await _updateMusic(context);
       await _loadBackgroundMusic();
       await _loadEffects();
       _musicLoaded = true;
@@ -158,7 +161,7 @@ _backgroundPlayer.onDurationChanged.listen((d) {
         DeviceFileSource(path),
       );
       await _effectPlayer.setVolume(1);
-      printState();
+     // printState();
     } catch (e) {
       debugPrint('Error in function play: $e');
       debugPrint(e.toString());
@@ -220,7 +223,30 @@ _backgroundPlayer.onDurationChanged.listen((d) {
   static Future<void> _loadBackgroundMusic() async {
     _backgroundTracks.clear();
 
-    final files = await _getFileList("bg");
+ //   final files = await _getFileList("bg");
+    final musicDir = await _musicDirectory();
+    final bgDir = Directory("${musicDir.path}/BackgroundMusic");
+
+    if (!await bgDir.exists()) {
+      debugPrint("BackgroundMusic folder not found");
+      return;
+    }
+    final files = bgDir.listSync();
+
+    for (final entity in files) {
+    if (entity is! File) continue;
+
+    final name = entity.path.toLowerCase();
+
+    if (name.endsWith(".mp3") ||
+        name.endsWith(".ogg") || 
+        name.endsWith(".wav")) {
+        _backgroundTracks.add(entity.path);
+      } 
+  }
+    debugPrint("Loaded ${_backgroundTracks.length} background tracks");
+  }
+  /*
 
     if (files.isEmpty) {
       debugPrint("No background music");
@@ -232,7 +258,7 @@ _backgroundPlayer.onDurationChanged.listen((d) {
       final path = await _ensureDownloaded(
         type: "bg",
         fileName: name,
-      );
+      ); 
 
       if (path != null) {
         _backgroundTracks.add(path);
@@ -244,7 +270,7 @@ _backgroundPlayer.onDurationChanged.listen((d) {
      // await _playRandomBackground();
     }
   }
-
+*/ 
   static Future<void> _playRandomBackground() async {
     if (_backgroundTracks.isEmpty) {
     debugPrint('No tracks available');
@@ -282,34 +308,196 @@ _backgroundPlayer.onDurationChanged.listen((d) {
     }
   }
 
+
   // ===== EFFECTS =====
   static Future<void> _loadEffects() async {
     await _loadEffect("spin");
     await _loadEffect("win");
   }
 
-  static Future<void> _loadEffect(
-    String type,
-  ) async {
-    final files = await _getFileList(type);
+  static Future<void> _loadEffect(String type) async {
+ //   final files = await _getFileList(type);
+    final musicDir = await _musicDirectory();
+    late String folder;
 
+    switch (type) {
+      case "spin": folder = "Spin";
+        break;
+      case "win": folder = "Win";
+        break;
+      default: 
+        return;
+    }
+
+    final dir = Directory("${musicDir.path}/$folder");
+
+    if (!await dir.exists()) {
+      debugPrint("$folder folder not found");
+      return;
+    }
+    final files = dir.listSync();
+
+    for (final entity in files) {
+      if (entity is! File) continue;
+      final path = entity.path.toLowerCase();
+    if (path.endsWith(".mp3") || 
+        path.endsWith(".ogg") ||
+        path.endsWith(".wav")) {
+        _sounds[type] = entity.path;
+        return;
+      }
+    }
+    
+    debugPrint("$folder sound not found");
+  }
+/*
     if (files.isEmpty) {
       debugPrint("$type effect not found");
       return;
     }
 
     final name = files.first["name"] as String;
-    final path = await _ensureDownloaded(
+   final path = await _ensureDownloaded(
       type: type,
       fileName: name,
-    );
+    ); 
 
     if (path != null) {
       _sounds[type] = path;
     }
   }
-
+*/ 
   // ===== DOWNLOAD =====
+  static Future<bool> _downloadArchive(
+    String url,
+  ) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode !=200 ) {
+        return false;
+      }
+      final dir = await _musicDirectory();
+
+      final archive = File("${dir.path}/$_tempArchive");
+      await archive.writeAsBytes(
+        response.bodyBytes,
+      );
+      return true;
+    } catch (e) {
+      debugPrint(e.toString());
+      return false;
+    }
+  }
+
+  // EXTRACT
+static Future<bool> _extractArchive() async {
+  try {
+    final dir = await _musicDirectory();
+
+    final archiveFile = File(
+      "${dir.path}/$_tempArchive",
+    );
+
+    if (!await archiveFile.exists()) {
+      return false;
+    }
+
+    final bytes = await archiveFile.readAsBytes();
+
+    final archive = ZipDecoder().decodeBytes(bytes);
+
+    final tempDir = Directory(
+      "${dir.path}_new",
+    );
+
+    if (await tempDir.exists()) {
+      await tempDir.delete(
+        recursive: true,
+      );
+    }
+
+    await tempDir.create();
+
+    for (final file in archive) {
+      final filename = p.join(
+        tempDir.path,
+        file.name,
+      );
+
+      if (file.isFile) {
+        final out = File(filename);
+
+        await out.parent.create(
+          recursive: true,
+        );
+
+        await out.writeAsBytes(
+          file.content as List<int>,
+        );
+      } else {
+        await Directory(filename).create(
+          recursive: true,
+        );
+      }
+    }
+
+    await archiveFile.delete();
+
+    final oldDir = await _musicDirectory();
+
+    if (await oldDir.exists()) {
+      await oldDir.delete(
+        recursive: true,
+      );
+    }
+
+    await tempDir.rename(
+      oldDir.path,
+    );
+
+    return true;
+  } catch (e) {
+    debugPrint(e.toString());
+    return false;
+  }
+}
+
+static Future<void> _updateMusic(
+  BuildContext context,
+) async {
+  await _loadCache();
+
+  final remoteVersion = AppConfigService().musicVersion;
+
+  if (_musicVersion == remoteVersion) {
+    return;
+  }
+
+  final ok = await _downloadArchive(
+        "${AppConfigService().workerUrl}/music",
+  );
+
+  if (!ok) return;
+
+  final extracted = await _extractArchive();
+
+  if (!extracted) return;
+
+  await _saveMusicVersion(remoteVersion);
+
+  await GameMessage.show(
+    context: context,
+    title: "Music updated",
+    text: AppConfigService().musicReason,
+    icon: MessageIcon.music,
+    gradient: MessageGradient.purple,
+    buttons: [
+      MessageButton.ok(),
+    ],
+  );
+}
+  /*
   static Future<String?> _ensureDownloaded({
     required String type,
     required String fileName,
@@ -327,7 +515,7 @@ _backgroundPlayer.onDurationChanged.listen((d) {
     return await _downloadFile(
       type: type,
       fileName: fileName,
-    );
+    ); 
   }
 
   static Future<String?> _downloadFile({
@@ -373,7 +561,8 @@ _backgroundPlayer.onDurationChanged.listen((d) {
       return null;
     }
   }
-
+*/ 
+/*
   static Future<List<Map<String, dynamic>>> _getFileList(
     String type,
   ) async {
@@ -398,7 +587,7 @@ _backgroundPlayer.onDurationChanged.listen((d) {
       return [];
     }
   }
-
+*/ 
   // ===== CACHE =====
   static Future<Directory> _musicDirectory() async {
     final dir = await getApplicationDocumentsDirectory();
@@ -420,7 +609,7 @@ _backgroundPlayer.onDurationChanged.listen((d) {
       version,
     );
   }
-
+/*
   // ===== FORCE UPDATE =====
   static Future<void> _checkForceUpdate(
     BuildContext context,
@@ -467,7 +656,7 @@ _backgroundPlayer.onDurationChanged.listen((d) {
     debugPrint("bgMusicEnabled   : ${AppConfigService().backgroundMusicEnabled}");
     debugPrint("-----------------------------");
   }
-
+*/ 
   // ===== ОЧИСТКА КЕША МУЗЫКИ =====
 static Future<void> clearMusicCache() async {
   try {
@@ -483,7 +672,7 @@ static Future<void> clearMusicCache() async {
     debugPrint('Error clearing music cache: $e');
   }
 }
-
+/*
   // ===== DIALOG =====
   static Future<void> _showDeleteDialog(
     String reason,
@@ -554,4 +743,6 @@ static Future<void> clearMusicCache() async {
       },
     );
   }
+*/ 
 }
+

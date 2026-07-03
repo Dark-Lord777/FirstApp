@@ -1,196 +1,156 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http; 
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppConfigService {
-  static final AppConfigService _instance = AppConfigService._internal();
+  AppConfigService._();
+  static final AppConfigService _instance = AppConfigService._();
   factory AppConfigService() => _instance;
-  AppConfigService._internal();
 
-  // ===== ПОЛЯ =====
-  String _workerUrl = 'https://firstapp-backend.dark-lord.workers.dev';
-  String _syncUrl = '';
-  String _termsUrl = 'https://dark-lord.pages.dev/projects/fortune/terms';
-  String _privacyUrl = 'https://dark-lord.pages.dev/projects/fortune/privacy';
-  String _shareUrl = '';
-  String _appVersion = '0';
-  String _titleText = 'Are you lucky today?';
-  String _tgChannel = '';
-  String _donateUrl = '';
-  bool _musicEnabled = false;
-  List<String> _musicTracks = [];
-  String _spinSound = '';
-  String _winSound = '';
-  bool _forceUpdate = false;
-  String _musicReason = '';
+  static const _workerUrl =
+      "https://firstapp-backend.dark-lord.workers.dev";
 
-  bool _spinSoundEnabled = true;
-  bool _winSoundEnabled = true;
-  bool _backgroundMusicEnabled = true;
-  
-  bool _starsEnabled = false;
-  
-  // 👇 НОТИФАЙЕР — ЭТО ПОЛЕ КЛАССА!
   final ValueNotifier<bool> starsNotifier = ValueNotifier(false);
 
-  // ===== ГЕТТЕРЫ =====
+  Map<String, dynamic> _config = {
+    "version": "0",
+    "titleText": "Are you lucky today?",
+    "termsUrl": "https://dark-lord.pages.dev/projects/fortune/terms",
+    "privacyUrl": "https://dark-lord.pages.dev/projects/fortune/privacy",
+    "shareUrl": "",
+    "tgChannel": "",
+    "donateUrl": "",
+    "music": <String, dynamic>{},
+  };
+
+  bool starsEnabled = false;
+  bool spinSoundEnabled = true;
+  bool winSoundEnabled = true;
+  bool backgroundMusicEnabled = true;
+
+  dynamic operator [](String key) => _config[key];
+
+  String get version => _config["version"] ?? "0";
   String get workerUrl => _workerUrl;
-  String get syncUrl => _syncUrl;
-  String get termsUrl => _termsUrl;
-  String get privacyUrl => _privacyUrl;
-  String get shareUrl => _shareUrl;
-  String get appVersion => _appVersion;
-  String get titleText => _titleText;
-  String get tgChannel => _tgChannel;
-  String get donateUrl => _donateUrl;
-  bool get musicEnabled => _musicEnabled;
-  List<String> get musicTracks => _musicTracks;
-  String get spinSound => _spinSound;
-  String get winSound => _winSound;
-  
-  bool get spinSoundEnabled => _spinSoundEnabled;
-  bool get winSoundEnabled => _winSoundEnabled;
-  bool get backgroundMusicEnabled => _backgroundMusicEnabled;
-  bool get forceUpdate => _forceUpdate;
-  String get musicReason => _musicReason;
-  bool get starsEnabled => _starsEnabled;
+  String get titleText => _config["titleText"] ?? "";
+  String get termsUrl => _config["termsUrl"] ?? "";
+  String get privacyUrl => _config["privacyUrl"] ?? "";
+  String get shareUrl => _config["shareUrl"] ?? "";
+  String get tgChannel => _config["tgChannel"] ?? "";
+  String get donateUrl => _config["donateUrl"] ?? "";
+  String get syncUrl => _config["syncUrl"] ?? ""; //hyi znaet dlya chego
+  String get musicVersion => _config["music"]?["music_version"] ?? "0";
+  String get musicArchiveUrl => _config["music"]?["archive_url"] ?? "";
+  String get musicReason => _config["music"]?["reason"] ?? "";
 
-  // ===== СЕТТЕРЫ =====
-  set starsEnabled(bool value) {
-    _starsEnabled = value;
-    starsNotifier.value = value; // 👈 ОПОВЕЩАЕМ ПОДПИСЧИКОВ
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('stars_enabled', value);
-    });
-  }
-  
-  set spinSoundEnabled(bool value) {
-    _spinSoundEnabled = value;
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('spin_sound_enabled', value);
-    });
-  }
-  
-  set winSoundEnabled(bool value) {
-    _winSoundEnabled = value;
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('win_sound_enabled', value);
-    });
-  }
-  
-  set backgroundMusicEnabled(bool value) {
-    _backgroundMusicEnabled = value;
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('background_music_enabled', value);
-    });
-  }
-  
-  set forceUpdate(bool value) {
-    _forceUpdate = value;
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('force_update', value);
-    });
-  }
-  
-  set musicReason(String value) {
-    _musicReason = value;
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setString('music_reason', value);
-    });
-  }
 
-  // ===== ИНИЦИАЛИЗАЦИЯ =====
+  Map<String, dynamic> get music =>
+      Map<String, dynamic>.from(_config["music"] ?? {});
+
   Future<void> init() async {
-    await _loadFromLocalPrefs();
-    await _fetchRemoteConfig();
-    starsNotifier.value = _starsEnabled; // 👈 СИНХРОНИЗИРУЕМ
+    await _loadPrefs();
+    await _loadConfig();
+    starsNotifier.value = starsEnabled;
   }
 
-  // ===== СБРОС =====
-  void resetToDefaults() {
-    _starsEnabled = false;
-    starsNotifier.value = false;
-    _spinSoundEnabled = true;
-    _winSoundEnabled = true;
-    _backgroundMusicEnabled = true;
-    _forceUpdate = false;
-    _musicReason = '';
-    _appVersion = '0';
-    _titleText = 'Are you lucky today?';
-    
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('stars_enabled', _starsEnabled);
-      prefs.setBool('spin_sound_enabled', _spinSoundEnabled);
-      prefs.setBool('win_sound_enabled', _winSoundEnabled);
-      prefs.setBool('background_music_enabled', _backgroundMusicEnabled);
-      prefs.setBool('force_update', _forceUpdate);
-      prefs.setString('music_reason', _musicReason);
-    });
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final cache = prefs.getString("cached_config");
+    if (cache != null) {
+      _config = Map<String, dynamic>.from(jsonDecode(cache));
+    }
+
+    starsEnabled =
+        prefs.getBool("stars_enabled") ?? starsEnabled;
+    spinSoundEnabled =
+        prefs.getBool("spin_sound_enabled") ?? spinSoundEnabled;
+    winSoundEnabled =
+        prefs.getBool("win_sound_enabled") ?? winSoundEnabled;
+    backgroundMusicEnabled =
+        prefs.getBool("background_music_enabled") ??
+        backgroundMusicEnabled;
   }
 
-  // ===== ЗАГРУЗКА ИЗ ЛОКАЛЬНОГО ХРАНИЛИЩА =====
-  Future<void> _loadFromLocalPrefs() async {
+  Future<void> _loadConfig() async {
     try {
+      final response = await http
+          .get(
+            Uri.parse("$_workerUrl/config"),
+            headers: const {
+              "Content-Type": "application/json",
+            },
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode != 200) return;
+
+      final config =
+          Map<String, dynamic>.from(jsonDecode(response.body));
+
+      if (config["version"] == _config["version"]) return;
+
+      _config = config;
+
       final prefs = await SharedPreferences.getInstance();
-      _appVersion = prefs.getString('cached_app_version') ?? '0';
-      _termsUrl = prefs.getString('cached_terms_url') ?? _termsUrl;
-      _privacyUrl = prefs.getString('cached_privacy_url') ?? _privacyUrl;
-      _shareUrl = prefs.getString('cached_share_url') ?? _shareUrl;
-      _titleText = prefs.getString('cached_title_text') ?? _titleText;
-      _workerUrl = prefs.getString('cached_worker_url') ?? _workerUrl;
-      _tgChannel = prefs.getString('cached_tg_channel') ?? _tgChannel;
-      _donateUrl = prefs.getString('cached_donate_url') ?? _donateUrl;
-      _starsEnabled = prefs.getBool('stars_enabled') ?? false;
-      _spinSoundEnabled = prefs.getBool('spin_sound_enabled') ?? true;
-      _winSoundEnabled = prefs.getBool('win_sound_enabled') ?? true;
-      _backgroundMusicEnabled = prefs.getBool('background_music_enabled') ?? true;
-      _forceUpdate = prefs.getBool('force_update') ?? false;
-      _musicReason = prefs.getString('music_reason') ?? '';
+      await prefs.setString(
+        "cached_config",
+        jsonEncode(_config),
+      );
+
+      debugPrint("Config updated (${_config["version"]})");
     } catch (e) {
-      debugPrint('Error when readed a cache: $e');
+      debugPrint("Config error: $e");
     }
   }
 
-  // ===== ЗАГРУЗКА С СЕРВЕРА =====
-  Future<void> _fetchRemoteConfig() async {
-    try {
-      final response = await http.get(
-        Uri.parse('$_workerUrl/config'),
-        headers: {'Content-Type': "application/json"},
-      ).timeout(const Duration(seconds: 5));
+  Future<void> setStarsEnabled(bool value) async {
+    starsEnabled = value;
+    starsNotifier.value = value;
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> config = jsonDecode(response.body);
-        final String serverVersion = config['version']?.toString() ?? '0';
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("stars_enabled", value);
+  }
 
-        if (serverVersion != _appVersion) {
-          _titleText = config['titleText'] ?? _titleText;
-          _termsUrl = config['termsUrl'] ?? _termsUrl;
-          _privacyUrl = config['privacyUrl'] ?? _privacyUrl;
-          _shareUrl = config['shareUrl'] ?? _shareUrl;
-          _tgChannel = config['tgChannel'] ?? _tgChannel;
-          _donateUrl = config['donateUrl'] ?? _donateUrl;
-          _appVersion = serverVersion;
+  Future<void> setSpinSoundEnabled(bool value) async {
+    spinSoundEnabled = value;
 
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('cached_terms_url', _termsUrl);
-          await prefs.setString('cached_privacy_url', _privacyUrl);
-          await prefs.setString('cached_share_url', _shareUrl);
-          await prefs.setString('cached_title_text', _titleText);
-          await prefs.setString('cached_tg_channel', _tgChannel);
-          await prefs.setString('cached_donate_url', _donateUrl);
-          await prefs.setString('cached_app_version', _appVersion);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("spin_sound_enabled", value);
+  }
 
-          debugPrint(' Config updated from server (version: $_appVersion)');
-        } else {
-          debugPrint(' Config is up to date (version $_appVersion)');
-        }
-      } else {
-        debugPrint(' Server returned ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint(' Failed to get config: $e');
-    }
+  Future<void> setWinSoundEnabled(bool value) async {
+    winSoundEnabled = value;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("win_sound_enabled", value);
+  }
+
+  Future<void> setBackgroundMusicEnabled(bool value) async {
+    backgroundMusicEnabled = value;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(
+      "background_music_enabled",
+      value,
+    );
+  }
+
+  Future<void> resetToDefaults() async {
+    starsEnabled = false;
+    spinSoundEnabled = true;
+    winSoundEnabled = true;
+    backgroundMusicEnabled = true;
+
+    starsNotifier.value = false;
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.remove("stars_enabled");
+    await prefs.remove("spin_sound_enabled");
+    await prefs.remove("win_sound_enabled");
+    await prefs.remove("background_music_enabled");
   }
 }
