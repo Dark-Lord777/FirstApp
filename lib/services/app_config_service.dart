@@ -44,6 +44,7 @@ class AppConfigService {
   String get musicVersion => _config["music"]?["music_version"] ?? "0";
   String get musicArchiveUrl => _config["music"]?["archive_url"] ?? "";
   String get musicReason => _config["music"]?["reason"] ?? "";
+  bool get showMusicUpdateMessage => _config["music"]?["show_update_message"] ?? false;
 
 
   Map<String, dynamic> get music =>

@@ -48,7 +48,11 @@ flutter:
   assets:
     - assets/bee_dynamic_launcher/catalog.json
     - assets/bee_dynamic_launcher/icons/
-    - assets/iconsSvg/
+    - assets/icons/
+    - assets/music/BackgroundMusic/
+    - assets/music/Spin/
+    - assets/music/Win/
+    - assets/music/UI/
 
   uses-material-design: true
 

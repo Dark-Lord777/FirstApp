@@ -28,6 +28,7 @@ class MusicService {
   static bool _isDownloading = false;
   static String _musicVersion = "";
   static const String _tempArchive = "music.zip";
+  static const bool kUseBundledMusic = true;
 
   static final Random _random = Random();
   static bool _isAppInBackground = false;
@@ -146,6 +147,8 @@ _backgroundPlayer.onDurationChanged.listen((d) {
       _isDownloading = false;
     }
   }
+  
+  
 
   static Future<void> play(String sound) async {
     final path = _sounds[sound];
@@ -183,7 +186,10 @@ _backgroundPlayer.onDurationChanged.listen((d) {
           debugPrint("Music resumed (app in foreground)");
         }
       }
-
+  
+  static Future<void> playClick() async {
+    await play("click");
+  }
   static Future<void> playSpinSound() async {
     if (!_spinSoundEnabled) return;
     await play("spin");
@@ -313,6 +319,7 @@ _backgroundPlayer.onDurationChanged.listen((d) {
   static Future<void> _loadEffects() async {
     await _loadEffect("spin");
     await _loadEffect("win");
+    await _loadEffect("click");
   }
 
   static Future<void> _loadEffect(String type) async {
@@ -324,6 +331,8 @@ _backgroundPlayer.onDurationChanged.listen((d) {
       case "spin": folder = "Spin";
         break;
       case "win": folder = "Win";
+        break;
+      case "click": folder = "UI";
         break;
       default: 
         return;
@@ -463,9 +472,11 @@ static Future<bool> _extractArchive() async {
   }
 }
 
-static Future<void> _updateMusic(
-  BuildContext context,
-) async {
+static Future<void> _updateMusic(BuildContext context) async {
+    if (kUseBundledMusic) {
+      debugPrint("Using bundled music");
+      return;
+    }
   await _loadCache();
 
   final remoteVersion = AppConfigService().musicVersion;
@@ -486,16 +497,18 @@ static Future<void> _updateMusic(
 
   await _saveMusicVersion(remoteVersion);
 
-  await GameMessage.show(
-    context: context,
-    title: "Music updated",
-    text: AppConfigService().musicReason,
-    icon: MessageIcon.music,
-    gradient: MessageGradient.purple,
-    buttons: [
-      MessageButton.ok(),
-    ],
-  );
+      if (AppConfigService().showMusicUpdateMessage) {
+    await GameMessage.show(
+      context: context,
+      title: "Music updated",
+      text: AppConfigService().musicReason,
+      icon: MessageIcon.music,
+      gradient: MessageGradient.purple,
+      buttons: [
+        MessageButton.ok(),
+      ],
+    );
+  }
 }
   /*
   static Future<String?> _ensureDownloaded({
