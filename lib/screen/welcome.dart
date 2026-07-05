@@ -513,8 +513,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
     Future<void> _handleAuth() async {
+                                MusicService.playClick();
+
     final nick = _nickController.text.trim();
     if (nick.isEmpty) {
+                            MusicService.playClick();
+
       BotToast.showCustomText(
         duration: const Duration(seconds: 2),
         align: const Alignment(0, -0.3), // Вылетит сверху

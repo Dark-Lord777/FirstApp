@@ -158,7 +158,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color(0xFF1A1A2E),
-        iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            MusicService.playClick();
+            Navigator.of(context).pop();
+          },
+        ),
+       // iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -214,6 +221,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   value: _spinSoundEnabled,
                   onChanged: (value) async {
                     setState(() {
+                       MusicService.playClick();
                       _spinSoundEnabled = value;
                       AppConfigService().setSpinSoundEnabled(value);
                       MusicService.setSpinSoundEnabled(value);

@@ -269,7 +269,10 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                               style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
                             ),
                             GestureDetector(
-                              onTap: () => _launchUrl(AppConfigService().termsUrl),
+                              onTap: () { 
+                              MusicService.playClick();
+                              _launchUrl(AppConfigService().termsUrl);
+                            },
                               child: const Text(
                                 'Terms',
                                 style: TextStyle(

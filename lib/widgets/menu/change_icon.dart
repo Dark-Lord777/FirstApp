@@ -6,6 +6,8 @@ import 'package:bee_dynamic_launcher/bee_dynamic_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bot_toast/bot_toast.dart';
 
+import 'package:wheel_of_fortune/services/music_service.dart';
+
 class ChangeIconBtn extends StatelessWidget {
   final String iconName;
   final String label;
@@ -78,7 +80,10 @@ class ChangeIconBtn extends StatelessWidget {
   @override 
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _changeIcon(context),
+      onTap: () { 
+          MusicService.playClick();
+        _changeIcon(context);
+      },
       child: Container(
         width: 100,
       decoration: BoxDecoration(
