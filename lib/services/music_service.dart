@@ -121,9 +121,14 @@ _backgroundPlayer.onDurationChanged.listen((d) {
       }
       
  //     await _checkForceUpdate(context);
-      await _updateMusic(context);
       await _loadBackgroundMusic();
       await _loadEffects();
+
+       _updateMusic(context);
+    /*
+      await _loadBackgroundMusic();
+      await _loadEffects();
+*/ 
       _musicLoaded = true;
 
       if (firstStart && _backgroundTracks.isNotEmpty) {
@@ -382,7 +387,7 @@ _backgroundPlayer.onDurationChanged.listen((d) {
   ) async {
     try {
       final response = await http.get(Uri.parse(url));
-
+      debugPrint("download ok");
       if (response.statusCode !=200 ) {
         return false;
       }
@@ -464,7 +469,7 @@ static Future<bool> _extractArchive() async {
     await tempDir.rename(
       oldDir.path,
     );
-
+    debugPrint("extract ok");
     return true;
   } catch (e) {
     debugPrint(e.toString());
@@ -473,10 +478,12 @@ static Future<bool> _extractArchive() async {
 }
 
 static Future<void> _updateMusic(BuildContext context) async {
+/*
     if (kUseBundledMusic) {
       debugPrint("Using bundled music");
       return;
     }
+*/ 
   await _loadCache();
 
   final remoteVersion = AppConfigService().musicVersion;
@@ -496,6 +503,14 @@ static Future<void> _updateMusic(BuildContext context) async {
   if (!extracted) return;
 
   await _saveMusicVersion(remoteVersion);
+    _backgroundTracks.clear();
+    _sounds.clear();
+
+    await _loadBackgroundMusic();
+    await _loadEffects();
+    if (_backgroundTracks.isNotEmpty) {
+      await _playRandomBackground();
+    }
 
       if (AppConfigService().showMusicUpdateMessage) {
     await GameMessage.show(

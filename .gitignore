@@ -51,7 +51,6 @@ linux/flutter/
 windows/flutter/
 #web/
 
-
 rust/target/
 **/*.rs.bk
 *.pdb
@@ -74,23 +73,26 @@ platform-tools-latest-linux.zip
 platform-tools/
 macos/Runner/GeneratedPluginRegistrant.*
 macos/Flutter/GeneratedPluginRegistrant.swift
-node_modules
+node_modules/
 
 # Generated Android icons (resized by script)
 android/app/src/main/res/mipmap-*/
 android/app/src/main/res/drawable/*_foreground.png
 android/app/src/main/res/drawable-v21/*_foreground.png
-node_modules/
+
+# Generated Release icons
+android/app/src/release/res/mipmap-*/
+android/app/src/release/res/drawable/*_foreground.png
+android/app/src/release/res/drawable-v21/*_foreground.png
+
 .wrangler/
 test-results/
 *.log
-cat
 package-lock.json
 
 my-release-key.keystore
 new_keystore_base64.txt
 
-new_keystore_base64.txt
 plugins/**/example/
 plugins/**/test/
 plugins/**/doc/
@@ -98,8 +100,7 @@ plugins/**/*.md
 plugins/**/ios/
 plugins/**/android/src/test/
 plugins/**/android/src/main/res/mipmap-*
-android/app/src/main/res/mipmap-*/
 
- android/app/google-services.json
+android/app/google-services.json
 assets/icons/*
 assets/music/*

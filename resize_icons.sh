@@ -1,5 +1,5 @@
 #!/bin/bash
-RES_DIR="android/app/src/main/res"
+RES_DIR="android/app/src/release/res"
 ASSETS_DIR="assets/bee_dynamic_launcher/icons"
 
 if [ ! -f /etc/os-release ] || ! grep -q "Ubuntu" /etc/os-release; then
