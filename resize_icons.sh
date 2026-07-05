@@ -38,6 +38,9 @@ ls
 
 mkdir -p "$RES_DIR/values/"
 mkdir -p "$RES_DIR/mipmap-anydpi-v26/"
+for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+	mkdir -p android/app/src/release/res/mipmap-$d
+done
 
 clear
 flutter pub get
