@@ -14,6 +14,7 @@ Widget build(BuildContext context) {
     return BaseAnimatedButton(
       text: "Spin",
       onPressed: onPressed,
+      playClickSound: true,
       gradientColors: [
         //later put your color like this Color(0FFhecCode)
     Color(0xFFFFD54F), // золотистый

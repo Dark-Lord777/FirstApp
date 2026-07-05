@@ -10,6 +10,7 @@ import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/services/routing.dart';
 import 'package:wheel_of_fortune/screen/splash_screen.dart';
+import 'package:wheel_of_fortune/services/music_service.dart';
 
 
 class WelcomeScreen extends StatefulWidget {
@@ -484,6 +485,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
     try {
+          MusicService.playClick(); // 👈 ДОБАВЬ
       await launchUrl(uri, mode: LaunchMode.platformDefault);
     } catch (e) {
       BotToast.showCustomText(
@@ -543,6 +545,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     setState(() => _isLoading = true);
 
     try {
+          MusicService.playClick();
       _nickFocusNode.unfocus();
       await Future.delayed(const Duration(milliseconds: 300));
 //      final prefs = await SharedPreferences.getInstance();
@@ -581,6 +584,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
 
   Future<void> _handleGuest() async {
+        MusicService.playClick();
     final guestNick = 'Guest_${DateTime.now().millisecondsSinceEpoch % 10000}';
 
 //    final prefs = await SharedPreferences.getInstance();

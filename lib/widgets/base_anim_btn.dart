@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+import 'package:wheel_of_fortune/services/music_service.dart';
+
+
 class BaseAnimatedButton extends StatefulWidget {
   final String text;
   final VoidCallback onPressed;
@@ -8,6 +11,7 @@ class BaseAnimatedButton extends StatefulWidget {
   final Color textColor;
   final EdgeInsets padding;
   final double fontSize;
+  final bool playClickSound;
 
   const BaseAnimatedButton({
     super.key,
@@ -17,15 +21,56 @@ class BaseAnimatedButton extends StatefulWidget {
     required this.textColor,
     this.padding = const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
     this.fontSize = 24,
+    this.playClickSound = true,
   });
 
   @override
   State<BaseAnimatedButton> createState() => _BaseAnimatedButtonState();
 }
 
-class _BaseAnimatedButtonState extends State<BaseAnimatedButton> {
+class _BaseAnimatedButtonState extends State<BaseAnimatedButton> 
+ with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
   bool pressed = false;
   bool hovered = false;
+
+  @override 
+  void initState() {
+   super.initState();
+  _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 100),
+  );
+  _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+    CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+  );
+}
+
+void _handlePress() {
+      debugPrint(' _handlePress called'); 
+  if (widget.onPressed == null) { 
+  debugPrint("on pressed in null");
+  return; 
+  }
+
+  if (widget.playClickSound) {
+      debugPrint(' playClickSound is true, calling playClick...');
+  debugPrint('Play click');
+    MusicService.playClick();
+  } else {
+        debugPrint(' playClickSound is false, skipping');
+  }
+  _controller.forward().then((_) {
+    _controller.reverse();
+    widget.onPressed!();
+  });
+}
+  @override 
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +84,7 @@ class _BaseAnimatedButtonState extends State<BaseAnimatedButton> {
         onTapDown: (_) => setState(() => pressed = true),
         onTapUp: (_) {
           setState(() => pressed = false);
-          widget.onPressed();
+          _handlePress();
         },
         onTapCancel: () => setState(() => pressed = false),
         child: AnimatedContainer(

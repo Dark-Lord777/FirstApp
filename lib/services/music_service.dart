@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:archive/archive_io.dart';
@@ -32,6 +33,8 @@ class MusicService {
 
   static final Random _random = Random();
   static bool _isAppInBackground = false;
+  static String _lastTrackPath = "";
+static Duration _lastTrackPosition = Duration.zero;
 
   // ===== GETTERS =====
   static bool get spinSoundEnabled => _spinSoundEnabled;
@@ -63,11 +66,20 @@ class MusicService {
     if (_initialized) return;
     _initialized = true;
 
+
+await _effectPlayer.setAudioContext(AudioContext(
+      android: const AudioContextAndroid(
+        isSpeakerphoneOn: false,
+        audioFocus: AndroidAudioFocus.none,
+      ),
+    ));
+
+
     _backgroundPlayer.onPlayerComplete.listen((_) {
-      debugPrint('Track finished, playing next...');
-      debugPrint('COMPLITE');
-      _playRandomBackground();
+      _onTrackComplete();
     });
+    await loadMusic(context: context);
+    await _loadSavedState();
     _backgroundPlayer.onPlayerStateChanged.listen((state) {
   debugPrint("STATE: $state");
 });
@@ -153,7 +165,25 @@ _backgroundPlayer.onDurationChanged.listen((d) {
     }
   }
   
+static Future<void> resumeMusic() async {
+  if (!AppConfigService().backgroundMusicEnabled) {
+    debugPrint(' Music disabled, not resuming');
+    return;
+  }
   
+  if (_backgroundTracks.isEmpty) {
+    debugPrint(' No tracks loaded, cannot resume');
+    return;
+  }
+  
+  if (_lastTrackPath.isNotEmpty) {
+    // Продолжаем с последнего трека
+    await _resumeFromSavedState();
+  } else {
+    // Или играем рандомный
+    await _playRandomBackground();
+  }
+}  
 
   static Future<void> play(String sound) async {
     final path = _sounds[sound];
@@ -164,6 +194,9 @@ _backgroundPlayer.onDurationChanged.listen((d) {
     }
 
     try {
+      if (_effectPlayer.state == PlayerState.playing) {
+        return;
+      }
       await _effectPlayer.stop();
       await _effectPlayer.play(
         DeviceFileSource(path),
@@ -181,35 +214,162 @@ _backgroundPlayer.onDurationChanged.listen((d) {
   static void setAppLifecycleState(AppLifecycleState state) {
     if (state ==  AppLifecycleState.paused || 
         state ==  AppLifecycleState.detached) {
+        _saveCurrentStateManually();
         _isAppInBackground = true;
         _backgroundPlayer.stop();
         debugPrint('Music paused (app in background)');
         } else if (state ==  AppLifecycleState.resumed) {
           if (_backgroundTracks.isNotEmpty && AppConfigService().backgroundMusicEnabled) {
-          _playRandomBackground();
+          _resumeFromSavedState();
           }
           debugPrint("Music resumed (app in foreground)");
         }
       }
+
+  static Future<void> _saveCurrentStateManually() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    
+    if (_lastTrackPath.isNotEmpty) {
+      await prefs.setString('last_track_path', _lastTrackPath);
+      await prefs.setInt('last_track_position', _lastTrackPosition.inMilliseconds);
+      debugPrint('💾 Saved manually: ${_lastTrackPath.split('/').last} at ${_lastTrackPosition.inSeconds}s');
+    }
+  } catch (e) {
+    debugPrint('⚠️ Failed to save state manually: $e');
+  }
+}
+
+static Future<void> _saveCurrentState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      if (_lastTrackPath.isNotEmpty) {
+        await prefs.setString('last_track_path', _lastTrackPath);
+      }
+      final position = await _backgroundPlayer.getCurrentPosition();
+      if (position != null) {
+        await prefs.setInt('last_track_position', position.inMilliseconds);
+      }
+      debugPrint('Saved state: ${_lastTrackPath.split('/').last} at ${position?.inSeconds}s');
+    } catch (e) {
+      debugPrint('failed to save state: $e');
+    }
+  }  
+
+  static Future<void> _resumeFromSavedState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      final trackPath = prefs.getString('last_track_path');
+      final positionMs = prefs.getInt('last_track_position');
+
+      if (trackPath == null || positionMs == null) {
+        if (_backgroundTracks.isNotEmpty) {
+        debugPrint('Not save a state');
+        await _playRandomBackground();
+        }
+        return;
+      }
+      final file = File(trackPath);
+      if (!await file.exists()) {
+        debugPrint('Saved track not found, playing random');
+        await _playRandomBackground();
+        return;
+      }
+      await _backgroundPlayer.stop();
+      await _backgroundPlayer.play(DeviceFileSource(trackPath), position: Duration(milliseconds: positionMs ?? 0));
+      await _backgroundPlayer.setVolume(1);
+      _lastTrackPath = trackPath;
+       _lastTrackPosition = Duration(milliseconds: positionMs);
+
+        _startPositionTimer();
+      debugPrint('Resumed: ${trackPath.split("/").last} at ${positionMs ~/ 1000}s');
+    } catch (e) {
+      debugPrint('failed to resume $e');
+      if (_backgroundTracks.isNotEmpty) {
+      await _playRandomBackground();
+      }
+    }
+  }
+  static Timer? _positionTimer;
+
+static void _startPositionTimer() {
+  _positionTimer?.cancel();
+  _positionTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    final pos = await _backgroundPlayer.getCurrentPosition();
+    if (pos != null) {
+      _lastTrackPosition = pos;
+               debugPrint('⏱️ Position updated: ${pos.inSeconds}s');
+    }
+  });
+}
+
+  static Future<void> _loadSavedState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final trackPath = prefs.getString('last_track_path');
+      final positionMs = prefs.getInt('last_track_position');
+
+      if (trackPath != null && positionMs != null) {
+        _lastTrackPath = trackPath;
+        _lastTrackPosition = Duration(milliseconds: positionMs);
+         debugPrint('📂 Loaded saved state: ${trackPath.split('/').last} at ${positionMs ~/ 1000}s');
+
+      }
+
+    } catch (e) {
+      debugPrint('Failed ti load saved state: $e');
+    }
+  }
+
+// ===== ЭФФЕКТЫ =====
+static Future<void> playClick() async {
+  if (!_sounds.containsKey("click")) {
+    debugPrint('⚠️ click sound not loaded');
+    return;
+  }
   
-  static Future<void> playClick() async {
-    await play("click");
+  try {
+    // 👇 НЕ ОСТАНАВЛИВАЕМ ДРУГИЕ ЭФФЕКТЫ
+    await _effectPlayer.play(DeviceFileSource(_sounds["click"]!));
+    await _effectPlayer.setVolume(0.5); // тише, чтобы не перекрывало
+  } catch (e) {
+    debugPrint('Error playing click: $e');
   }
-  static Future<void> playSpinSound() async {
-    if (!_spinSoundEnabled) return;
-    await play("spin");
-  }
+}
 
-  static Future<void> playWinSound() async {
-    if (!_winSoundEnabled) return;
-    await play("win");
+static Future<void> playSpinSound() async {
+  if (!_spinSoundEnabled) return;
+  if (!_sounds.containsKey("spin")) return;
+  
+  try {
+    await _effectPlayer.stop(); // 👈 ТОЛЬКО ЗДЕСЬ ОСТАНАВЛИВАЕМ
+    await _effectPlayer.play(DeviceFileSource(_sounds["spin"]!));
+    await _effectPlayer.setVolume(1);
+  } catch (e) {
+    debugPrint('Error playing spin: $e');
   }
+}
 
+static Future<void> playWinSound() async {
+  if (!_winSoundEnabled) return;
+  if (!_sounds.containsKey("win")) return;
+  
+  try {
+    await _effectPlayer.stop(); // 👈 ТОЛЬКО ЗДЕСЬ ОСТАНАВЛИВАЕМ
+    await _effectPlayer.play(DeviceFileSource(_sounds["win"]!));
+    await _effectPlayer.setVolume(1);
+  } catch (e) {
+    debugPrint('Error playing win: $e');
+  }
+}
   static Future<void> stopSpinSound() async {
     await _effectPlayer.stop();
   }
 
   static Future<void> stopMusic() async {
+      _positionTimer?.cancel();
     await _backgroundPlayer.stop();
     // НЕ ТРОГАЕМ _effectPlayer
   }
@@ -312,12 +472,23 @@ _backgroundPlayer.onDurationChanged.listen((d) {
         DeviceFileSource(path),
       );
       await _backgroundPlayer.setVolume(1);
+      _lastTrackPath = path;
+      _lastTrackPosition = Duration.zero;
+
+          _startPositionTimer();
+
       debugPrint("Playing: ${path.split('/').last}");
     } catch (e) {
       debugPrint('Error playing background: $e');
       debugPrint(e.toString());
     }
   }
+    static void _onTrackComplete() {
+      debugPrint('Track finished, playing next...');
+        _positionTimer?.cancel();
+      _playRandomBackground();
+    }
+  
 
 
   // ===== EFFECTS =====

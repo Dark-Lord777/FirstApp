@@ -155,8 +155,8 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
         color: [
                 Colors.orange.shade400,   // 🟧 ЯРКИЙ
         Colors.white,     // 🩰 РОЗОВЫЙ
-        Colors.white,     // 💎 БИРЮЗОВЫЙ
-        Colors.white,     // 🟩 САЛАТОВЫЙ
+        Colors.red,     // 💎 БИРЮЗОВЫЙ
+        Colors.purple,     // 🟩 САЛАТОВЫЙ
         Colors.yellow, // 🟪 ФИОЛЕТОВЫЙ
         Colors.yellow,   // 🟨 ЖЁЛТЫЙ
 
@@ -380,6 +380,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                 bottom: bottomButtons,
                 child: SpinBtn(
                   onPressed: () {
+                        debugPrint('Spin button pressed');
                     if (sectors.isEmpty) {
                       return;
                     }
@@ -394,7 +395,10 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                 left: 16,
                 child: Builder(
                   builder: (context) => GestureDetector(
-                    onTap: () => Scaffold.of(context).openDrawer(),
+                    onTap: () {
+                      MusicService.playClick();
+                    Scaffold.of(context).openDrawer();
+                    },
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(

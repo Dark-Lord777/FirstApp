@@ -4,6 +4,7 @@ import 'package:wheel_of_fortune/widgets/menu/change_icon.dart';
 import 'package:wheel_of_fortune/services/icon_catalog_service.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/screen/settings.dart';
+import 'package:wheel_of_fortune/services/music_service.dart';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -155,6 +156,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                             'Settings'
                           ),
                           onTap: () {
+                            MusicService.playClick();
                             Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const SettingsScreen()),
@@ -177,12 +179,18 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                         ListTile(
                           leading: const Icon(SimpleIcons.telegram, color: Colors.purple),
                           title: const Text('Subscribe to telegram channel'),
-                          onTap: () => _launchUrl(AppConfigService().tgChannel),
+                          onTap: () {
+                                MusicService.playClick();
+                          _launchUrl(AppConfigService().tgChannel);
+                          }
                         ),
                         ListTile(
                           leading: const Icon(SimpleIcons.buymeacoffee, color: Colors.purple),
                           title: Text('Buy me a coffee'),
-                          onTap: () => _launchUrl(AppConfigService().donateUrl),
+                          onTap: () { 
+                                MusicService.playClick();
+                            _launchUrl(AppConfigService().donateUrl);
+                          }
                         ),
                         Divider(color: Colors.purple.shade300),
                         const SizedBox(height: 24),
@@ -200,6 +208,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                           leading: const Icon(Icons.share, color: Colors.purple),
                           title: const Text('Share App'),
                           onTap: () {
+                                MusicService.playClick();
                             Share.share(AppConfigService().shareUrl);
 //                        Share.share('Check out Wheel of Fortune: Stars Edition! Download it here:\nhttps://uptodown.com');
 
@@ -208,17 +217,24 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                         ListTile(
                           leading: const Icon(Icons.description, color: Colors.purple),
                           title: const Text('Terms & Conditions'),
-                          onTap: () => _launchUrl(AppConfigService().termsUrl),
+                          onTap: () { 
+                                MusicService.playClick();
+                            _launchUrl(AppConfigService().termsUrl); 
+                          }
                         ),
                         ListTile(
                           leading: const Icon(Icons.privacy_tip, color: Colors.purple),
                           title: const Text('Privacy Policy'),
-                          onTap: () => _launchUrl(AppConfigService().privacyUrl),
+                          onTap: () {
+                                MusicService.playClick();
+                            _launchUrl(AppConfigService().privacyUrl);
+                          }
                         ),
                         ListTile(
                           leading: const Icon(Icons.info, color: Colors.purple),
                           title: const Text('About the app'),
                           onTap: () {
+                                MusicService.playClick();
                             showAboutDialog(
                               context: context,
                               applicationName: 'Wheel of Fortune',

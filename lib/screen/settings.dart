@@ -215,7 +215,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onChanged: (value) async {
                     setState(() {
                       _spinSoundEnabled = value;
-                      AppConfigService().spinSoundEnabled = value;
+                      AppConfigService().setSpinSoundEnabled(value);
                       MusicService.setSpinSoundEnabled(value);
                     });
                   },
@@ -239,9 +239,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   value: _winSoundEnabled,
                   onChanged: (value) async {
+                    MusicService.playClick();
+
                     setState(() {
                       _winSoundEnabled = value;
-                      AppConfigService().winSoundEnabled = value;
+                      AppConfigService().setWinSoundEnabled(value);
                       MusicService.setWinSoundEnabled(value);
                     });
                   },
@@ -271,10 +273,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onChanged: (value) async {
                     setState(() {
                       _backgroundMusicEnabled = value;
-                      AppConfigService().backgroundMusicEnabled = value;
+                      AppConfigService().setBackgroundMusicEnabled(value);
                     });
                     if (!value) {
-                      MusicService.stopMusic();
+                       MusicService.playClick();
+                        MusicService.stopMusic();
                       if (!await GameMessage.wasShown("music_disabled")) {
                         await GameMessage.show(
                           context: context,
@@ -291,7 +294,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         await GameMessage.markShown("music_disabled");
                       }
                     } else {
-                      MusicService.reloadMusic(context: context);
+               //     MusicService.playClick();
+               //     MusicService.reloadMusic(context: context);
+                        MusicService.resumeMusic();
+
                     }
                   },
                   activeColor: Colors.purple,
@@ -323,9 +329,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   value: _starsEnabled,
                   onChanged: (value) {
+                   MusicService.playClick();
                     setState(() {
                       _starsEnabled = value;
-                      AppConfigService().starsEnabled = value;
+                      AppConfigService().setStarsEnabled(value);
                     });
                   },
                   activeColor: Colors.purple,
