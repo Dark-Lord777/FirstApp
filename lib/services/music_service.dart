@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'package:flutter/services.dart';
 import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as p;
 import 'package:audioplayers/audioplayers.dart';
@@ -35,6 +36,15 @@ class MusicService {
   static bool _isAppInBackground = false;
   static String _lastTrackPath = "";
 static Duration _lastTrackPosition = Duration.zero;
+
+  static const Map<String, String> _musicFolders = {
+  'BackgroundMusic': 'bg',
+  'Spin': 'spin',
+  'Win': 'win',
+  'UI': 'click',
+};
+  static const List<String> _supportedExtensions = ['.mp3', '.wav', '.ogg'];
+
 
   // ===== GETTERS =====
   static bool get spinSoundEnabled => _spinSoundEnabled;
@@ -88,9 +98,172 @@ _backgroundPlayer.onDurationChanged.listen((d) {
   debugPrint("DURATION: $d");
 });
 
-    await loadMusic(context: context);
+   // await loadMusic(context: context);
   }
-    
+  
+  static Future<void> _loadMusic({required BuildContext context}) async {
+    if (_isDownloading) {
+      debugPrint('Music download already running');
+      return;
+    }
+
+    _isDownloading = true;
+    try {
+      if (!AppConfigService().backgroundMusicEnabled) {
+        await stopMusic();
+        return;
+      }
+
+      await _loadAllMusic();
+
+      _updateMusic(context);
+
+      _musicLoaded = true;
+
+      if (_backgroundTracks.isNotEmpty && !_isAppInBackground) {
+        await _playRandomBackground();
+      }
+      debugPrint("Music initialized");
+    } catch (e) {
+      debugPrint('Music loading failed: $e');
+      BotToast.showText(text: "Music loading failed");
+    } finally {
+      _isDownloading = false;
+    }
+  /*
+    _backgroundTracks.clear();
+    _sounds.clear();
+
+    await _loadFromAssets();
+
+
+    await _loadAllMusic
+    await _loadFromDisk();
+     debugPrint("✅ Music (archived) loaded: ${_backgroundTracks.length} bg tracks, ${_sounds.length} effects");
+
+*/ 
+  }
+  static Future<void> _loadAllMusic() async {
+    _backgroundTracks.clear();
+    _sounds.clear();
+
+    await _loadFromAssets();
+
+    await _loadFromDisk();
+         debugPrint("✅ Music (archived) loaded: ${_backgroundTracks.length} bg tracks, ${_sounds.length} effects");
+
+  }
+
+  static Future<void> _loadFromAssets() async {
+    try {
+      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      final assets = manifest.listAssets();
+
+      for (final folder in _musicFolders.keys) {
+        final folderPath = 'assets/music/$folder/';
+        final type = _musicFolders[folder]!;
+        for (final asset in assets) {
+          if (asset.startsWith(folderPath) && _isSupportedFile(asset)) {
+            if (folder == 'BackgroundMusic') {
+              _backgroundTracks.add(asset);
+            } else {
+              _sounds[type] = asset;
+            }
+          }
+        }
+      }
+      debugPrint('Loaded from assets');
+    } catch (e) {
+      debugPrint('Failed to load from assets: $e');
+    }
+  }
+  
+  static Future<void> _loadFromDisk() async {
+    try {
+      final musicDir = await _musicDirectory();
+
+      for (final folder in _musicFolders.keys) {
+        final dir = Directory("${musicDir.path}/$folder");
+      if (!await dir.exists()) continue;
+
+      final files = dir.listSync();
+      final type = _musicFolders[folder]!;
+
+      for (final entity in files) {
+          if (entity is! File) continue;
+        final path = entity.path;
+      if (_isSupportedFile(path)) {
+        if (folder == 'BackgroundMusic') {
+          if (!_backgroundTracks.contains(path)) {
+              _backgroundTracks.add(path);
+              }
+            } else {
+             //Перезаписываем assets (диск приоритетнее)
+            _sounds[type] = path;
+            }
+          }
+        }
+      }
+      debugPrint('Loaded from Disk');
+    } catch (e) {
+      debugPrint('Failed to load from disk: $e');
+    }
+  }
+
+  static bool _isSupportedFile(String path) {
+    return _supportedExtensions.any((ext) => path.toLowerCase().endsWith(ext));
+  }
+
+  static Future<void> _loadFolder({
+    required String folder,
+    required String type,
+    required bool isBackground,
+  }) async {
+    try {
+      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      final assets = manifest.listAssets();
+      final folderPath = 'assets/music/$folder/';
+
+      for (final asset in assets) {
+        if (asset.startsWith(folderPath) && _isSupportedFile(asset)) {
+          if (isBackground) {
+            if (!_backgroundTracks.contains(asset)) {
+              _backgroundTracks.add(asset);
+            }
+          } else {
+            _sounds[type] = asset;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to load $folder from assets: $e');
+    }
+
+    try {
+      final musicDir = await _musicDirectory();
+      final dir = Directory("${musicDir.path}/$folder");
+      if (!await dir.exists()) return;
+
+      final files = dir.listSync();
+      for (final entity in files) {
+        if (entity is! File) continue;
+        final path = entity.path;
+        if (_isSupportedFile(path)) {
+          if (isBackground) {
+            if (!_backgroundTracks.contains(path)) {
+              _backgroundTracks.add(path);
+            }
+          } else {
+            _sounds[type] = path;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to load $folder from disk: $e');
+    }
+  }
+
+
   static Future<void> reloadMusic({
     required BuildContext context,
   }) async {
@@ -134,7 +307,15 @@ _backgroundPlayer.onDurationChanged.listen((d) {
       
  //     await _checkForceUpdate(context);
       await _loadBackgroundMusic();
-      await _loadEffects();
+   //   await _loadEffect();
+
+      // ❌ БЫЛО
+//await _loadEffects();
+
+
+await _loadEffects("spin");
+await _loadEffects("win");
+await _loadEffects("click");
 
        _updateMusic(context);
     /*
@@ -392,12 +573,17 @@ static Future<void> playWinSound() async {
 
   // ===== BACKGROUND MUSIC =====
   static Future<void> _loadBackgroundMusic() async {
+    await _loadFolder(
+      folder: 'BackgroundMusic',
+      type: 'bg',
+      isBackground: true,
+    );
     _backgroundTracks.clear();
 
  //   final files = await _getFileList("bg");
-    final musicDir = await _musicDirectory();
-    final bgDir = Directory("${musicDir.path}/BackgroundMusic");
-
+ //   final musicDir = await _musicDirectory();
+   // final bgDir = Directory("${musicDir.path}/BackgroundMusic");
+/*
     if (!await bgDir.exists()) {
       debugPrint("BackgroundMusic folder not found");
       return;
@@ -415,6 +601,7 @@ static Future<void> playWinSound() async {
         _backgroundTracks.add(entity.path);
       } 
   }
+*/ 
     debugPrint("Loaded ${_backgroundTracks.length} background tracks");
   }
   /*
@@ -492,13 +679,31 @@ static Future<void> playWinSound() async {
 
 
   // ===== EFFECTS =====
-  static Future<void> _loadEffects() async {
-    await _loadEffect("spin");
-    await _loadEffect("win");
-    await _loadEffect("click");
+  static Future<void> _loadEffects(String type) async {
+    final folder = _musicFolders.keys.firstWhere(
+      (key) => _musicFolders[key] == type,
+      orElse: () => '',
+    );
+    
+    if (folder.isEmpty) {
+      debugPrint("Unknown effect type: $type");
+      return;
+    }
+
+    await _loadFolder(
+      folder: folder,
+      type: type,
+      isBackground: false,
+    );
+    debugPrint("Loaded $type effect: ${_sounds[type] ?? 'not found'}");
   }
 
   static Future<void> _loadEffect(String type) async {
+    await _loadEffect("spin");
+    await _loadEffects("win");
+    await _loadEffects('click');
+
+  /*
  //   final files = await _getFileList(type);
     final musicDir = await _musicDirectory();
     late String folder;
@@ -534,6 +739,7 @@ static Future<void> playWinSound() async {
     }
     
     debugPrint("$folder sound not found");
+    */ 
   }
 /*
     if (files.isEmpty) {
@@ -660,8 +866,10 @@ static Future<void> _updateMusic(BuildContext context) async {
   final remoteVersion = AppConfigService().musicVersion;
 
   if (_musicVersion == remoteVersion) {
+  debugPrint("Music is up to date version $_musicVersion");
     return;
   }
+    debugPrint("New music version available $remoteVersion");
 
   final ok = await _downloadArchive(
         "${AppConfigService().workerUrl}/music",
@@ -677,12 +885,18 @@ static Future<void> _updateMusic(BuildContext context) async {
     _backgroundTracks.clear();
     _sounds.clear();
 
+    await _loadAllMusic();
+
+    if (_backgroundTracks.isNotEmpty) {
+      await _playRandomBackground();
+    }
+/*
     await _loadBackgroundMusic();
     await _loadEffects();
     if (_backgroundTracks.isNotEmpty) {
       await _playRandomBackground();
     }
-
+*/ 
       if (AppConfigService().showMusicUpdateMessage) {
     await GameMessage.show(
       context: context,
@@ -867,6 +1081,8 @@ static Future<void> clearMusicCache() async {
     _musicLoaded = false;
     _backgroundTracks.clear();
     _sounds.clear();
+
+    await _loadAllMusic();
   } catch (e) {
     debugPrint('Error clearing music cache: $e');
   }
