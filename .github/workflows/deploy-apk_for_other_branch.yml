@@ -55,6 +55,14 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: 
           flutter-version: ${{ env.FLUTTER_VERSION }}
+      - name: Dump icons
+        run: |
+          echo "=== RELEASE ==="
+          find android/app/src/release/res -type f | sort
+
+          echo
+          echo "=== MAIN ==="
+          find android/app/src/main/res -type f | sort
       - name: I don't know 
         continue-on-error: true
         run: |
@@ -68,13 +76,21 @@ jobs:
         continue-on-error: true
         run: |
           flutter pub get
-          dart run bee_dynamic_launcher 
+          
           ./resize_icons.sh 
           ls -la 
-          ls - la android/app/src/release/res/mipmap-hdpi
+          ls -la android/app/src/release/res/mipmap-hdpi
           ls android/app/src/release/res/mipmap-mdpi 
           ls android/app/src/release/res/mipmap-xxhdpi
           ls android/app/src/main/res/mipmap-hdpi
+      - name: Dump icons
+        run: |
+          echo "=== RELEASE ==="
+          find android/app/src/release/res -type f | sort
+
+          echo
+          echo "=== MAIN ==="
+          find android/app/src/main/res -type f | sort
 
     
       - name: Remove adaptive icons (fix AAPT errors)
