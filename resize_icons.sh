@@ -31,7 +31,10 @@ if ! command -v bc &>/dev/null; then
 	fi
 fi
 
-cd /workspace
+echo "PWD before: $(pwd)"
+pwd
+ls
+
 mkdir -p "$RES_DIR/values/"
 mkdir -p "$RES_DIR/mipmap-anydpi-v26/"
 
