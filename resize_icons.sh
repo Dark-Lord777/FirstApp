@@ -10,15 +10,16 @@ if [ ! -f /etc/os-release ] || ! grep -q "Ubuntu" /etc/os-release; then
 fi
 
 echo "Env okey(Ubuntu). Check ImageMagick"
-if ! command -v convert &>/dev/null; then
-	echo "Install ImageMagick"
-	apt-get update && apt-get install -y imagemagick
 
-	if ! command -v convert &>/dev/null; then
-		echo "Critical error. Exitting"
-		exit 1
-	fi
-fi
+#if ! command -v convert &>/dev/null; then
+#	echo "Install ImageMagick"
+#	apt-get update && apt-get install -y imagemagick
+
+#	if ! command -v convert &>/dev/null; then
+#		echo "Critical error. Exitting"
+#		exit 1
+#	fi
+#fi
 
 # Проверка и установка bc
 if ! command -v bc &>/dev/null; then
