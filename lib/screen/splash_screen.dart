@@ -5,6 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 //import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
 import 'package:wheel_of_fortune/screen/welcome.dart';
 import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
+import 'package:wheel_of_fortune/screen/maintenance_screen.dart';
+import 'package:wheel_of_fortune/services/routing.dart';
+import 'package:wheel_of_fortune/services/app_config_service.dart';
 
 
 class SplashScreen extends StatefulWidget {
@@ -68,16 +71,26 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
   void _navigateToNextScreen() async {
+    final routing = RoutingService();
+    final config = AppConfigService();
+
+/*
     final prefs = await SharedPreferences.getInstance();
     final isRegistered = prefs.getBool('is_registered') ?? false;
     final isGuest = prefs.getBool('is_guest') ?? false;
-
+*/ 
     Widget nextScreen;
-    if (isRegistered || isGuest) {
+
+    if (config.isMaintenanceActive) {
+      nextScreen = const MaintenanceScreen();
+    }
+
+    else if (routing.isRegistered || routing.isGuest) {
       nextScreen = const WheelScreen();
     } else {
       nextScreen = const WelcomeScreen();
     }
+    debugPrint('Navigating to: ${nextScreen.runtimeType}');
     Navigator.pushReplacement(
       context,
     MaterialPageRoute(builder: (_) => nextScreen),

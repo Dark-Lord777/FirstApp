@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 
 import 'package:wheel_of_fortune/services/music_service.dart';
+import 'package:wheel_of_fortune/services/app_config_service.dart';
 
 
 class _FortuneRandom {
@@ -94,12 +95,18 @@ class WheelLogic {
   bool get isSpinning => _isSpinning;
   
   void spin() {
+    final config = AppConfigService();
+
+    final minRot = config.minRotations;
+    final maxRot = config.maxRotations;
+    final duration = config.spinDuration;
+
     if (_isSpinning) return;
     if (sectors.isEmpty) return;
     
     _startAngle = _currentAngle;
     
-    int fullRotations = _random.nextInt(6, 20);  
+    int fullRotations = _random.nextInt(minRot, maxRot);  
     double landingAngle = _random.nextDouble() * 2 * pi;
     _targetDelta = fullRotations * 2 * pi + landingAngle;
     

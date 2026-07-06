@@ -29,7 +29,20 @@ class AppConfigService {
   bool spinSoundEnabled = true;
   bool winSoundEnabled = true;
   bool backgroundMusicEnabled = true;
-
+//    bool get isMaintenanceActive => _config["maintenance"]?["is_active"] ?? false;
+//  bool get isMaintenanceActive  => _config["maintence"]?["is_active"] ?? false;
+ // bool get isMaintenanceActive => isMaintenanceActive; 
+  bool get isMaintenanceActive => _config["maintenance"]?["is_active"] ?? false;
+  String get maintenanceTitle => _config["maintenance"]?["title"] ?? "🔧 Maintenance";
+  String get maintenanceMessage {
+    final msg = _config["maintenance"]?["message"];
+    if (msg is List) {
+      return msg.join('\n');
+    }
+    return msg ?? "We'll be back soon!";
+  }
+  String get maintenanceType => _config["maintenance"]?["type"] ?? "maintenance";
+  
   dynamic operator [](String key) => _config[key];
 
   String get version => _config["version"] ?? "0";
@@ -44,7 +57,17 @@ class AppConfigService {
   String get musicVersion => _config["music"]?["music_version"] ?? "0";
   String get musicArchiveUrl => _config["music"]?["archive_url"] ?? "";
   String get musicReason => _config["music"]?["reason"] ?? "";
+//  Stringring get maintenanceTitle => _config["maintence"]?["title"] ?? "🔧 Maintence";
+  //String get maintenanceMessage => _config["maintence"]?["message"] ?? "We'll be bacck soon!";
+//  String get maintenanceType => _config["maintence"]?["type"] ?? "maintence";
+
   bool get showMusicUpdateMessage => _config["music"]?["show_update_message"] ?? false;
+
+
+  int get syncInterval => _config['syncInterval'] ?? 5;
+  int get spinDuration => _config['spinDuration'] ?? 9;
+  int get minRotations => _config['minRotations'] ?? 6;
+  int get maxRotations => _config['maxRotations'] ?? 20;
 
 
   Map<String, dynamic> get music =>

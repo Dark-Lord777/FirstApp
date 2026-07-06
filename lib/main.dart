@@ -17,68 +17,68 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugPrint, kReleaseMode;
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 
-
-// Глобальный доступ к navigatorKey (нужен для GameEventsService)
+// Глобальный доступ к navigatorKey
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // КОНЕЦ ВСТАВКИ
- //   await RoutingService().init();
-    runApp(const MyApp());
-    unawaited(_initializeServices());
-
+  // 👇 СНАЧАЛА ИНИЦИАЛИЗИРУЕМ ВСЕ СЕРВИСЫ
+  await _initServices();
+  
+  // 👇 ПОТОМ ЗАПУСКАЕМ ПРИЛОЖЕНИЕ
+  runApp(const MyApp());
 }
-  Future<void> _initializeServices() async {
+
+Future<void> _initServices() async {
   try {
     await Firebase.initializeApp();
-    debugPrint('Firebase initialized succesfully');
+    debugPrint('Firebase initialized successfully');
   } catch (e) {
     debugPrint('Firebase init failed $e');
   }
-     // НАЧАЛО ВСТАВКИ: убираем белую полосу снизу (исправленный регистр букв)
+  
+  // Настройки системы
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    systemNavigationBarColor: Colors.transparent, // Делаем панель прозрачной
-    systemNavigationBarDividerColor: Colors.transparent, // Убираем разделитель
-    systemNavigationBarIconBrightness: Brightness.light, // Иконки будут светлыми
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.light,
   ));
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge); // Разрешаем приложению заходить под полоску
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  
+  // ИНИЦИАЛИЗИРУЕМ ВСЕ СЕРВИСЫ ПО ПОРЯДКУ
+  await RoutingService().init();      // 1. Роутинг
+  await AppConfigService().init();    // 2. Конфиг с сервера
+  await GameEventsService().init();   // 3. События
+  
+  // Инициализация других сервисов в фоне
+  unawaited(_initOtherServices());
+}
 
-      await RoutingService().init();
-
-  await AppConfigService().init(); 
-
-  // ИНИЦИАЛИЗАЦИЯ GameEventsService
-  await GameEventsService().init();
-
+Future<void> _initOtherServices() async {
   if (kReleaseMode) {
     debugPrint = (String? message, {int? wrapWidth}) {};
   }
 
-  // initialisation bee_dynamic_launcher
+  // Launcher
   if (!kIsWeb && Platform.isAndroid) {
     try {
       await BeeDynamicLauncher.initializeFromCatalog();
       debugPrint('Launcher initialized');
-      final variants = await BeeDynamicLauncher.getAvailableVariants();
-      debugPrint('Available variants: $variants');
-      
-      final current = await BeeDynamicLauncher.getCurrentVariant();
-      debugPrint("Current variant: $current");
     } catch (e) {
       debugPrint('Init error: $e');
     }
   }
 
+  // User ID
   final userId = await UserIdService.getUserId();
   final deviceId = await UserIdService.getDeviceId();
   debugPrint('User ID: $userId');
   debugPrint('Device Id: $deviceId');
 
+  // FCM
   String? fcmToken;
   try {
     fcmToken = await FirebaseMessaging.instance.getToken();
@@ -90,7 +90,6 @@ void main() async {
     await NotificationService.registerDevice(fcmToken);
   }
 }
-
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -105,7 +104,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     
-    // Загружаем музыку после инициализации виджета
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadMusic();
     });
@@ -116,8 +114,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       final context = navigatorKey.currentContext;
       if (context != null) {
         await MusicService.initialize(context: context);
-      } else {
-        debugPrint('Context not available for music loading');
       }
     } catch (e) {
       debugPrint('Failed to load music: $e');
@@ -127,10 +123,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     MusicService.setAppLifecycleState(state);
-
-    if (state == AppLifecycleState.paused || 
-        state == AppLifecycleState.detached) {
-      // Сохраняем всё при сворачивании
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
       GameEventsService().endSession();
     }
   }
@@ -148,9 +141,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       theme: ThemeData.dark(),
-       home: const SplashScreen(),
-    //  home: RoutingService().getInitialScreen(),
-      //home: const RoutingService(),
+      home: const SplashScreen(), 
       builder: (context, child) {
         child = BotToastInit()(context, child);
         return child;
