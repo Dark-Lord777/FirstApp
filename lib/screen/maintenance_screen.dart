@@ -25,8 +25,8 @@ with TickerProviderStateMixin {
   final List<_FloatingParticle> _particles = [];
   final Random _random = Random();
 
-  _Comet? _comet;
-  Timer? _cometTimer;
+//  _Comet? _comet;
+  //Timer? _cometTimer;
 
   int _messageIndex = 0;
   Timer? _messageTimer;
@@ -79,7 +79,7 @@ with TickerProviderStateMixin {
     );
 
     _initParticles();
-    _initCometTimer();
+    //_initCometTimer();
     _initMessageTimer();
    // _initDotTimer();
   }
@@ -103,11 +103,13 @@ with TickerProviderStateMixin {
     ));
     }
   }
-
+/*
   void _initCometTimer() {
-    _cometTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _cometTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (mounted) {
         setState(() {
+        final fromLeft = _random.nextBool();
+        final fromTop = _random.nextBool();
         _comet = _Comet(
           startX: -0.1,
           startY: _random.nextDouble() * 0.6 + 0.1,
@@ -138,12 +140,12 @@ with TickerProviderStateMixin {
       });
     });
   }
-
+*/ 
   void _initMessageTimer() {
     _messageTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
       if (!mounted) return;
       _textFadeController.reverse().then((_) {
-        if (!mounted) {
+        if (mounted) {
         setState(() {
           _messageIndex = (_messageIndex + 1) % _messages.length;
           _currentMessage = _messages[_messageIndex];
@@ -169,9 +171,9 @@ with TickerProviderStateMixin {
     _rotationController.dispose();
     _particlesController.dispose();
     _textFadeController.dispose();
-    _cometTimer?.cancel();
+  //  _cometTimer?.cancel();
     _messageTimer?.cancel();
-    _dotTimer?.cancel();
+  //  _dotTimer?.cancel();
     super.dispose();
   }
 
@@ -197,8 +199,64 @@ with TickerProviderStateMixin {
 
           child: Stack(
           children: [
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: _rotationController,
+                builder: (context, child) {
+                  return Transform.rotate(
+                    angle: _rotationController.value * 2 * pi * 0.3,
+                    child: Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.purple.withOpacity(0.08),
+                          width: 2,
+                        ),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: List.generate(12, (index) {
+                          final angle = index * (2 * pi / 12);
+                          return Transform.rotate(
+                            angle: angle,
+                            child: Container(
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              height: 1,
+                              color: Colors.purple.withOpacity(0.07),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
             ..._particles.map((p) => _buildParticle(p, size)),
-                        if (_comet != null) _buildComet(_comet!, size),
+   //                     if (_comet != null) _buildComet(_comet!, size),
+
+            
+            Positioned(
+              bottom: size.height * 0.12,
+              left: -size.width * 0.1,
+              child: AnimatedBuilder(
+                animation: _rotationController,
+                builder: (context, child) {
+                  final angle = -_rotationController.value * 2 * pi * 0.7 +
+                      sin(_rotationController.value * 2) * 0.2;
+                  return Transform.rotate(
+                    angle: angle,
+                    child: Icon(
+                      Icons.settings,
+                      size: size.width * 0.2,
+                      color: Colors.pink.shade300.withOpacity(0.06),
+                    ),
+                  );
+                },
+              ),
+            ),
 
             Positioned(
               top: size.height * 0.1,
@@ -367,7 +425,10 @@ with TickerProviderStateMixin {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                             ' We\'re polishing the wheel...',
+                              _currentMessage,
+                         //  _currentMessage + '.' * (_dotCount % 4),
+
+                            // ' We\'re polishing the wheel...',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.white.withOpacity(0.4),
@@ -424,9 +485,16 @@ with TickerProviderStateMixin {
     );
   }
 
+/*
   Widget _buildComet(_Comet comet, Size size) {
+        final dx = comet.endX - comet.startX;
+        final dy = comet.endY - comet.startY;
+        final angle = atan2(dy, dx);
+
     final x = comet.startX * size.width + (comet.endX - comet.startX) * size.width * comet.progress;
     final y = comet.startY * size.height + (comet.endY - comet.startY) * size.height * comet.progress;
+      
+        final trailLength = 60.0;
 
     return Positioned(
       left: x - 40,
@@ -452,8 +520,9 @@ with TickerProviderStateMixin {
       ),
     );
   }
-  
+ */  
 }
+
 
 class _FloatingParticle {
   double x, y, size, speed, opacity, dx, dy;
@@ -480,7 +549,7 @@ class _FloatingParticle {
     if (y < 0) y = 1;
   }
 }
-
+/*
 class _Comet {
   double startX, startY, endX, endY, progress;
 
@@ -492,4 +561,4 @@ class _Comet {
     required this.progress,
   });
 }
-
+*/ 
