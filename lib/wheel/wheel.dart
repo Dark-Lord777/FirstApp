@@ -30,7 +30,6 @@ class WheelDraw extends StatelessWidget {
             blurRadius: 60,
             spreadRadius: 5,
           ),
-
           BoxShadow(
             color: Colors.purple.shade400.withOpacity(0.3),
             blurRadius: 80,
@@ -93,9 +92,6 @@ class _WheelPainter extends CustomPainter {
         canvas,
         Offset(center.dx - textPainter.width / 2, center.dy - textPainter.height / 2),
       );
-
- //     Paint centerDot = Paint()..color = Colors.white;
-   //   canvas.drawCircle(center, 5, centerDot);
       return;
     }
     
@@ -149,6 +145,32 @@ class _WheelPainter extends CustomPainter {
       );
       
       startAngle += anglePerSector;
+    }
+
+    // ===== 🔥 СПИЦЫ (линии от центра к краю) =====
+    if (sectors.length >= 2) {
+      double spokeAngle = -pi / 2 + rotationAngle;
+      for (int i = 0; i < sectors.length; i++) {
+        // Золотая спица с свечением
+        Paint spokePaint = Paint()
+          ..color = Colors.amber.shade400.withOpacity(0.9)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.0
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+        
+        double endX = center.dx + radius * cos(spokeAngle);
+        double endY = center.dy + radius * sin(spokeAngle);
+        canvas.drawLine(center, Offset(endX, endY), spokePaint);
+        
+        // Белая тонкая линия поверх
+        Paint innerSpokePaint = Paint()
+          ..color = Colors.white.withOpacity(0.3)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0;
+        canvas.drawLine(center, Offset(endX, endY), innerSpokePaint);
+        
+        spokeAngle += anglePerSector;
+      }
     }
     
     Paint pointerPaint = Paint()

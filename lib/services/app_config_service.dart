@@ -58,7 +58,7 @@ class AppConfigService {
   dynamic operator [](String key) => _config[key];
 
   String get version => _config["version"] ?? "0";
-  String get workerUrl => _workerUrl;
+ // String get workerUrl => _workerUrl;
   String get titleText => _config["titleText"] ?? "";
   String get termsUrl => _config["termsUrl"] ?? "";
   String get privacyUrl => _config["privacyUrl"] ?? "";
