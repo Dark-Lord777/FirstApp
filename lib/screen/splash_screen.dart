@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     duration: const Duration(milliseconds: 1500),
     );
-    _scaleAnimation = Tween<double>(begin: 1.5, end: 0.95).animate(
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
     );
     //move a logo to below part a screen 
@@ -56,10 +56,10 @@ class _SplashScreenState extends State<SplashScreen>
     duration: const Duration(milliseconds: 1500),
     );
     _positionedAnimation = Tween<Offset>(
-      begin: const Offset(0, 0), //centre of screen
-      end: const Offset(0, -0.37), 
+      begin: const Offset(0, 0.3), //centre of screen
+      end: const Offset(0, 0), 
     ).animate(
-      CurvedAnimation(parent: _positionController, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _positionController, curve: Curves.easeOutBack),
     );
 
     //launch a animation
@@ -91,43 +91,38 @@ class _SplashScreenState extends State<SplashScreen>
       nextScreen = const WelcomeScreen();
     }
     debugPrint('Navigating to: ${nextScreen.runtimeType}');
-    Navigator.pushReplacement(
+
+      Navigator.pushReplacement(
       context,
-    MaterialPageRoute(builder: (_) => nextScreen),
-    );
-  }
-  
-/*
-  Widget getInitialScreen() {
-    if(_isRegistered || _isGuest) {
-      debugPrint('User Already: nickname=$nickname, going to Wheelscreen');
-      return const WheelScreen();
-    } else {
-      debugPrint('No user found, showing WelcomeScreen');
-      return const WelcomeScreen();
-    }
-  }
-  void _navigateToWelcome() {
-    Navigator.pushReplacement(
-      context,
-    PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => const WelcomeScreen(),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = 0.0;
-        const end = 1.0;
-        const curve = Curves.easeInOut;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          var opacityAnimation = animation.drive(tween);
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Сначала появляется, потом увеличивается и затухает
+          final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+            CurvedAnimation(
+              parent: animation,
+              curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+            ),
+          );
+          final scaleAnimation = Tween<double>(begin: 1.1, end: 1.0).animate(
+            CurvedAnimation(
+              parent: animation,
+              curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+            ),
+          );
+          
           return FadeTransition(
-          opacity: opacityAnimation,
-          child: child,
+            opacity: fadeAnimation,
+            child: ScaleTransition(
+              scale: scaleAnimation,
+              child: child,
+            ),
           );
         },
-      transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 600),
       ),
     );
   }
-*/ 
   @override
   void dispose() {
     _rotationController.dispose();
