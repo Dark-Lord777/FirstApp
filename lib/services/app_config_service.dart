@@ -9,14 +9,17 @@ class AppConfigService {
   static final AppConfigService _instance = AppConfigService._();
   factory AppConfigService() => _instance;
 
-  static const _workerUrl =
+  static const _defaultWorkerUrl =
       "https://firstapp-backend.dark-lord.workers.dev";
+  
 
   final ValueNotifier<bool> starsNotifier = ValueNotifier(false);
 
   Map<String, dynamic> _config = {
     "version": "0",
     "titleText": "Are you lucky today?",
+    "workerUrl": _defaultWorkerUrl,
+    "backupUrl": "",
     "termsUrl": "https://dark-lord.pages.dev/projects/fortune/terms",
     "privacyUrl": "https://dark-lord.pages.dev/projects/fortune/privacy",
     "shareUrl": "",
@@ -32,6 +35,15 @@ class AppConfigService {
 //    bool get isMaintenanceActive => _config["maintenance"]?["is_active"] ?? false;
 //  bool get isMaintenanceActive  => _config["maintence"]?["is_active"] ?? false;
  // bool get isMaintenanceActive => isMaintenanceActive; 
+    String get workerUrl {
+    final url = _config["workerUrl"] as String?;
+    return (url != null && url.isNotEmpty) ? url : _defaultWorkerUrl;
+  }
+   String get backupUrl {
+    final url = _config["backupUrl"] as String?;
+    return (url != null && url.isNotEmpty) ? url : "";
+  }
+
   bool get isMaintenanceActive => _config["maintenance"]?["is_active"] ?? false;
   String get maintenanceTitle => _config["maintenance"]?["title"] ?? "🔧 Maintenance";
   String get maintenanceMessage {
@@ -98,37 +110,63 @@ class AppConfigService {
         backgroundMusicEnabled;
   }
 
-  Future<void> _loadConfig() async {
+ Future<void> _loadConfig() async {
     try {
+      final url = workerUrl;
+      debugPrint("📡 Trying main: $url/config");
+      
       final response = await http
           .get(
-            Uri.parse("$_workerUrl/config"),
-            headers: const {
-              "Content-Type": "application/json",
-            },
+            Uri.parse("$url/config"),
+            headers: const {"Content-Type": "application/json"},
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 3));
 
-      if (response.statusCode != 200) return;
-
-      final config =
-          Map<String, dynamic>.from(jsonDecode(response.body));
-
-      if (config["version"] == _config["version"]) return;
-
-      _config = config;
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        "cached_config",
-        jsonEncode(_config),
-      );
-
-      debugPrint("Config updated (${_config["version"]})");
+      if (response.statusCode == 200) {
+        final config = Map<String, dynamic>.from(jsonDecode(response.body));
+        if (config["version"] != _config["version"]) {
+          _config = config;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString("cached_config", jsonEncode(_config));
+          debugPrint("✅ Config updated from main (${_config["version"]})");
+        }
+        return;
+      }
     } catch (e) {
-      debugPrint("Config error: $e");
+      debugPrint("⚠️ Main server failed: $e");
     }
+
+    final backup = backupUrl;
+    if (backup.isNotEmpty) {
+      try {
+        debugPrint("🔄 Trying backup: $backup");
+        final response = await http
+            .get(
+              Uri.parse(backup),
+              headers: const {"Content-Type": "application/json"},
+            )
+            .timeout(const Duration(seconds: 4));
+
+        if (response.statusCode == 200) {
+          final config = Map<String, dynamic>.from(jsonDecode(response.body));
+          if (config["version"] != _config["version"]) {
+            _config = config;
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString("cached_config", jsonEncode(_config));
+            debugPrint("✅ Config updated from backup (${_config["version"]})");
+          }
+          return;
+        }
+      } catch (e) {
+        debugPrint("⚠️ Backup server failed: $e");
+      }
+    }
+
+    debugPrint("❌ All servers unavailable. Using cached config.");
   }
+
+
+
 
   Future<void> setStarsEnabled(bool value) async {
     starsEnabled = value;
