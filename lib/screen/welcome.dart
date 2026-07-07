@@ -20,7 +20,7 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen>
     with TickerProviderStateMixin {
-  // ===== АНИМАЦИИ =====
+  // ===== ANIMATIONS =====
   late AnimationController _mainController;
   late Animation<double> _fadeIn;
   late Animation<double> _scaleIn;
@@ -32,7 +32,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   late AnimationController _particleController;
   final List<_Particle> _particles = [];
 
-  // ===== ПОЛЕ =====
+  // ===== FIELDS =====
   final TextEditingController _nickController = TextEditingController();
   final FocusNode _nickFocusNode = FocusNode();
   bool _isLoading = false;
@@ -140,17 +140,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           ),
           child: Stack(
             children: [
-              // ===== ЧАСТИЦЫ =====
+              // ===== PARTICLES =====
               ..._particles.map((p) => _buildParticle(p, size)),
 
-              // ===== ОСНОВНОЙ КОНТЕНТ ЧЕРЕЗ СЛИВЕРЫ =====
+              // ===== MAIN CONTENT THROUGH SLIVERS =====
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 28),
                   child: CustomScrollView(
                     physics: const ClampingScrollPhysics(),
                     slivers: [
-                      // Оборачиваем всю Column с основным контентом в SliverToBoxAdapter
                       SliverToBoxAdapter(
                         child: Transform.translate(
                           offset: const Offset(0, 10),
@@ -159,7 +158,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             children: [
                               const SizedBox(height: 20),
                               
-                              // ===== КОЛЕСО =====
+                              // ===== WHEEL =====
                               FadeTransition(
                                 opacity: _fadeIn,
                                 child: ScaleTransition(
@@ -234,7 +233,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
                               const SizedBox(height: 40),
 
-                              // ===== ЗАГОЛОВОК =====
+                              // ===== TITLE =====
                               FadeTransition(
                                 opacity: _fadeIn,
                                 child: Transform.translate(
@@ -266,7 +265,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
                               const SizedBox(height: 30),
 
-                              // ===== ПОЛЕ ДЛЯ НИКА =====
+                              // ===== NICKNAME FIELD =====
                               FadeTransition(
                                 opacity: _fadeIn,
                                 child: Transform.translate(
@@ -335,7 +334,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
                               const SizedBox(height: 20),
 
-                              // ===== КНОПКИ =====
+                              // ===== BUTTONS =====
                               FadeTransition(
                                 opacity: _fadeIn,
                                 child: Transform.translate(
@@ -395,23 +394,47 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                 ),
                               ),
                               const SizedBox(height: 20),
-                              TextButton(
-                                onPressed: _isLoading ? null : _handleRestore,
-                                child: Text(
-                                  'Already have an account? Restore',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.4),
-                                    fontSize: 13,
+                              
+                              // ===== RESTORE ACCOUNT BUTTON =====
+                              FadeTransition(
+                                opacity: _fadeIn,
+                                child: Transform.translate(
+                                  offset: Offset(0, _slideUp.value * 1.6),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    height: 48,
+                                    child: OutlinedButton(
+                                      onPressed: _isLoading ? null : _handleRestore,
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: Colors.white.withOpacity(0.6),
+                                        side: BorderSide(
+                                          color: Colors.purple.shade400.withOpacity(0.3),
+                                          width: 1.5,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Restore Account',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
+                              
                               const SizedBox(height: 20),
                             ],
                           ),
                         ),
                       ),
 
-                      // ===== ПОДПИСЬ (ПРИЖАТА К НИЗУ) =====
+                      // ===== FOOTER (STICKY TO BOTTOM) =====
                       SliverFillRemaining(
                         hasScrollBody: false,
                         child: Container(
@@ -480,7 +503,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     );
   }
 
-  // ===== ЧАСТИЦА =====
+  // ===== PARTICLE =====
   Widget _buildParticle(_Particle p, Size size) {
     return Positioned(
       left: p.x * size.width,
@@ -508,7 +531,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     );
   }
 
-  // ===== МЕТОДЫ =====
+  // ===== METHODS =====
 
   Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
@@ -748,7 +771,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 }
 
-// ===== ЧАСТИЦЫ (ВНЕ КЛАССА) =====
+// ===== PARTICLES (OUTSIDE CLASS) =====
 
 class _Particle {
   static final _random = _SecureRandom();
