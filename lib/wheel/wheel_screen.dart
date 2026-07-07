@@ -18,6 +18,8 @@ import 'package:wheel_of_fortune/wheel/wheel.dart';
 import 'package:wheel_of_fortune/widgets/star_field.dart';
 import 'package:wheel_of_fortune/services/music_service.dart';
 import 'package:wheel_of_fortune/services/game_events.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
+
 
 // ===== КЛАСС ЧАСТИЦЫ (ВНЕ КЛАССА WheelScreen!) =====
 class _Particle {
@@ -105,7 +107,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
         });
       },
       onWin: (String prize) async {
-        debugPrint("PRIZE $prize");
+        Log.d("PRIZE $prize");
         GameEventsService().recordSpin(prize, true);
         _pulseController.forward().then((_) => _pulseController.reset());
         MusicService.setBackgroundVolume(0.3);
@@ -380,7 +382,7 @@ class _WheelScreenState extends State<WheelScreen> with TickerProviderStateMixin
                 bottom: bottomButtons,
                 child: SpinBtn(
                   onPressed: () {
-                        debugPrint('Spin button pressed');
+                      Log.d('Spin button pressed');
                     if (sectors.isEmpty) {
                       return;
                     }

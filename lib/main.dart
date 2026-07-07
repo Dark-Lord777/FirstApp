@@ -8,6 +8,7 @@ import 'package:wheel_of_fortune/services/game_events.dart';
 import 'package:wheel_of_fortune/services/routing.dart'; 
 import 'package:wheel_of_fortune/screen/welcome.dart';
 import 'package:wheel_of_fortune/screen/splash_screen.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
 
 import 'dart:async';
 import 'dart:io' show Platform;
@@ -35,9 +36,9 @@ void main() async {
 Future<void> _initServices() async {
   try {
     await Firebase.initializeApp();
-    debugPrint('Firebase initialized successfully');
-  } catch (e) {
-    debugPrint('Firebase init failed $e');
+    Log.i('Firebase initialized successfully');
+  } catch (e, st) {
+    Log.h(e, st, 'Firebase init failed');
   }
   
   // Настройки системы
@@ -59,32 +60,36 @@ Future<void> _initServices() async {
 
 Future<void> _initOtherServices() async {
   if (kReleaseMode) {
-    debugPrint = (String? message, {int? wrapWidth}) {};
+  Log.d('Release mode started');
+
+//    Log.d(String? message, {int? wrapWidth}) {};
   }
 
   // Launcher
   if (!kIsWeb && Platform.isAndroid) {
     try {
       await BeeDynamicLauncher.initializeFromCatalog();
-      debugPrint('Launcher initialized');
-    } catch (e) {
-      debugPrint('Init error: $e');
+      Log.i('Launcher initialized');
+    } catch (e, st) {
+      Log.h(e, st, 'Init error');
     }
   }
 
   // User ID
-  final userId = await UserIdService.getUserId();
-  final deviceId = await UserIdService.getDeviceId();
-  debugPrint('User ID: $userId');
-  debugPrint('Device Id: $deviceId');
+  final userInfo = await UserIdService.getUserInfo();
+    Log.i('✅ USER INIT: ${userInfo['nickname']} | ${userInfo['userId']}');
+//  final deviceId = await UserIdService.getDeviceId();
+ // debugPrint('User ID: $userId');
+ // debugPrint('Device Id: $deviceId');
 
   // FCM
   String? fcmToken;
   try {
     fcmToken = await FirebaseMessaging.instance.getToken();
-    debugPrint('FCM TOKEN: $fcmToken');
-  } catch (e) {
-    debugPrint("Failed to get FCM Token: $e");
+    Log.i('FCM initializad');
+   // debugPrint('FCM TOKEN: $fcmToken');
+  } catch (e, st) {
+    Log.h(e, st, "Failed to get FCM Token");
   }
   if (fcmToken != null) {
     await NotificationService.registerDevice(fcmToken);
@@ -115,8 +120,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (context != null) {
         await MusicService.initialize(context: context);
       }
-    } catch (e) {
-      debugPrint('Failed to load music: $e');
+    } catch (e, st) {
+      Log.h(e, st,'Failed to load music');
     }
   }
 

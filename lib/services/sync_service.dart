@@ -1,6 +1,7 @@
 import 'package:wheel_of_fortune/services/database_service.dart';
 import 'package:wheel_of_fortune/services/user_id_service.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
 
 import 'dart:convert';
 import 'dart:io';
@@ -16,7 +17,7 @@ class SyncService {
     _isSyncing = true;
 
     if (kIsWeb) {
-    debugPrint("Web sync disabled");
+    Log.d("Web sync disabled");
     _isSyncing = false;
     return;
     }
@@ -25,20 +26,20 @@ class SyncService {
       final data = await DatabaseService.instance.getAllAnalytics();
       
       if (data['spins'].isEmpty && data['sectors'].isEmpty && data['events'].isEmpty) {
-        debugPrint(' Nothing to sync');
+        Log.d(' Nothing to sync');
         return;
       }
       
       final userInfo = await UserIdService.getUserInfo();
       data['userId'] = userInfo['userId'];
-      data['deviceId'] = userInfo['deviceId'];
+      data['deviceId'] = userInfo['userId'];
 
       final jsonString = jsonEncode(data);
       final bytes = utf8.encode(jsonString);
       final compressed = gzip.encode(bytes);
 
       
-      debugPrint('📤 Sending ${data['spins'].length} spins, ${data['sectors'].length} sectors...');
+      Log.i('📤 Sending ${data['spins'].length} spins, ${data['sectors'].length} sectors...');
 
       final response = await http.post(
         Uri.parse(serverUrl),
@@ -51,21 +52,23 @@ class SyncService {
 
       if (response.statusCode == 200) {
         await DatabaseService.instance.clearAfterSync();
-        debugPrint(' Analytics synced and cleared');
+        Log.i(' Analytics synced and cleared');
         //now i write return here because when i commented print for release app i think this function ma broke my app
-        return;
+       // return;
       } else {
-        debugPrint(' Server returned ${response.statusCode}');
-        return;
+        Log.w(' Server returned ${response.statusCode}');
+     // return;
       }
-    } catch (e) {
-      debugPrint(' Sync failed: $e');
-      return;
+    } catch (e, st) {
+      Log.h(e, st, ' Sync failed');
+   //   return;
+    } finally {
+      _isSyncing = false;
     }
   }
 
   static Future<void> forceSync() async {
-    debugPrint(' Force syncing...');
+    Log.i(' Force syncing...');
     await syncData();
   }
 }

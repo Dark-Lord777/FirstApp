@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 import 'package:wheel_of_fortune/services/music_service.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
+
 
 
 class _FortuneRandom {
@@ -110,7 +112,7 @@ class WheelLogic {
     double landingAngle = _random.nextDouble() * 2 * pi;
     _targetDelta = fullRotations * 2 * pi + landingAngle;
     
-  debugPrint('🎡 Вращение: $fullRotations оборотов, длительность: ${SPIN_DURATION_SECONDS} сек');
+  Log.d('🎡 Вращение: $fullRotations оборотов, длительность: ${SPIN_DURATION_SECONDS} сек');
     
     _isSpinning = true;
     MusicService.playSpinSound();
@@ -129,7 +131,7 @@ class WheelLogic {
       if (finalAngle < 0) finalAngle += 2 * pi;
       
       String prize = _getSectorByAngle(finalAngle);
-      debugPrint('Winner : $prize');
+      Log.d('Winner : $prize');
       
       _isSpinning = false;
       onWin(prize);

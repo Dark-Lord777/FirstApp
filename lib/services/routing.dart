@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wheel_of_fortune/screen/welcome.dart';
 import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
+
 
 class RoutingService {
   static final RoutingService _instance = RoutingService._internal();
@@ -43,7 +45,7 @@ class RoutingService {
     _isGuest = false;
   }
     _isInitialized = true;
-    debugPrint("RoutingService Initialized: registered=$_isRegistered, guest=$_isGuest, nick=$_nickname");
+    Log.i("RoutingService Initialized: registered=$_isRegistered, guest=$_isGuest, nick=$_nickname");
   }
 
   Future<void> registerUser(String nickname) async {
@@ -57,8 +59,8 @@ class RoutingService {
     _isRegistered = true;
     _isGuest = false;
 
-    debugPrint("User registered: $nickname");
-      debugPrint('📝 Saved to prefs: nickname=$nickname, isRegistered=true');
+    Log.i("User registered: $nickname");
+    Log.i(' Saved to prefs: nickname=$nickname, isRegistered=true');
   }
 
 
@@ -72,7 +74,7 @@ class RoutingService {
     _nickname = guestNick;
     _isGuest = true;
     _isRegistered = false;
-    debugPrint('Guest registered: $guestNick');
+    Log.i('Guest registered: $guestNick');
   }
 
   Future<void> reset() async {
@@ -86,17 +88,17 @@ class RoutingService {
     _isGuest = false;
     _isRegistered = false;
 
-    debugPrint('RoutingService reset');
+    Log.i('RoutingService reset');
   }
 
   //ogic of routing 
 
   Widget getInitialScreen() {
     if (_isRegistered || _isGuest) {
-      debugPrint('User already: nickname=$nickname, goind to WheelScreen');
+      Log.i('User already: nickname=$nickname, goind to WheelScreen');
       return const WheelScreen();
     } else {
-      debugPrint('No user found, showing WelcomeScreen');
+      Log.i('No user found, showing WelcomeScreen');
       return const WelcomeScreen();
     }
   }

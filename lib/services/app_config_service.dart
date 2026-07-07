@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
+import 'package:wheel_of_fortune/services/user_id_service.dart';
+
 
 class AppConfigService {
   AppConfigService._();
@@ -113,7 +116,7 @@ class AppConfigService {
  Future<void> _loadConfig() async {
     try {
       final url = workerUrl;
-      debugPrint("📡 Trying main: $url/config");
+      Log.i("📡 Trying main: $url/config");
       
       final response = await http
           .get(
@@ -128,18 +131,18 @@ class AppConfigService {
           _config = config;
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString("cached_config", jsonEncode(_config));
-          debugPrint("✅ Config updated from main (${_config["version"]})");
+          Log.i(" Config updated from main (${_config["version"]})");
         }
         return;
       }
-    } catch (e) {
-      debugPrint("⚠️ Main server failed: $e");
+    } catch (e, st) {
+      Log.h(e, st, "Main server failed");
     }
 
     final backup = backupUrl;
     if (backup.isNotEmpty) {
       try {
-        debugPrint("🔄 Trying backup: $backup");
+        Log.w("Trying backup: $backup");
         final response = await http
             .get(
               Uri.parse(backup),
@@ -153,20 +156,50 @@ class AppConfigService {
             _config = config;
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString("cached_config", jsonEncode(_config));
-            debugPrint("✅ Config updated from backup (${_config["version"]})");
+            Log.i(" Config updated from backup (${_config["version"]})");
           }
           return;
         }
-      } catch (e) {
-        debugPrint("⚠️ Backup server failed: $e");
+      } catch (e, st) {
+        Log.h(e, st, "Backup server failed");
       }
     }
 
-    debugPrint("❌ All servers unavailable. Using cached config.");
+    Log.e(" All servers unavailable. Using cached config.");
   }
 
+  Future<void> sendLogToServer(String level, String message, {String? details}) async {
+    try {
+      final url = workerUrl;
+      
+      Log.i("Sending remote log to $url/logs");
+      
+      final userInfo = await UserIdService.getUserInfo();
 
+      final response = await http.post(
+        Uri.parse("$url/logs"),
+        headers: const {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "userId": userInfo["userId"],
+          "nickname": userInfo["nickname"],
+          "device": "${userInfo["deviceManufacturer"]} ${userInfo["deviceModel"]}",
+          "os": userInfo["osVersion"],
+          "appVersion": userInfo["appVersion"],
+          "logLevel": level,
+          "message": message,
+          "details": details ?? "",
+          "timestamp": DateTime.now().toIso8601String(),
+        }),
+      ).timeout(const Duration(seconds: 2));
 
+      if (response.statusCode != 200) {
+        Log.w("Failed to send remote log. Status ${response.statusCode}");
+      }
+    } catch (e, st) {
+      Log.h(e, st, "remote lig transmission failed");
+    }
+  }
+  
 
   Future<void> setStarsEnabled(bool value) async {
     starsEnabled = value;

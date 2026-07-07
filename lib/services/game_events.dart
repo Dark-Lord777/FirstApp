@@ -10,6 +10,7 @@ import 'package:wheel_of_fortune/services/user_id_service.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/services/game_message.dart';
 import 'package:wheel_of_fortune/services/routing.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
 
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -55,7 +56,7 @@ class GameEventsService {
     _sessionStartTime = DateTime.now();
     _sessionSeconds = 0;
 
-    debugPrint('📊 GameEventsService initialized. Total spins: $_totalSpins');
+    Log.i('📊 GameEventsService initialized. Total spins: $_totalSpins');
 
     // КЛЮЧЕВОЕ ОБНОВЛЕНИЕ: Мгновенная синхронизация с сервером при входе в прогу!
     _sendStatsAsync('APP_INIT_SYNC', false);
@@ -79,7 +80,7 @@ class GameEventsService {
       'timestamp': DateTime.now().toIso8601String(),
     });
 
-    debugPrint('🎡 Spin #$_totalSpins (session: $_sessionSpins). Записано в память.');
+    Log.i('🎡 Spin #$_totalSpins (session: $_sessionSpins). Записано в память.');
 
     // 4. Проверяем уведомление (оставили как было)
     if (_spinsSinceLastNotification >= _notificationInterval) {
@@ -98,7 +99,7 @@ class GameEventsService {
     // 7. КЛЮЧЕВОЕ ОБНОВЛЕНИЕ: Отправляем на сервер по новому интервалу (_syncInterval = 5)
     final syncInterval = AppConfigService().syncInterval;
     if (_totalSpins % syncInterval == 0) {
-      debugPrint('🔄 Накопилось $syncInterval спинов, фоновая синхронизация с сервером...');
+     Log.i('Spins have $syncInterval accumulated, background synchronization with the server...');
       _sendStatsAsync(sector, isWin);
     }
   }
@@ -112,10 +113,10 @@ class GameEventsService {
       for (var spin in _pendingSpins) {
         await db.saveSpin(spin['sector'], spin['isWin']);
       }
-      debugPrint('💾 Saved ${_pendingSpins.length} spins to DB');
+      Log.i(' Saved ${_pendingSpins.length} spins to DB');
       _pendingSpins.clear();
-    } catch (e) {
-      debugPrint('⚠️ Failed to save spins to local DB: $e');
+    } catch (e, st) {
+      Log.h(e, st, 'Failed to save spins to local DB:');
     }
   }
 
@@ -129,7 +130,7 @@ class GameEventsService {
   // ===== УЧЁТ СЕКТОРОВ =====
   Future<void> recordSector(String name) async {
     DatabaseService.instance.saveSector(name);
-    debugPrint('📝 Sector recorded: $name');
+    Log.d(' Sector recorded: $name');
   }
 
   // ===== УВЕДОМЛЕНИЯ =====
@@ -142,7 +143,7 @@ class GameEventsService {
       ];
       final message = messages[_totalSpins ~/ _notificationInterval % messages.length];
       
-      debugPrint('📢 NOTIFICATION: $message');
+      Log.i('📢 NOTIFICATION: $message');
       _showLightNotification(message);
     }
   }
@@ -194,20 +195,20 @@ class GameEventsService {
 
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint('🎯 Сервер успешно синхронизирован! Статус: ${response.statusCode}');
+        Log.i('Server synchronized successfully! Status: ${response.statusCode}');
       } else {
-        debugPrint('⚠️ Сервер принял запрос, но ответил ошибкой: ${response.statusCode}');
+        Log.e('Server accepted the request but responded with an error: ${response.statusCode}');
       }
     } on TimeoutException catch (e) {
-      debugPrint('First try sincronization failed. Try ever');
+      Log.w('First try sincronization failed. Try again');
       try {
         await Future.delayed(const Duration(seconds: 2));
         final response = await http.post(
           Uri.parse('${AppConfigService().workerUrl}/stats'),
           headers: {'Content-Type': 'application/json'},
         ).timeout(const Duration(seconds: 6));
-      } catch (e) {
-      debugPrint('⚠️ Фоновая синхронизация не удалась (нет сети), данные сохранены локально: $e');
+      } catch (e, st) {
+      Log.h(e, st, 'Background synchronization failed (no network), data saved locally');
       }
     }
   }
@@ -225,7 +226,7 @@ class GameEventsService {
     
     await prefs.setInt(_keyTotalSpins, _totalSpins);
 
-    debugPrint('📊 Session ended saved: ${_sessionSeconds}s, $_sessionSpins spins');
+    Log.i(' Session ended saved: ${_sessionSeconds}s, $_sessionSpins spins');
   }
 
   // ===== ГЕТТЕРЫ =====
@@ -251,7 +252,7 @@ class GameEventsService {
     _sessionSpins = 0;
     _totalTimeBeforeSession = 0;
     _pendingSpins.clear();
-    debugPrint('🔄 Stats reset');
+    Log.w(' Stats reset');
   }
 
   void dispose() {

@@ -147,7 +147,6 @@ class _WheelPainter extends CustomPainter {
       startAngle += anglePerSector;
     }
 
-    // ===== 🔥 СПИЦЫ (линии от центра к краю) =====
     if (sectors.length >= 2) {
       double spokeAngle = -pi / 2 + rotationAngle;
       for (int i = 0; i < sectors.length; i++) {

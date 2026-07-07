@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:wheel_of_fortune/services/music_service.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
+
 
 
 class BaseAnimatedButton extends StatefulWidget {
@@ -48,18 +50,17 @@ class _BaseAnimatedButtonState extends State<BaseAnimatedButton>
 }
 
 void _handlePress() {
-      debugPrint(' _handlePress called'); 
+      Log.d(' _handlePress called'); 
   if (widget.onPressed == null) { 
-  debugPrint("on pressed in null");
+  Log.d("on pressed in null");
   return; 
   }
 
   if (widget.playClickSound) {
-      debugPrint(' playClickSound is true, calling playClick...');
-  debugPrint('Play click');
+   Log.d(' playClickSound is true, calling playClick...');
     MusicService.playClick();
   } else {
-        debugPrint(' playClickSound is false, skipping');
+    Log.d(' playClickSound is false, skipping');
   }
   _controller.forward().then((_) {
     _controller.reverse();

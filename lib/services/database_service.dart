@@ -1,12 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
+
 
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
   static Database? _database;
+
+    static bool _isSavingLog = false;
 
   DatabaseService._init();
 
@@ -22,8 +27,9 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
   }
 
@@ -53,6 +59,20 @@ class DatabaseService {
         timestamp TEXT NOT NULL
       )
     ''');
+  }
+  
+  Future<void> _upgradeDB(Database db, int oldversion, int newVersion) async {
+    if (oldversion < 2) {
+      await db.execute('DROP TABLE IF EXISTS event');
+      await db.execute('''
+      CREATE TABLE events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_type TEXT NOT NULL,
+        event_data TEXT,
+        timestamp TEXT NOT NULL 
+      )
+      ''');
+    }
   }
 
   // Сохранить выигрыш
@@ -109,7 +129,34 @@ class DatabaseService {
     return deviceId;
   }
   // В конец класса DatabaseService
+  
+  Future<void> saveLogEvent(String level, String message, [String? details]) async {
+    if (_isSavingLog) {
+      debugPrint('Log save already in progress, skipping');
+      return;
+    }
+    _isSavingLog = true;
 
+    try {
+      final db = await database;
+      final logData = jsonEncode({
+          'message': message,
+          'details': details ?? '',
+        });
+
+        await db.insert('events', {
+          'event_type': 'LOG_$level',
+          'event_data': logData,
+          'timestamp': DateTime.now().toIso8601String(),
+        });
+      } catch (e) {
+        //DO NOT CALL Log.h() HERE! ONLY debugPrint, otherwise it will lead to recursion and crash the program.
+        debugPrint('Failed to save log to local DB $e');
+      } finally {
+      _isSavingLog = false;
+      }
+    }
+  
 // ===== ОЧИСТКА ВСЕХ ДАННЫХ =====
 Future<void> clearAllData() async {
   try {
@@ -119,7 +166,7 @@ Future<void> clearAllData() async {
     await db.delete('events');
     debugPrint('🗑️ All database tables cleared');
   } catch (e) {
-    debugPrint('Error clearing database: $e');
+  debugPrint('Error clearing database: $e');
+    }
   }
-}
 }

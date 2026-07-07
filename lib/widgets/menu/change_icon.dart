@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bot_toast/bot_toast.dart';
 
 import 'package:wheel_of_fortune/services/music_service.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
+
 
 class ChangeIconBtn extends StatelessWidget {
   final String iconName;
@@ -25,21 +27,21 @@ class ChangeIconBtn extends StatelessWidget {
   Future<void> _changeIcon(BuildContext context) async {
     if (!kIsWeb && Platform.isAndroid) {
       try {
-        debugPrint('Trying to change icon to: $iconName');
+        Log.d('Trying to change icon to: $iconName');
 
         final variants = await BeeDynamicLauncher.getAvailableVariants();
-        debugPrint('File: change_icon.dart');
-        debugPrint('Available variants: $variants');
+    
+        Log.d('Available variants: $variants');
         
         if (variants.contains(iconName)) {
-          debugPrint('Variant found, aproving');
+          Log.d('Variant found, aproving');
           await BeeDynamicLauncher.applyVariant(iconName);
-          debugPrint('Approve');          
+                    
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('currentIcon', iconName);
 
           final current = await BeeDynamicLauncher.getCurrentVariant();
-          debugPrint('Current variant after change: $current');
+          Log.i('Current variant after change: $current');
           
           if (context.mounted) {
             BotToast.showText(
@@ -50,7 +52,7 @@ class ChangeIconBtn extends StatelessWidget {
             );
           }
         } else {
-          debugPrint('Variant $iconName not found in $variants');
+          Log.i('Variant $iconName not found in $variants');
           if (context.mounted) {
             BotToast.showText(
               text: "Variant not available",
@@ -58,8 +60,8 @@ class ChangeIconBtn extends StatelessWidget {
             );
           }
         }
-      } catch (e) {
-       debugPrint("Error: $e");
+      } catch (e, st) {
+       Log.h(e, st, "Error");
         if (context.mounted) {
             BotToast.showText(
               text: "Error $e",
@@ -69,8 +71,9 @@ class ChangeIconBtn extends StatelessWidget {
       }
     } else {
       if (context.mounted) {
+          Log.i('Not supported on this platform');
              BotToast.showText(
-              text: "Mot supported in this platform",
+              text: "Not supported in this platform",
               duration: const Duration(seconds: 2),
             );
       }

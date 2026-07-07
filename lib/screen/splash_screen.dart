@@ -8,6 +8,7 @@ import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
 import 'package:wheel_of_fortune/screen/maintenance_screen.dart';
 import 'package:wheel_of_fortune/services/routing.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
 
 
 class SplashScreen extends StatefulWidget {
@@ -90,7 +91,7 @@ class _SplashScreenState extends State<SplashScreen>
     } else {
       nextScreen = const WelcomeScreen();
     }
-    debugPrint('Navigating to: ${nextScreen.runtimeType}');
+    Log.i('Navigating to: ${nextScreen.runtimeType}');
 
       Navigator.pushReplacement(
       context,
