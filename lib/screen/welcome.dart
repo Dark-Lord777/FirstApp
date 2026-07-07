@@ -5,13 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:bot_toast/bot_toast.dart';
 
-
 import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/services/routing.dart';
 import 'package:wheel_of_fortune/screen/splash_screen.dart';
 import 'package:wheel_of_fortune/services/music_service.dart';
-
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -32,7 +30,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   late Animation<double> _wheelRotation;
 
   late AnimationController _particleController;
-  late final List<_Particle> _particles = [];
+  final List<_Particle> _particles = [];
 
   // ===== ПОЛЕ =====
   final TextEditingController _nickController = TextEditingController();
@@ -80,7 +78,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
     Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) {
- //       _nickFocusNode.requestFocus();
+        // _nickFocusNode.requestFocus();
       }
     });
   }
@@ -128,9 +126,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           _nickFocusNode.unfocus();
         },
         child: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: const [
+              colors: [
                 Color(0xFF0F0F1A),
                 Color(0xFF1A0A2E),
                 Color(0xFF2D1B4E),
@@ -145,269 +143,286 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               // ===== ЧАСТИЦЫ =====
               ..._particles.map((p) => _buildParticle(p, size)),
 
-              // ===== ОСНОВНОЙ КОНТЕНТ С ПОДНЯТИЕМ =====
+              // ===== ОСНОВНОЙ КОНТЕНТ ЧЕРЕЗ СЛИВЕРЫ =====
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 28),
-                  child: Transform.translate(
-                    offset: const Offset(0, 10), // 
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // ===== КОЛЕСО =====
-                        FadeTransition(
-                          opacity: _fadeIn,
-                          child: ScaleTransition(
-                            scale: _scaleIn,
-                            child: AnimatedBuilder(
-                              animation: _wheelRotation,
-                              builder: (context, child) {
-                                return Transform.rotate(
-                                  angle: _wheelRotation.value,
-                                  child: Container(
-                                    width: size.width * 0.45,
-                                    height: size.width * 0.45,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: RadialGradient(
-                                        colors: [
-                                          Colors.purple.shade300,
-                                          Colors.purple.shade700,
-                                          Colors.purple.shade900,
-                                        ],
-                                        stops: const [0.2, 0.6, 1.0],
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.purple.shade700
-                                              .withOpacity(0.5),
-                                          blurRadius: 60,
-                                          spreadRadius: 20,
-                                        ),
-                                      ],
-                                    ),
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        ...List.generate(12, (index) {
-                                          final angle =
-                                              index * (2 * pi / 12);
-                                          return Transform.rotate(
-                                            angle: angle,
-                                            child: Container(
-                                              width:
-                                                  size.width * 0.65 * 0.6,
-                                              height: 2,
-                                              color: Colors.white
-                                                  .withOpacity(
-                                                      index % 2 == 0
-                                                          ? 0.3
-                                                          : 0.15),
-                                            ),
-                                          );
-                                        }),
-                                        Container(
-                                          width: 50,
-                                          height: 50,
-                                          decoration: const BoxDecoration(
+                  child: CustomScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    slivers: [
+                      // Оборачиваем всю Column с основным контентом в SliverToBoxAdapter
+                      SliverToBoxAdapter(
+                        child: Transform.translate(
+                          offset: const Offset(0, 10),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(height: 20),
+                              
+                              // ===== КОЛЕСО =====
+                              FadeTransition(
+                                opacity: _fadeIn,
+                                child: ScaleTransition(
+                                  scale: _scaleIn,
+                                  child: AnimatedBuilder(
+                                    animation: _wheelRotation,
+                                    builder: (context, child) {
+                                      return Transform.rotate(
+                                        angle: _wheelRotation.value,
+                                        child: Container(
+                                          width: size.width * 0.45,
+                                          height: size.width * 0.45,
+                                          decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            color: Colors.white,
+                                            gradient: RadialGradient(
+                                              colors: [
+                                                Colors.purple.shade300,
+                                                Colors.purple.shade700,
+                                                Colors.purple.shade900,
+                                              ],
+                                              stops: const [0.2, 0.6, 1.0],
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.purple.shade700
+                                                    .withOpacity(0.5),
+                                                blurRadius: 60,
+                                                spreadRadius: 20,
+                                              ),
+                                            ],
                                           ),
-                                          child: const Icon(
-                                            Icons.star,
-                                            color: Colors.purple,
-                                            size: 28,
+                                          child: Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              ...List.generate(12, (index) {
+                                                final angle =
+                                                    index * (2 * pi / 12);
+                                                return Transform.rotate(
+                                                  angle: angle,
+                                                  child: Container(
+                                                    width: size.width * 0.65 * 0.6,
+                                                    height: 2,
+                                                    color: Colors.white
+                                                        .withOpacity(
+                                                            index % 2 == 0
+                                                                ? 0.3
+                                                                : 0.15),
+                                                  ),
+                                                );
+                                              }),
+                                              Container(
+                                                width: 50,
+                                                height: 50,
+                                                decoration: const BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: Colors.white,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.star,
+                                                  color: Colors.purple,
+                                                  size: 28,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        // ===== ЗАГОЛОВОК =====
-                        FadeTransition(
-                          opacity: _fadeIn,
-                          child: Transform.translate(
-                            offset: Offset(0, _slideUp.value),
-                            child: Column(
-                              children: [
-                                const Text(
-                                  'Wheel of Fortune',
-                                  style: TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: 1.5,
+                                      );
+                                    },
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Spin and decide!',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white.withOpacity(0.6),
-                                    letterSpacing: 0.5,
+                              ),
+
+                              const SizedBox(height: 40),
+
+                              // ===== ЗАГОЛОВОК =====
+                              FadeTransition(
+                                opacity: _fadeIn,
+                                child: Transform.translate(
+                                  offset: Offset(0, _slideUp.value),
+                                  child: Column(
+                                    children: [
+                                      const Text(
+                                        'Wheel of Fortune',
+                                        style: TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          letterSpacing: 1.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Spin and decide!',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.white.withOpacity(0.6),
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
+                              ),
 
-                        const SizedBox(height: 30),
+                              const SizedBox(height: 30),
 
-                        // ===== ПОЛЕ ДЛЯ НИКА =====
-                        FadeTransition(
-                          opacity: _fadeIn,
-                          child: Transform.translate(
-                            offset: Offset(0, _slideUp.value * 1.2),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Come up with a nickname',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.purple.shade900
-                                            .withOpacity(0.3),
-                                        Colors.purple.shade700
-                                            .withOpacity(0.1),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: Colors.purple.shade400
-                                          .withOpacity(0.3),
-                                    ),
-                                  ),
-                                  child: TextField(
-                                    controller: _nickController,
-                                    focusNode: _nickFocusNode,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                    ),
-                                    textInputAction: TextInputAction.done,
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter a nickname...',
-                                      hintStyle: TextStyle(
-                                        color: Colors.white.withOpacity(0.3),
-                                        fontSize: 16,
+                              // ===== ПОЛЕ ДЛЯ НИКА =====
+                              FadeTransition(
+                                opacity: _fadeIn,
+                                child: Transform.translate(
+                                  offset: Offset(0, _slideUp.value * 1.2),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Come up with a nickname',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.8),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
-                                      prefixIcon: Icon(
-                                        Icons.person_outline,
-                                        color: Colors.purple.shade300,
-                                        size: 24,
-                                      ),
-                                      border: InputBorder.none,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                    onSubmitted: (_) => _handleAuth(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // ===== КНОПКИ =====
-                        FadeTransition(
-                          opacity: _fadeIn,
-                          child: Transform.translate(
-                            offset: Offset(0, _slideUp.value * 1.4),
-                            child: Column(
-                              children: [
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 56,
-                                  child: ElevatedButton(
-                                    onPressed: _isLoading
-                                        ? null
-                                        : _handleAuth,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Colors.purple.shade600,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(16),
-                                      ),
-                                      elevation: 8,
-                                      shadowColor: Colors.purple.shade700
-                                          .withOpacity(0.5),
-                                    ),
-                                    child: _isLoading
-                                        ? const SizedBox(
-                                            height: 24,
-                                            width: 24,
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2,
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.purple.shade900
+                                                  .withOpacity(0.3),
+                                              Colors.purple.shade700
+                                                  .withOpacity(0.1),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(
+                                            color: Colors.purple.shade400
+                                                .withOpacity(0.3),
+                                          ),
+                                        ),
+                                        child: TextField(
+                                          controller: _nickController,
+                                          focusNode: _nickFocusNode,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                          ),
+                                          textInputAction: TextInputAction.done,
+                                          decoration: InputDecoration(
+                                            hintText: 'Enter a nickname...',
+                                            hintStyle: TextStyle(
+                                              color: Colors.white.withOpacity(0.3),
+                                              fontSize: 16,
                                             ),
-                                          )
-                                        : const Text(
-                                            'Continue',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w600,
+                                            prefixIcon: Icon(
+                                              Icons.person_outline,
+                                              color: Colors.purple.shade300,
+                                              size: 24,
+                                            ),
+                                            border: InputBorder.none,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 16,
                                             ),
                                           ),
+                                          onSubmitted: (_) => _handleAuth(),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 12),
-                                TextButton(
-                                  onPressed:
-                                      _isLoading ? null : _handleGuest,
-                                  child: Text(
-                                    'Continue as guest',
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.5),
-                                      fontSize: 14,
-                                    ),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // ===== КНОПКИ =====
+                              FadeTransition(
+                                opacity: _fadeIn,
+                                child: Transform.translate(
+                                  offset: Offset(0, _slideUp.value * 1.4),
+                                  child: Column(
+                                    children: [
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height: 56,
+                                        child: ElevatedButton(
+                                          onPressed: _isLoading
+                                              ? null
+                                              : _handleAuth,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                Colors.purple.shade600,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            elevation: 8,
+                                            shadowColor: Colors.purple.shade700
+                                                .withOpacity(0.5),
+                                          ),
+                                          child: _isLoading
+                                              ? const SizedBox(
+                                                  height: 24,
+                                                  width: 24,
+                                                  child: CircularProgressIndicator(
+                                                    color: Colors.white,
+                                                    strokeWidth: 2,
+                                                  ),
+                                                )
+                                              : const Text(
+                                                  'Continue',
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      TextButton(
+                                        onPressed: _isLoading ? null : _handleGuest,
+                                        child: Text(
+                                          'Continue as guest',
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(0.5),
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 20),
+                              TextButton(
+                                onPressed: _isLoading ? null : _handleRestore,
+                                child: Text(
+                                  'Already have an account? Restore',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.4),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        TextButton(
-                          onPressed: _isLoading ? null : _handleRestore,
-                          child: Text(
-                            'Already have an account? Restore',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.4),
-                              fontSize: 13,
-                            ),
+                      ),
+
+                      // ===== ПОДПИСЬ (ПРИЖАТА К НИЗУ) =====
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Container(
+                          alignment: Alignment.bottomCenter,
+                          padding: EdgeInsets.only(
+                            bottom: size.height * 0.02,
+                            left: 16,
+                            right: 16,
                           ),
-                        ),
-                    //    const Spacer(),
-                        // ===== ПОДПИСЬ =====
-                        FadeTransition(
-                          opacity: _fadeIn,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
+                          child: FadeTransition(
+                            opacity: _fadeIn,
                             child: RichText(
                               textAlign: TextAlign.center,
                               text: TextSpan(
@@ -424,14 +439,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                     baseline: TextBaseline.alphabetic,
                                     child: GestureDetector(
                                       behavior: HitTestBehavior.translucent,
-                                      onTap: () => _launchUrl(
-                                          AppConfigService().termsUrl),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
+                                      onTap: () {
+                                        MusicService.playClick();
+                                        _launchUrl(AppConfigService().termsUrl);
+                                      },
+                                      child: const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 4,
                                           vertical: 10,
-                                        ), // Расширяем невидимую зону клика
-                                        child: const Text(
+                                        ),
+                                        child: Text(
                                           'Terms',
                                           style: TextStyle(
                                             fontSize: 11,
@@ -451,9 +468,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             ),
                           ),
                         ),
-                        //end of elelements 
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -493,11 +509,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   // ===== МЕТОДЫ =====
-    
-    Future<void> _launchUrl(String url) async {
+
+  Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
     try {
-          MusicService.playClick(); // 👈 ДОБАВЬ
+      MusicService.playClick();
       await launchUrl(uri, mode: LaunchMode.platformDefault);
     } catch (e) {
       BotToast.showCustomText(
@@ -524,19 +540,19 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     }
   }
 
-    Future<void> _handleAuth() async {
-                                MusicService.playClick();
+  Future<void> _handleAuth() async {
+    MusicService.playClick();
 
     final nick = _nickController.text.trim();
     if (nick.isEmpty) {
-                            MusicService.playClick();
+      MusicService.playClick();
 
       BotToast.showCustomText(
         duration: const Duration(seconds: 2),
-        align: const Alignment(0, -0.3), // Вылетит сверху
+        align: const Alignment(0, -0.3),
         toastBuilder: (cancelFunc) {
           return Card(
-            color: const Color(0xFF4A148C), // Фиолетовый под стиль Wheel
+            color: const Color(0xFF4A148C),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: const BorderSide(color: Colors.purpleAccent, width: 1),
@@ -561,16 +577,13 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     setState(() => _isLoading = true);
 
     try {
-          MusicService.playClick();
+      MusicService.playClick();
       _nickFocusNode.unfocus();
       await Future.delayed(const Duration(milliseconds: 300));
-//      final prefs = await SharedPreferences.getInstance();
-  //    await prefs.setString('user_nickname', nick);
- //     await SplashScreen().registerUser(nick);
-//      SplashScreen().navigateToWheel(context);
-//      await _goToWheel();
-    await RoutingService().registerUser(nick);
-    RoutingService().navigateToWheel(context);
+      await RoutingService().registerUser(nick);
+      if (mounted) {
+        RoutingService().navigateToWheel(context);
+      }
     } catch (e) {
       BotToast.showCustomText(
         duration: const Duration(seconds: 3),
@@ -594,21 +607,20 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         },
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-
   Future<void> _handleGuest() async {
-        MusicService.playClick();
+    MusicService.playClick();
     final guestNick = 'Guest_${DateTime.now().millisecondsSinceEpoch % 10000}';
 
-//    final prefs = await SharedPreferences.getInstance();
- //   await prefs.setString('user_nickname', guestNick);
-  //  await prefs.setBool('is_guest', true);
     await RoutingService().registerGuest(guestNick);
-    RoutingService().navigateToWheel(context);
-   // await _goToWheel();
+    if (mounted) {
+      RoutingService().navigateToWheel(context);
+    }
   }
 
   Future<void> _handleRestore() async {
@@ -625,20 +637,22 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
       if (savedNick == nick) {
         await RoutingService().registerUser(nick);
-        RoutingService().navigateToWheel(context);
+        if (mounted) {
+          RoutingService().navigateToWheel(context);
+        }
       } else {
         BotToast.showCustomText(
           duration: const Duration(seconds: 2),
           align: const Alignment(0, -0.3),
           toastBuilder: (cancelFunc) {
             return Card(
-            color: Colors.red.shade900,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Text(
-              'Acount not found. Please register...',
-              style: TextStyle(color: Colors.white, fontSize: 14),
+              color: Colors.red.shade900,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Text(
+                  'Account not found. Please register...',
+                  style: TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ),
             );
@@ -653,26 +667,28 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           return Card(
             color: Colors.red.shade900,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child:  Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Text(
                 'Error $e',
-                style: TextStyle(color: Colors.white, fontSize: 14),
+                style: const TextStyle(color: Colors.white, fontSize: 14),
               ),
             ),
           );
         },
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
-  
+
   Future<String?> _showRestoreDialog() async {
     final controller = TextEditingController();
     return showDialog<String>(
       context: context,
-    barrierDismissible: true,
+      barrierDismissible: true,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF2D1B4E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -705,7 +721,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           ],
         ),
         actions: [
-          TextButton (
+          TextButton(
             onPressed: () => Navigator.pop(context, null),
             child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
           ),
@@ -721,17 +737,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       ),
     );
   }
-/*
 
-  Future<void> _goToWheel() async {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const WheelScreen(),
-      ),
-    );
-  }
-*/ 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
