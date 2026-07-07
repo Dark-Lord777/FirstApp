@@ -80,7 +80,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
     Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) {
-        _nickFocusNode.requestFocus();
+ //       _nickFocusNode.requestFocus();
       }
     });
   }
@@ -391,7 +391,18 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             ),
                           ),
                         ),
-                        const Spacer(),
+                        const SizedBox(height: 20),
+                        TextButton(
+                          onPressed: _isLoading ? null : _handleRestore,
+                          child: Text(
+                            'Already have an account? Restore',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.4),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                    //    const Spacer(),
                         // ===== ПОДПИСЬ =====
                         FadeTransition(
                           opacity: _fadeIn,
@@ -440,6 +451,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             ),
                           ),
                         ),
+                        //end of elelements 
                       ],
                     ),
                   ),
@@ -597,6 +609,117 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     await RoutingService().registerGuest(guestNick);
     RoutingService().navigateToWheel(context);
    // await _goToWheel();
+  }
+
+  Future<void> _handleRestore() async {
+    MusicService.playClick();
+
+    final nick = await _showRestoreDialog();
+    if (nick == null || nick.isEmpty) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedNick = prefs.getString('user_nickname');
+
+      if (savedNick == nick) {
+        await RoutingService().registerUser(nick);
+        RoutingService().navigateToWheel(context);
+      } else {
+        BotToast.showCustomText(
+          duration: const Duration(seconds: 2),
+          align: const Alignment(0, -0.3),
+          toastBuilder: (cancelFunc) {
+            return Card(
+            color: Colors.red.shade900,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Text(
+              'Acount not found. Please register...',
+              style: TextStyle(color: Colors.white, fontSize: 14),
+                ),
+              ),
+            );
+          },
+        );
+      }
+    } catch (e) {
+      BotToast.showCustomText(
+        duration: const Duration(seconds: 2),
+        align: const Alignment(0, -0.3),
+        toastBuilder: (cancelFunc) {
+          return Card(
+            color: Colors.red.shade900,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child:  Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Text(
+                'Error $e',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+            ),
+          );
+        },
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+  
+  Future<String?> _showRestoreDialog() async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+    barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2D1B4E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Restore Account',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Enter your nickname to restore your account',
+              style: TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Enter your nickname...',
+                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                filled: true,
+                fillColor: Colors.purple.shade900.withOpacity(0.3),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton (
+            onPressed: () => Navigator.pop(context, null),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple.shade600,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Restore', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 /*
 
