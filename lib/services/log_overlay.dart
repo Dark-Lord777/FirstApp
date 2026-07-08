@@ -41,7 +41,18 @@ class _LogOverlayState extends State<LogOverlay> {
     return Stack(
       children: [
         widget.child,
-        if (Log.logsEnabled) _buildOverlay(), // 👈 ПОКАЗЫВАЕМ ЕСЛИ ВКЛЮЧЕН
+        ValueListenableBuilder<bool>(
+          valueListenable: Log.logsEnabledNotifier,
+          builder: (context, enabled, _) {
+          if (enabled) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+            _refreshLogs();
+          });
+          return _buildOverlay();
+          }
+          return const SizedBox.shrink();
+          },
+        ),
       ],
     );
   }
@@ -51,7 +62,7 @@ class _LogOverlayState extends State<LogOverlay> {
       bottom: 0,
       left: 0,
       right: 0,
-      height: MediaQuery.of(context).size.height * 0.5, // 👈 ПОЛОВИНА ЭКРАНА
+      height: MediaQuery.of(context).size.height * 0.5, 
       child: Container(
         color: Colors.black.withOpacity(0.95),
         child: Column(
