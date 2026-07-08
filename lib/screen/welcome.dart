@@ -4,37 +4,24 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:bot_toast/bot_toast.dart';
-
-
 import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
 import 'package:wheel_of_fortune/services/routing.dart';
 import 'package:wheel_of_fortune/screen/splash_screen.dart';
 import 'package:wheel_of_fortune/services/music_service.dart';
 
-
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
-
-  @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
+  @override State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen>
-    with TickerProviderStateMixin {
-  // ===== АНИМАЦИИ =====
+class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateMixin {
   late AnimationController _mainController;
-  late Animation<double> _fadeIn;
-  late Animation<double> _scaleIn;
-  late Animation<double> _slideUp;
-
+  late Animation<double> _fadeIn, _scaleIn, _slideUp;
   late AnimationController _wheelController;
   late Animation<double> _wheelRotation;
-
   late AnimationController _particleController;
   late final List<_Particle> _particles = [];
-
-  // ===== ПОЛЕ =====
   final TextEditingController _nickController = TextEditingController();
   final FocusNode _nickFocusNode = FocusNode();
   bool _isLoading = false;
@@ -43,45 +30,17 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   void initState() {
     super.initState();
 
-    _mainController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
-    _fadeIn = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _mainController, curve: Curves.easeOut),
-    );
-
-    _scaleIn = Tween<double>(begin: 0.7, end: 1).animate(
-      CurvedAnimation(parent: _mainController, curve: Curves.elasticOut),
-    );
-
-    _slideUp = Tween<double>(begin: 50, end: 0).animate(
-      CurvedAnimation(parent: _mainController, curve: Curves.easeOut),
-    );
-
-    _wheelController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 8),
-    )..repeat();
-
-    _wheelRotation = Tween<double>(begin: 0, end: 2 * pi).animate(
-      CurvedAnimation(parent: _wheelController, curve: Curves.linear),
-    );
-
-    _particleController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-
+    _mainController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+    _fadeIn = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _mainController, curve: Curves.easeOut));
+    _scaleIn = Tween<double>(begin: 0.7, end: 1).animate(CurvedAnimation(parent: _mainController, curve: Curves.elasticOut));
+    _slideUp = Tween<double>(begin: 50, end: 0).animate(CurvedAnimation(parent: _mainController, curve: Curves.easeOut));
+    _wheelController = AnimationController(vsync: this, duration: const Duration(seconds: 8))..repeat();
+    _wheelRotation = Tween<double>(begin: 0, end: 2 * pi).animate(CurvedAnimation(parent: _wheelController, curve: Curves.linear));
+    _particleController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
     _initParticles();
-
     _mainController.forward();
-
     Future.delayed(const Duration(milliseconds: 800), () {
-      if (mounted) {
-        _nickFocusNode.requestFocus();
-      }
+      if (mounted) _nickFocusNode.requestFocus();
     });
   }
 
@@ -120,13 +79,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: GestureDetector(
-        onTap: () {
-          _nickFocusNode.unfocus();
-        },
+        onTap: () => _nickFocusNode.unfocus(),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -142,95 +98,81 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           ),
           child: Stack(
             children: [
-              // ===== ЧАСТИЦЫ =====
               ..._particles.map((p) => _buildParticle(p, size)),
-
-              // ===== ОСНОВНОЙ КОНТЕНТ С ПОДНЯТИЕМ =====
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 28),
                   child: Transform.translate(
-                    offset: const Offset(0, 10), // 
+                    offset: const Offset(0, 10),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // ===== КОЛЕСО =====
                         FadeTransition(
                           opacity: _fadeIn,
                           child: ScaleTransition(
                             scale: _scaleIn,
                             child: AnimatedBuilder(
                               animation: _wheelRotation,
-                              builder: (context, child) {
-                                return Transform.rotate(
-                                  angle: _wheelRotation.value,
-                                  child: Container(
-                                    width: size.width * 0.45,
-                                    height: size.width * 0.45,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: RadialGradient(
-                                        colors: [
-                                          Colors.purple.shade300,
-                                          Colors.purple.shade700,
-                                          Colors.purple.shade900,
-                                        ],
-                                        stops: const [0.2, 0.6, 1.0],
+                              builder: (context, child) => Transform.rotate(
+                                angle: _wheelRotation.value,
+                                child: Container(
+                                  width: size.width * 0.45,
+                                  height: size.width * 0.45,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        Colors.purple.shade300,
+                                        Colors.purple.shade700,
+                                        Colors.purple.shade900,
+                                      ],
+                                      stops: const [0.2, 0.6, 1.0],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.purple.shade700.withOpacity(0.5),
+                                        blurRadius: 60,
+                                        spreadRadius: 20,
                                       ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.purple.shade700
-                                              .withOpacity(0.5),
-                                          blurRadius: 60,
-                                          spreadRadius: 20,
-                                        ),
-                                      ],
-                                    ),
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        ...List.generate(12, (index) {
-                                          final angle =
-                                              index * (2 * pi / 12);
-                                          return Transform.rotate(
-                                            angle: angle,
-                                            child: Container(
-                                              width:
-                                                  size.width * 0.65 * 0.6,
-                                              height: 2,
-                                              color: Colors.white
-                                                  .withOpacity(
-                                                      index % 2 == 0
-                                                          ? 0.3
-                                                          : 0.15),
-                                            ),
-                                          );
-                                        }),
-                                        Container(
-                                          width: 50,
-                                          height: 50,
-                                          decoration: const BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: Colors.white,
-                                          ),
-                                          child: const Icon(
-                                            Icons.star,
-                                            color: Colors.purple,
-                                            size: 28,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    ],
                                   ),
-                                );
-                              },
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      ...List.generate(12, (index) {
+                                        final angle = index * (2 * pi / 12);
+                                        return Transform.rotate(
+                                          angle: angle,
+                                          child: Container(
+                                            width: size.width * 0.65 * 0.6,
+                                            height: 2,
+                                            color: index % 2 == 0
+                                                ? Colors.white.withOpacity(0.3)
+                                                : Colors.white.withOpacity(0.15),
+                                          ),
+                                        );
+                                      }),
+                                      Container(
+                                        width: 50,
+                                        height: 50,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white,
+                                        ),
+                                        child: const Icon(
+                                          Icons.star,
+                                          color: Colors.purple,
+                                          size: 28,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 40),
-
-                        // ===== ЗАГОЛОВОК =====
                         FadeTransition(
                           opacity: _fadeIn,
                           child: Transform.translate(
@@ -259,10 +201,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 30),
-
-                        // ===== ПОЛЕ ДЛЯ НИКА =====
                         FadeTransition(
                           opacity: _fadeIn,
                           child: Transform.translate(
@@ -283,16 +222,13 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.purple.shade900
-                                            .withOpacity(0.3),
-                                        Colors.purple.shade700
-                                            .withOpacity(0.1),
+                                        Colors.purple.shade900.withOpacity(0.3),
+                                        Colors.purple.shade700.withOpacity(0.1),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: Colors.purple.shade400
-                                          .withOpacity(0.3),
+                                      color: Colors.purple.shade400.withOpacity(0.3),
                                     ),
                                   ),
                                   child: TextField(
@@ -315,8 +251,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                         size: 24,
                                       ),
                                       border: InputBorder.none,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
+                                      contentPadding: const EdgeInsets.symmetric(
                                         horizontal: 16,
                                         vertical: 16,
                                       ),
@@ -328,10 +263,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 20),
-
-                        // ===== КНОПКИ =====
                         FadeTransition(
                           opacity: _fadeIn,
                           child: Transform.translate(
@@ -342,20 +274,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                   width: double.infinity,
                                   height: 56,
                                   child: ElevatedButton(
-                                    onPressed: _isLoading
-                                        ? null
-                                        : _handleAuth,
+                                    onPressed: _isLoading ? null : _handleAuth,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Colors.purple.shade600,
+                                      backgroundColor: Colors.purple.shade600,
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
                                       elevation: 8,
-                                      shadowColor: Colors.purple.shade700
-                                          .withOpacity(0.5),
+                                      shadowColor: Colors.purple.shade700.withOpacity(0.5),
                                     ),
                                     child: _isLoading
                                         ? const SizedBox(
@@ -377,8 +304,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                 ),
                                 const SizedBox(height: 12),
                                 TextButton(
-                                  onPressed:
-                                      _isLoading ? null : _handleGuest,
+                                  onPressed: _isLoading ? null : _handleGuest,
+                                  style: TextButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
                                   child: Text(
                                     'Continue as guest',
                                     style: TextStyle(
@@ -389,8 +320,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                 ),
                                 const SizedBox(height: 12),
                                 TextButton(
-                                  onPressed:
-                                      _isLoading ? null : _handleRestoreAccount,
+                                  onPressed: _isLoading ? null : _handleRestoreAccount,
+                                  style: TextButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
                                   child: Text(
                                     'Restore Account',
                                     style: TextStyle(
@@ -404,7 +339,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           ),
                         ),
                         const Spacer(),
-                        // ===== ПОДПИСЬ =====
                         FadeTransition(
                           opacity: _fadeIn,
                           child: Padding(
@@ -425,14 +359,13 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                     baseline: TextBaseline.alphabetic,
                                     child: GestureDetector(
                                       behavior: HitTestBehavior.translucent,
-                                      onTap: () => _launchUrl(
-                                          AppConfigService().termsUrl),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
+                                      onTap: () => _launchUrl(AppConfigService().termsUrl),
+                                      child: const Padding(
+                                        padding: EdgeInsets.symmetric(
                                           horizontal: 8,
                                           vertical: 10,
-                                        ), // Расширяем невидимую зону клика
-                                        child: const Text(
+                                        ),
+                                        child: Text(
                                           'Terms',
                                           style: TextStyle(
                                             fontSize: 11,
@@ -444,9 +377,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                       ),
                                     ),
                                   ),
-                                  const TextSpan(
-                                    text: ' of use',
-                                  ),
+                                  const TextSpan(text: ' of use'),
                                 ],
                               ),
                             ),
@@ -464,7 +395,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     );
   }
 
-  // ===== ЧАСТИЦА =====
   Widget _buildParticle(_Particle p, Size size) {
     return Positioned(
       left: p.x * size.width,
@@ -492,133 +422,45 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     );
   }
 
-  // ===== МЕТОДЫ =====
-    
-    Future<void> _launchUrl(String url) async {
+  Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
     try {
-          MusicService.playClick(); // 👈 ДОБАВЬ
+      MusicService.playClick();
       await launchUrl(uri, mode: LaunchMode.platformDefault);
     } catch (e) {
       BotToast.showCustomText(
         duration: const Duration(seconds: 3),
         align: const Alignment(0, -0.8),
-        toastBuilder: (cancelFunc) {
-          return Card(
-            color: Colors.red.shade900,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Text(
-                'Cannot open link',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
+        toastBuilder: (cancelFunc) => Card(
+          color: Colors.red.shade900,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Text(
+              'Cannot open link',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          );
-        },
+          ),
+        ),
       );
     }
   }
 
-    Future<void> _handleAuth() async {
-                                MusicService.playClick();
-
+  Future<void> _handleAuth() async {
+    MusicService.playClick();
     final nick = _nickController.text.trim();
     if (nick.isEmpty) {
-                            MusicService.playClick();
-
+      MusicService.playClick();
       BotToast.showCustomText(
         duration: const Duration(seconds: 2),
-        align: const Alignment(0, -0.3), // Вылетит сверху
-        toastBuilder: (cancelFunc) {
-          return Card(
-            color: const Color(0xFF4A148C), // Фиолетовый под стиль Wheel
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: Colors.purpleAccent, width: 1),
-            ),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Text(
-                'Enter a nickname',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          );
-        },
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-          MusicService.playClick();
-      _nickFocusNode.unfocus();
-      await Future.delayed(const Duration(milliseconds: 300));
-//      final prefs = await SharedPreferences.getInstance();
-  //    await prefs.setString('user_nickname', nick);
- //     await SplashScreen().registerUser(nick);
-//      SplashScreen().navigateToWheel(context);
-//      await _goToWheel();
-    await RoutingService().registerUser(nick);
-    RoutingService().navigateToWheel(context);
-    } catch (e) {
-      BotToast.showCustomText(
-        duration: const Duration(seconds: 3),
-        align: const Alignment(0, -0.8),
-        toastBuilder: (cancelFunc) {
-          return Card(
-            color: Colors.red.shade900,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Text(
-                'Error: $e',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-
-  Future<void> _handleGuest() async {
-        MusicService.playClick();
-    final guestNick = 'Guest_${DateTime.now().millisecondsSinceEpoch % 10000}';
-
-//    final prefs = await SharedPreferences.getInstance();
- //   await prefs.setString('user_nickname', guestNick);
-  //  await prefs.setBool('is_guest', true);
-    await RoutingService().registerGuest(guestNick);
-    RoutingService().navigateToWheel(context);
-   // await _goToWheel();
-  }
-
-  Future<void> _handleRestoreAccount() async {
-    MusicService.playClick();
-    // TODO: Implement restore account logic
-    BotToast.showCustomText(
-      duration: const Duration(seconds: 2),
-      align: const Alignment(0, -0.3),
-      toastBuilder: (cancelFunc) {
-        return Card(
+        align: const Alignment(0, -0.3),
+        toastBuilder: (cancelFunc) => Card(
           color: const Color(0xFF4A148C),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -627,7 +469,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           child: const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Text(
-              'Restore account feature coming soon',
+              'Enter a nickname',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 14,
@@ -635,22 +477,77 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               ),
             ),
           ),
-        );
-      },
-    );
+        ),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      MusicService.playClick();
+      _nickFocusNode.unfocus();
+      await Future.delayed(const Duration(milliseconds: 300));
+      await RoutingService().registerUser(nick);
+      RoutingService().navigateToWheel(context);
+    } catch (e) {
+      BotToast.showCustomText(
+        duration: const Duration(seconds: 3),
+        align: const Alignment(0, -0.8),
+        toastBuilder: (cancelFunc) => Card(
+          color: Colors.red.shade900,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Text(
+              'Error: $e',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
-/*
+  Future<void> _handleGuest() async {
+    MusicService.playClick();
+    final guestNick = 'Guest_${DateTime.now().millisecondsSinceEpoch % 10000}';
+    await RoutingService().registerGuest(guestNick);
+    RoutingService().navigateToWheel(context);
+  }
 
-  Future<void> _goToWheel() async {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const WheelScreen(),
+  Future<void> _handleRestoreAccount() async {
+    MusicService.playClick();
+    BotToast.showCustomText(
+      duration: const Duration(seconds: 2),
+      align: const Alignment(0, -0.3),
+      toastBuilder: (cancelFunc) => Card(
+        color: const Color(0xFF4A148C),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Colors.purpleAccent, width: 1),
+        ),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Text(
+            'Restore account feature coming soon',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       ),
     );
   }
-*/ 
+
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -661,17 +558,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 }
 
-// ===== ЧАСТИЦЫ (ВНЕ КЛАССА) =====
-
 class _Particle {
   static final _random = _SecureRandom();
-
-  double x, y;
-  double size;
-  double speed;
-  double opacity;
+  double x, y, size, speed, opacity, dx, dy;
   Color color;
-  double dx, dy;
 
   _Particle({
     required this.x,
