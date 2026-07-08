@@ -69,6 +69,7 @@ class UserIdService {
 
     final userInfo = {
       'userId': userId,
+      'deviceId': await getDeviceId(),
       'nickname': nickname,
       'deviceManufacturer': manufacturer,
       'deviceModel': model,
@@ -80,7 +81,17 @@ class UserIdService {
     return userInfo;
   }
 
-  // 3. Работа с Никнеймами
+  static Future<String> getDeviceId() async {
+  final prefs = await SharedPreferences.getInstance();
+  String? deviceId = prefs.getString('device_id');
+  if (deviceId == null) {
+    deviceId = const Uuid().v4();
+    await prefs.setString('device_id', deviceId);
+  }
+  return deviceId;
+}
+
+  // 3. Работа сНикнеймами
   static Future<String> getNickname() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_nickKey) ?? 'Guest';

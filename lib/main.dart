@@ -9,6 +9,7 @@ import 'package:wheel_of_fortune/services/routing.dart';
 import 'package:wheel_of_fortune/screen/welcome.dart';
 import 'package:wheel_of_fortune/screen/splash_screen.dart';
 import 'package:wheel_of_fortune/services/logger.dart';
+import 'package:wheel_of_fortune/services/log_overlay.dart';
 
 import 'dart:async';
 import 'dart:io' show Platform;
@@ -149,7 +150,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       home: const SplashScreen(), 
       builder: (context, child) {
         child = BotToastInit()(context, child);
-        return child;
+        return LogOverlay(child:child!);
       },
       navigatorObservers: [BotToastNavigatorObserver()],
     );

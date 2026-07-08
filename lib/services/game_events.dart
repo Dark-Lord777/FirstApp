@@ -174,6 +174,9 @@ class GameEventsService {
       final data = {
         'userId': userInfo['userId'],
         'deviceId': userInfo['deviceId'],
+        'deviceManufacturer': userInfo['deviceManufacturer'],
+        'deviceModel': userInfo['deviceModel'],
+        'osVersion': userInfo['osVersion'],
         'nickname': nickname,
         'isGuest': isGuest,
         'isRegistered': isRegistered,

@@ -173,4 +173,8 @@ class Log {
   static Talker get instance {
     return _talker;
   }
+  static void clearHistory() {
+  _talker.history.clear();
+}
+
 }
