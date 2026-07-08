@@ -151,19 +151,19 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     physics: const ClampingScrollPhysics(),
                     slivers: [
                       SliverToBoxAdapter(
-                        child: Transform.translate(
-                          offset: const Offset(0, 10),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(height: 20),
-                              
-                              // ===== WHEEL =====
-                              FadeTransition(
-                                opacity: _fadeIn,
-                                child: ScaleTransition(
-                                  scale: _scaleIn,
-                                  child: AnimatedBuilder(
+                        child: SizedBox(
+                          height: size.height * 0.78,
+                          child: FadeTransition(
+                            opacity: _fadeIn,
+                            child: ScaleTransition(
+                              scale: _scaleIn,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(height: 20),
+                                  
+                                  // ===== WHEEL =====
+                                  AnimatedBuilder(
                                     animation: _wheelRotation,
                                     builder: (context, child) {
                                       return Transform.rotate(
@@ -228,208 +228,196 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                       );
                                     },
                                   ),
-                                ),
-                              ),
 
-                              const SizedBox(height: 40),
+                                  const SizedBox(height: 40),
 
-                              // ===== TITLE =====
-                              FadeTransition(
-                                opacity: _fadeIn,
-                                child: Transform.translate(
-                                  offset: Offset(0, _slideUp.value),
-                                  child: Column(
-                                    children: [
-                                      const Text(
-                                        'Wheel of Fortune',
-                                        style: TextStyle(
-                                          fontSize: 32,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          letterSpacing: 1.5,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Spin and decide!',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.white.withOpacity(0.6),
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 30),
-
-                              // ===== NICKNAME FIELD =====
-                              FadeTransition(
-                                opacity: _fadeIn,
-                                child: Transform.translate(
-                                  offset: Offset(0, _slideUp.value * 1.2),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Come up with a nickname',
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.8),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Colors.purple.shade900
-                                                  .withOpacity(0.3),
-                                              Colors.purple.shade700
-                                                  .withOpacity(0.1),
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(16),
-                                          border: Border.all(
-                                            color: Colors.purple.shade400
-                                                .withOpacity(0.3),
-                                          ),
-                                        ),
-                                        child: TextField(
-                                          controller: _nickController,
-                                          focusNode: _nickFocusNode,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18,
-                                          ),
-                                          textInputAction: TextInputAction.done,
-                                          decoration: InputDecoration(
-                                            hintText: 'Enter a nickname...',
-                                            hintStyle: TextStyle(
-                                              color: Colors.white.withOpacity(0.3),
-                                              fontSize: 16,
-                                            ),
-                                            prefixIcon: Icon(
-                                              Icons.person_outline,
-                                              color: Colors.purple.shade300,
-                                              size: 24,
-                                            ),
-                                            border: InputBorder.none,
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 16,
-                                            ),
-                                          ),
-                                          onSubmitted: (_) => _handleAuth(),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 20),
-
-                              // ===== BUTTONS =====
-                              FadeTransition(
-                                opacity: _fadeIn,
-                                child: Transform.translate(
-                                  offset: Offset(0, _slideUp.value * 1.4),
-                                  child: Column(
-                                    children: [
-                                      SizedBox(
-                                        width: double.infinity,
-                                        height: 56,
-                                        child: ElevatedButton(
-                                          onPressed: _isLoading
-                                              ? null
-                                              : _handleAuth,
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                Colors.purple.shade600,
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                            ),
-                                            elevation: 8,
-                                            shadowColor: Colors.purple.shade700
-                                                .withOpacity(0.5),
-                                          ),
-                                          child: _isLoading
-                                              ? const SizedBox(
-                                                  height: 24,
-                                                  width: 24,
-                                                  child: CircularProgressIndicator(
-                                                    color: Colors.white,
-                                                    strokeWidth: 2,
-                                                  ),
-                                                )
-                                              : const Text(
-                                                  'Continue',
-                                                  style: TextStyle(
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      TextButton(
-                                        onPressed: _isLoading ? null : _handleGuest,
-                                        child: Text(
-                                          'Continue as guest',
+                                  // ===== TITLE =====
+                                  Transform.translate(
+                                    offset: Offset(0, _slideUp.value),
+                                    child: Column(
+                                      children: [
+                                        const Text(
+                                          'Wheel of Fortune',
                                           style: TextStyle(
-                                            color: Colors.white.withOpacity(0.5),
-                                            fontSize: 14,
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                            letterSpacing: 1.5,
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Spin and decide!',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.white.withOpacity(0.6),
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              
-                              // ===== RESTORE ACCOUNT BUTTON =====
-                              FadeTransition(
-                                opacity: _fadeIn,
-                                child: Transform.translate(
-                                  offset: Offset(0, _slideUp.value * 1.6),
-                                  child: SizedBox(
-                                    width: double.infinity,
-                                    height: 48,
-                                    child: OutlinedButton(
-                                      onPressed: _isLoading ? null : _handleRestore,
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: Colors.white.withOpacity(0.6),
-                                        side: BorderSide(
-                                          color: Colors.purple.shade400.withOpacity(0.3),
-                                          width: 1.5,
+
+                                  const SizedBox(height: 30),
+
+                                  // ===== NICKNAME FIELD =====
+                                  Transform.translate(
+                                    offset: Offset(0, _slideUp.value * 1.2),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Come up with a nickname',
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(0.8),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                        const SizedBox(height: 8),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Colors.purple.shade900
+                                                    .withOpacity(0.3),
+                                                Colors.purple.shade700
+                                                    .withOpacity(0.1),
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(16),
+                                            border: Border.all(
+                                              color: Colors.purple.shade400
+                                                  .withOpacity(0.3),
+                                            ),
+                                          ),
+                                          child: TextField(
+                                            controller: _nickController,
+                                            focusNode: _nickFocusNode,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                            ),
+                                            textInputAction: TextInputAction.done,
+                                            decoration: InputDecoration(
+                                              hintText: 'Enter a nickname...',
+                                              hintStyle: TextStyle(
+                                                color: Colors.white.withOpacity(0.3),
+                                                fontSize: 16,
+                                              ),
+                                              prefixIcon: Icon(
+                                                Icons.person_outline,
+                                                color: Colors.purple.shade300,
+                                                size: 24,
+                                              ),
+                                              border: InputBorder.none,
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 16,
+                                              ),
+                                            ),
+                                            onSubmitted: (_) => _handleAuth(),
+                                          ),
                                         ),
-                                      ),
-                                      child: const Text(
-                                        'Restore Account',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          letterSpacing: 0.5,
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  // ===== BUTTONS =====
+                                  Transform.translate(
+                                    offset: Offset(0, _slideUp.value * 1.4),
+                                    child: Column(
+                                      children: [
+                                        SizedBox(
+                                          width: double.infinity,
+                                          height: 56,
+                                          child: ElevatedButton(
+                                            onPressed: _isLoading
+                                                ? null
+                                                : _handleAuth,
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  Colors.purple.shade600,
+                                              foregroundColor: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                              ),
+                                              elevation: 8,
+                                              shadowColor: Colors.purple.shade700
+                                                  .withOpacity(0.5),
+                                            ),
+                                            child: _isLoading
+                                                ? const SizedBox(
+                                                    height: 24,
+                                                    width: 24,
+                                                    child: CircularProgressIndicator(
+                                                      color: Colors.white,
+                                                      strokeWidth: 2,
+                                                    ),
+                                                  )
+                                                : const Text(
+                                                    'Continue',
+                                                    style: TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        TextButton(
+                                          onPressed: _isLoading ? null : _handleGuest,
+                                          child: Text(
+                                            'Continue as guest',
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(0.5),
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  
+                                  // ===== RESTORE ACCOUNT BUTTON =====
+                                  Transform.translate(
+                                    offset: Offset(0, _slideUp.value * 1.6),
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      height: 48,
+                                      child: OutlinedButton(
+                                        onPressed: _isLoading ? null : _handleRestore,
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: Colors.white.withOpacity(0.6),
+                                          side: BorderSide(
+                                            color: Colors.purple.shade400.withOpacity(0.3),
+                                            width: 1.5,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'Restore Account',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            letterSpacing: 0.5,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
+                                  
+                                  const SizedBox(height: 20),
+                                ],
                               ),
-                              
-                              const SizedBox(height: 20),
-                            ],
+                            ),
                           ),
                         ),
                       ),
