@@ -9,7 +9,8 @@ import 'package:wheel_of_fortune/services/music_service.dart';
 import 'package:wheel_of_fortune/services/game_message.dart';
 import 'package:wheel_of_fortune/screen/welcome.dart';
 import 'package:wheel_of_fortune/services/database_service.dart';
-
+import 'package:wheel_of_fortune/services/log_overlay.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -24,6 +25,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _winSoundEnabled = true;
   bool _backgroundMusicEnabled = true;
 
+  bool _logsEnabled = false;
+
   List<Map<String, dynamic>> _iconVariants = [];
   bool _isLoading = true;
   String _currentIcon = 'default';
@@ -37,6 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _spinSoundEnabled = AppConfigService().spinSoundEnabled;
     _winSoundEnabled = AppConfigService().winSoundEnabled;
     _backgroundMusicEnabled = AppConfigService().backgroundMusicEnabled;
+    _logsEnabled = Log.logsEnabled;
   }
 
   Future<void> _loadCurrentIcon() async {
@@ -386,6 +390,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   trailing: const Icon(Icons.warning, color: Colors.red),
                   onTap: _resetAllData,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                color: const Color(0xFF2D1B4E),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: SwitchListTile(
+                  title: const Text(
+                    'Show Logs',
+                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                  subtitle: const Text(
+                    'Show debug logs overlay',
+                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                  value: _logsEnabled,
+                  onChanged: (value) {
+                    MusicService.playClick();
+                    setState(() {
+                      _logsEnabled = value;
+                      Log.setLogsEnabled(value);
+                    });
+                  },
+                  activeColor: Colors.purple,
+                  secondary: Icon(
+                    _logsEnabled ? Icons.bug_report : Icons.bug_report_outlined,
+                    color: _logsEnabled ? Colors.green : Colors.grey,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),

@@ -3,8 +3,12 @@ import 'package:talker_flutter/talker_flutter.dart';
 import 'package:wheel_of_fortune/services/database_service.dart';
 
 class SqfliteTalkerObserver extends TalkerObserver {
-
-  static bool _isSaving = false;
+  
+  static bool isSaving = false;
+  static bool _logsEnabled = false;
+  
+  //geter 
+  static bool get logsEnabled => _logsEnabled;
 
   @override
   void onError(TalkerError err) =>
@@ -29,12 +33,12 @@ class SqfliteTalkerObserver extends TalkerObserver {
   }
 
   void _save(String title, String? message, [String? stack]) {
-    if (_isSaving) {
+    if (isSaving) {
       debugPrint('Log saving already in progress, skipping: $title');
       return;
     }
 
-    _isSaving = true;
+    isSaving = true;
 
     try {
       final fullMessage = message ?? '';
@@ -48,15 +52,18 @@ class SqfliteTalkerObserver extends TalkerObserver {
     } catch (e) {
       debugPrint('Failed to save log through observer: $e');
     } finally {
-      _isSaving = false;
+      isSaving = false;
     }
   }
 }
 
 
 class Log {
+    static bool _logsEnabled = false;
+    static bool get logsEnabled => _logsEnabled; 
 
   static final _talker = TalkerFlutter.init(
+
     observer: SqfliteTalkerObserver(),
 
     settings: TalkerSettings(
@@ -176,5 +183,10 @@ class Log {
   static void clearHistory() {
   _talker.history.clear();
 }
+  
+  static void setLogsEnabled(bool enabled) {
+    _logsEnabled = enabled;
+  }
+
 
 }
