@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:wheel_of_fortune/services/logger.dart';
@@ -13,22 +14,43 @@ class LogOverlay extends StatefulWidget {
 class _LogOverlayState extends State<LogOverlay> {
   final ScrollController _scrollController = ScrollController();
   List<TalkerData> _logs = [];
+  StreamSubscription? _talkerSubscription;
 
   @override
   void initState() {
     super.initState();
-    _refreshLogs();
+    _loadExistingLogs();
+    
+    // Подписываемся на поток новых логов в реальном времени 🎯
+    _talkerSubscription = Log.instance.stream.listen((_) {
+      if (Log.logsEnabled) {
+        _refreshLogs();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _talkerSubscription?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _loadExistingLogs() {
+    _logs = List.from(Log.history);
   }
 
   void _refreshLogs() {
+    if (!mounted) return;
     setState(() {
-      _logs = Log.history.reversed.toList();
+      _logs = List.from(Log.history);
     });
 
+    // Мягко скроллим вниз к самому свежему логу
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
-          0,
+          _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
@@ -44,13 +66,11 @@ class _LogOverlayState extends State<LogOverlay> {
         ValueListenableBuilder<bool>(
           valueListenable: Log.logsEnabledNotifier,
           builder: (context, enabled, _) {
-          if (enabled) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-            _refreshLogs();
-          });
-          return _buildOverlay();
-          }
-          return const SizedBox.shrink();
+            if (enabled) {
+              // Больше никакого _refreshLogs() здесь! Чистая верстка.
+              return _buildOverlay();
+            }
+            return const SizedBox.shrink();
           },
         ),
       ],
@@ -62,31 +82,34 @@ class _LogOverlayState extends State<LogOverlay> {
       bottom: 0,
       left: 0,
       right: 0,
-      height: MediaQuery.of(context).size.height * 0.5, 
-      child: Container(
-        color: Colors.black.withOpacity(0.95),
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: _logs.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'Логов нет',
-                        style: TextStyle(color: Colors.grey, fontSize: 16),
+      height: MediaQuery.of(context).size.height * 0.7, 
+      child: Material( // Добавлено, чтобы текстовые стили и жесты сидели на валидной подложке
+        color: Colors.transparent,
+        child: Container(
+          color: Colors.black.withOpacity(0.95),
+          child: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: _logs.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Logs are empty',
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        // reverse: false (по умолчанию) — теперь скролл послушный!
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        itemCount: _logs.length,
+                        itemBuilder: (context, index) {
+                          return _buildLogTile(_logs[index]);
+                        },
                       ),
-                    )
-                  : ListView.builder(
-                      controller: _scrollController,
-                      reverse: true,
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      itemCount: _logs.length,
-                      itemBuilder: (context, index) {
-                        return _buildLogTile(_logs[index]);
-                      },
-                    ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -110,7 +133,7 @@ class _LogOverlayState extends State<LogOverlay> {
           const Icon(Icons.bug_report, color: Colors.white, size: 20),
           const SizedBox(width: 12),
           Text(
-            'Логи (${_logs.length})',
+            'Logs (${_logs.length})',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -132,8 +155,7 @@ class _LogOverlayState extends State<LogOverlay> {
           IconButton(
             icon: const Icon(Icons.close, color: Colors.white, size: 22),
             onPressed: () {
-              Log.setLogsEnabled(false); // 👈 ВЫКЛЮЧАЕМ
-              setState(() {});
+              Log.setLogsEnabled(false);
             },
           ),
         ],
