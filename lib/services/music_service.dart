@@ -618,14 +618,14 @@ static Future<void> playWinSound() async {
     );
     Log.i("Loaded $type effect: ${_sounds[type] ?? 'not found'}");
   }
-
+/*
   static Future<void> _loadEffect(String type) async {
     await _loadEffect("spin");
     await _loadEffects("win");
     await _loadEffects('click');
 
   }
-
+*/
 
   // ===== DOWNLOAD =====
   static Future<bool> _downloadArchive(
@@ -725,17 +725,47 @@ static Future<bool> _extractArchive() async {
   }
 }
 
+static Future<bool> _hasMusicFiles() async {
+    try {
+      final musicDir = await _musicDirectory();
+      if (!await musicDir.exists()) return false;
+
+      for (final folder in _musicFolders.keys) {
+        final folderDir = Directory("${musicDir.path}/$folder");
+        if (!await folderDir.exists()) continue;
+
+      final files = await folderDir.list().toList();
+      for (final file in files) {
+        if (file is File && _isSupportedFile(file.path)) {
+          return true;
+          }
+        }
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
 static Future<void> _updateMusic(BuildContext context) async {
 
   await _loadCache();
 
   final remoteVersion = AppConfigService().musicVersion;
+  final hasMusic = await _hasMusicFiles();
 
-  if (_musicVersion == remoteVersion) {
-  Log.i("Music is up to date version $_musicVersion");
+
+  if (_musicVersion == remoteVersion && hasMusic) {
+  Log.i("Music is up to date version $_musicVersion and exists");
     return;
   }
-    Log.d("New music version available $remoteVersion");
+    //Log.d("New music version available $remoteVersion");
+  if (_musicVersion == remoteVersion && !hasMusic) {
+    Log.w("Version matches but music files missing -forcing re-download");
+    _musicVersion = ""; 
+    await _saveMusicVersion("");
+  }
+    Log.d("Downloading music, remote version: $remoteVersion");
 
   final ok = await _downloadArchive(
         "${AppConfigService().workerUrl}/music",
@@ -745,7 +775,11 @@ static Future<void> _updateMusic(BuildContext context) async {
 
   final extracted = await _extractArchive();
 
-  if (!extracted) return;
+  if (!extracted) {
+    Log.e("Failed to extract music");
+    return; 
+  }
+
 
   await _saveMusicVersion(remoteVersion);
     _backgroundTracks.clear();
