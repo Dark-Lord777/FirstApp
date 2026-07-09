@@ -54,6 +54,7 @@ flutter:
     - assets/music/Spin/
     - assets/music/Win/
     - assets/music/UI/
+    - shorebird.yaml
 
   uses-material-design: true
 

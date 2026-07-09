@@ -46,6 +46,10 @@ RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools \
 # Принимаем лицензии заранее (включая будущие для NDK)
 RUN yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1
 
+# Установка Shorebird
+RUN curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh -sSf | bash && \
+    export PATH="$HOME/.shorebird/bin:$PATH"
+
 # Устанавливаем нужные компоненты И тот самый NDK, который просит Gradle
 RUN $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
     "platform-tools" \
