@@ -64,6 +64,7 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh -sSf | bash
           echo "$HOME/.shorebird/bin" >> $GITHUB_PATH
+              echo "export PATH=\"$HOME/.shorebird/bin:\$PATH\"" >> ~/.bashrc
 
       - name: Shorebird Login 
         run: shorebird login --ci
