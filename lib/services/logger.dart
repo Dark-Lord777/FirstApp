@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:wheel_of_fortune/services/database_service.dart';
+import 'package:wheel_of_fortune/services/app_config_service.dart';
 
 class SqfliteTalkerObserver extends TalkerObserver {
   static bool isSaving = false;
@@ -45,7 +46,6 @@ class Log {
   static bool _logsEnabled = false;
   static bool get logsEnabled => _logsEnabled;
 
-  // 👇 ТУТ ДОЛЖЕН БЫТЬ ТОЛЬКО ОДИН!
   static final ValueNotifier<bool> logsEnabledNotifier = ValueNotifier(false);
 
   static final _talker = TalkerFlutter.init(
@@ -71,19 +71,21 @@ class Log {
   }
 
   static void dev(dynamic msg) {
-    if (kDebugMode) {
+    if (AppConfigService().developerTools) {
       _talker.debug('[DEV] $msg\n📍 ${_caller()}');
     }
   }
 
   static void d(dynamic msg) {
-    if (kDebugMode) {
+    if (AppConfigService().developerTools) {
       _talker.debug('$msg\n📍 ${_caller()}');
     }
   }
 
   static void i(dynamic msg) {
+    if (AppConfigService().developerTools) {
     _talker.info('$msg\n📍 ${_caller()}');
+    }
   }
 
   static void w(dynamic message) {
@@ -111,6 +113,6 @@ class Log {
 
   static void setLogsEnabled(bool enabled) {
     _logsEnabled = enabled;
-    logsEnabledNotifier.value = enabled; // 👈 ТЕПЕРЬ РАБОТАЕТ
+    logsEnabledNotifier.value = enabled; 
   }
 }

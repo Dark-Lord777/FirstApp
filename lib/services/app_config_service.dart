@@ -35,6 +35,8 @@ class AppConfigService {
   bool spinSoundEnabled = true;
   bool winSoundEnabled = true;
   bool backgroundMusicEnabled = true;
+  bool get developerTools => _config["developerTools"] ?? false;
+
 //    bool get isMaintenanceActive => _config["maintenance"]?["is_active"] ?? false;
 //  bool get isMaintenanceActive  => _config["maintence"]?["is_active"] ?? false;
  // bool get isMaintenanceActive => isMaintenanceActive; 
@@ -92,6 +94,7 @@ class AppConfigService {
     await _loadPrefs();
     await _loadConfig();
     starsNotifier.value = starsEnabled;
+  //  await  loadDeveloperTools();
   }
 
   Future<void> _loadPrefs() async {
@@ -116,7 +119,7 @@ class AppConfigService {
  Future<void> _loadConfig() async {
     try {
       final url = workerUrl;
-      Log.i("📡 Trying main: $url/config");
+      Log.i(" Trying main: $url/config");
       
       final response = await http
           .get(
@@ -199,7 +202,23 @@ class AppConfigService {
       Log.h(e, st, "remote lig transmission failed");
     }
   }
-  
+ /* 
+    static void setDeveloperTools(bool value) async {
+       _developerTools = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('developer_tools', value);
+  }
+
+  static Future<void> loadDeveloperTools() async {
+    final prefs = await SharedPreferences.getInstance();
+    _developerTools = prefs.getBool('developer_tools') ?? false;
+  }
+
+  static Future<void> loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    _developerTools = prefs.getBool('developer_tools') ?? false;
+  }
+*/ 
 
   Future<void> setStarsEnabled(bool value) async {
     starsEnabled = value;
@@ -238,6 +257,7 @@ class AppConfigService {
     spinSoundEnabled = true;
     winSoundEnabled = true;
     backgroundMusicEnabled = true;
+    //_developerTools = false;
 
     starsNotifier.value = false;
 
@@ -247,5 +267,6 @@ class AppConfigService {
     await prefs.remove("spin_sound_enabled");
     await prefs.remove("win_sound_enabled");
     await prefs.remove("background_music_enabled");
+ //   await prefs.remove("developer_tools");
   }
 }

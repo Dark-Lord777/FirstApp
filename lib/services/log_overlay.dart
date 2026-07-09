@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:wheel_of_fortune/services/logger.dart';
+import 'package:wheel_of_fortune/services/app_config_service.dart';
 
 class LogOverlay extends StatefulWidget {
   final Widget child;
@@ -21,9 +22,8 @@ class _LogOverlayState extends State<LogOverlay> {
     super.initState();
     _loadExistingLogs();
     
-    // Подписываемся на поток новых логов в реальном времени 🎯
     _talkerSubscription = Log.instance.stream.listen((_) {
-      if (Log.logsEnabled) {
+      if (AppConfigService().developerTools && Log.logsEnabledNotifier.value) {
         _refreshLogs();
       }
     });
@@ -66,8 +66,7 @@ class _LogOverlayState extends State<LogOverlay> {
         ValueListenableBuilder<bool>(
           valueListenable: Log.logsEnabledNotifier,
           builder: (context, enabled, _) {
-            if (enabled) {
-              // Больше никакого _refreshLogs() здесь! Чистая верстка.
+            if (enabled && AppConfigService().developerTools) {
               return _buildOverlay();
             }
             return const SizedBox.shrink();

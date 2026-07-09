@@ -26,6 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _backgroundMusicEnabled = true;
 
   bool _logsEnabled = false;
+  bool _developersTools = false;
 
   List<Map<String, dynamic>> _iconVariants = [];
   bool _isLoading = true;
@@ -41,6 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _winSoundEnabled = AppConfigService().winSoundEnabled;
     _backgroundMusicEnabled = AppConfigService().backgroundMusicEnabled;
     _logsEnabled = Log.logsEnabled;
+    _developersTools = AppConfigService().developerTools;
   }
 
   Future<void> _loadCurrentIcon() async {
@@ -369,6 +371,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
 
               const SizedBox(height: 16),
+              if (_developersTools) ...[
               const Text(
                 'Developer Tools',
                 style: TextStyle(color: Colors.white, fontSize: 16),
@@ -422,6 +425,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ),
+            ],
               const SizedBox(height: 16),
             ],
           ),

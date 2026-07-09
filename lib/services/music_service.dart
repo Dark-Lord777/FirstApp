@@ -144,6 +144,9 @@ _backgroundPlayer.onDurationChanged.listen((d) {
 
   }
 
+
+ 
+
   static Future<void> _loadFromAssets() async {
     try {
       final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
@@ -288,13 +291,14 @@ _backgroundPlayer.onDurationChanged.listen((d) {
         );
       }
       
-      await _loadBackgroundMusic();
+    //  await _loadBackgroundMusic();
 
 
 
-await _loadEffects("spin");
-await _loadEffects("win");
-await _loadEffects("click");
+//await _loadEffects("spin");
+//await _loadEffects("win");
+//await _loadEffects("click");
+      await _loadAllMusic();
 
        _updateMusic(context);
       _musicLoaded = true;
@@ -785,7 +789,9 @@ static Future<void> _updateMusic(BuildContext context) async {
     _backgroundTracks.clear();
     _sounds.clear();
 
-    await _loadAllMusic();
+    //await _loadAllMusic();
+    await _loadFromDisk();
+    Log.i("After update: ${_backgroundTracks.length} bg tracks, ${_sounds.length} sounds");
 
     if (_backgroundTracks.isNotEmpty) {
       await _playRandomBackground();
