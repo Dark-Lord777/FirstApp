@@ -144,6 +144,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        showPerformanceOverlay: true,
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       theme: ThemeData.dark(),
