@@ -3,7 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wheel_of_fortune/screen/welcome.dart';
 import 'package:wheel_of_fortune/wheel/wheel_screen.dart';
+import 'package:wheel_of_fortune/screen/maintenance_screen.dart';
 import 'package:wheel_of_fortune/services/logger.dart';
+import 'package:wheel_of_fortune/services/patch_service.dart';
 
 
 class RoutingService {
@@ -19,6 +21,7 @@ class RoutingService {
   String? _nickname;
   bool _isGuest = false;
   bool _isRegistered = false;
+  bool _needsMaintenance = false;
 
   bool get isRegistered => _isRegistered;
   bool get isGuest => _isGuest;
@@ -44,6 +47,22 @@ class RoutingService {
     _isRegistered = false;
     _isGuest = false;
   }
+    try {
+      final isApplied = await PatchService.isPatchApplied();
+      final hasNewPatch = await PatchService.hasNewPatch();
+
+      if (!isApplied && hasNewPatch) {
+          _needsMaintenance = true;
+          Log.i("New patch available, showing maintenace screen");
+        } else {
+          _needsMaintenance = false;
+          Log.i("No patches needed, processing normaly");
+        }
+    } catch (e, st) {
+      Log.h(e,st, "Error checking patch status");
+      _needsMaintenance = false;
+    }
+
     _isInitialized = true;
     Log.i("RoutingService Initialized: registered=$_isRegistered, guest=$_isGuest, nick=$_nickname");
   }
@@ -94,6 +113,11 @@ class RoutingService {
   //ogic of routing 
 
   Widget getInitialScreen() {
+    if (_needsMaintenance) {
+      Log.i('Showing maintenace screen');
+      return const MaintenanceScreen();
+    }
+
     if (_isRegistered || _isGuest) {
       Log.i('User already: nickname=$nickname, goind to WheelScreen');
       return const WheelScreen();
@@ -102,7 +126,6 @@ class RoutingService {
       return const WelcomeScreen();
     }
   }
-  //routing 
 
   void  navigateToWheel(BuildContext context) {
     FocusScope.of(context).unfocus();
@@ -122,5 +145,6 @@ class RoutingService {
     _nickname = null;
     _isGuest = false;
     _isRegistered = false;
+    _needsMaintenance = false;
   }
 }

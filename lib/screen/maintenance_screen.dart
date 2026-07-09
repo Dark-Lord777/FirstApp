@@ -2,6 +2,9 @@ import 'dart:math';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:wheel_of_fortune/services/app_config_service.dart';
+import 'package:wheel_of_fortune/services/patch_service.dart';
+import 'package:wheel_of_fortune/services/logger.dart';
+import 'package:wheel_of_fortune/screen/welcome.dart';
 
 class MaintenanceScreen extends StatefulWidget {
   const MaintenanceScreen({super.key});
@@ -27,6 +30,9 @@ with TickerProviderStateMixin {
 
 //  _Comet? _comet;
   //Timer? _cometTimer;
+  bool _isDownloading = false;
+  bool _isReadyToInstall = false;
+  Timer? _checkTimer;
 
   int _messageIndex = 0;
   Timer? _messageTimer;
@@ -81,6 +87,7 @@ with TickerProviderStateMixin {
     _initParticles();
     //_initCometTimer();
     _initMessageTimer();
+    _startPatchProcess();
    // _initDotTimer();
   }
   void _initParticles() {
@@ -166,6 +173,82 @@ with TickerProviderStateMixin {
     });
   }
 */
+
+  Future<void> _startPatchProcess() async {
+    final hasNewPatch = await PatchService.hasNewPatch();
+    if (!hasNewPatch) {
+      return;
+    }
+    setState(() {
+      _isDownloading = true;
+      _currentMessage = 'Downloading update...';
+    });
+    try {
+      await PatchService.downloadAndInstallPatch();
+
+      setState(() {
+      _isDownloading = false;
+      _currentMessage = 'The update has been downloaded!';
+    });
+
+    _checkTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
+      final isReady = await PatchService.isPatchReadyToInstall();
+
+      if (isReady) {
+        timer.cancel();
+        if (mounted) {
+          setState(() {
+            _isReadyToInstall = true;
+            _currentMessage = 'The update is ready! Restart the app';
+          });
+          Future.delayed(const Duration(seconds: 3), () {
+            if (mounted) {
+              _showRestartDialog();
+            }
+          });
+        }
+      }
+    });
+    } catch (e, st) {
+      setState((){
+      Log.h(e,st, 'Update error');
+      _currentMessage = 'Update error';
+  });
+    }
+  }
+
+  void _showRestartDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Text(
+          'The update is ready!',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Restart the application to apply the update',
+          style: TextStyle(color: Colors.white54),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+              );
+            },
+            child: const Text(
+              'Restart',
+              style: TextStyle(color: Colors.purpleAccent),
+            ),
+          ),
+        ]
+      ),
+    );
+  }
+
+
   @override
   void dispose() {
     _rotationController.dispose();
@@ -173,6 +256,7 @@ with TickerProviderStateMixin {
     _textFadeController.dispose();
   //  _cometTimer?.cancel();
     _messageTimer?.cancel();
+    _checkTimer?.cancel();
   //  _dotTimer?.cancel();
     super.dispose();
   }
@@ -415,7 +499,12 @@ with TickerProviderStateMixin {
                           children: [
                             SizedBox(
                               width: 200,
-                              child: LinearProgressIndicator(
+                              child: _isDownloading 
+                              ?  const CircularProgressIndicator(color: Colors.purple)
+                               : _isReadyToInstall 
+
+                              ?  const Icon(Icons.check_circle, color: Colors.green, size: 50)
+                              : LinearProgressIndicator(
                                 backgroundColor: Colors.white.withOpacity(0.1),
                                 valueColor: AlwaysStoppedAnimation(
                                   Colors.purple.shade400 
@@ -434,6 +523,7 @@ with TickerProviderStateMixin {
                                 color: Colors.white.withOpacity(0.4),
                               ),
                             ),
+                            
                           ],
                         ),
                       ),
