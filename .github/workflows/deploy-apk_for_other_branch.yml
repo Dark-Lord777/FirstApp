@@ -63,17 +63,14 @@ jobs:
       - name: Setup shorebird 
         run: |
           curl --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh -sSf | bash
-          echo "$HOME/.shorebird/bin" >> $GITHUB_PATH
-          #    echo "export PATH=\"$HOME/.shorebird/bin:\$PATH\"" >> ~/.bashrc
           ls -la "$HOME/.config/shorebird/bin"
 
       - name: Shorebird Login 
         run: |
-            which shorebird
-            shorebird --version
-            shorebird login --ci
+          ~/.config/shorebird/bin/shorebird --version
+          ~/.config/shorebird/bin/shorebird login --ci
         env: 
-          SHOREBIRD_TOKEN: ${{env.SHOREBIRD_TOKEN}}
+          SHOREBIRD_TOKEN: ${{ env.SHOREBIRD_TOKEN }}
 
 
       - name: Generate Dynamic Icons 
@@ -87,20 +84,22 @@ jobs:
           rm -rf android/app/src/main/res/mipmap-anydpi-v26/
           echo "✅ Removed mipmap-anydpi-v26"
 
+
+          
       - name: Cat version from file
         id: git_version 
         run: |
             APP_VERS=$(tail -n 1 version_of_project | tr -d '\n\r')
             echo "APP_VERS=$APP_VERS" >> $GITHUB_OUTPUT
+
       - name: Build APK 
         id: build
-        continue-on-error: true
         run: |
-            shorebird release android --artifact apk --obfuscate
+          ~/.config/shorebird/bin/shorebird release android --artifact apk --obfuscate
+          cd build/app/outputs/flutter-apk/
+          VERSION="${{ steps.git_version.outputs.APP_VERS }}"
+          mv app-release.apk "${PROJECT}${VERSION}.apk"
 
-            cd  build/app/outputs/flutter-apk/
-            VERSION="${{ steps.git_version.outputs.APP_VERS }}"
-            mv app-release.apk "${PROJECT}${VERSION}.apk"
 
       - name: Notify Telegram if build failed
         if: steps.build.outcome == 'failure'
