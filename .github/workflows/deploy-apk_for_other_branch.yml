@@ -67,8 +67,9 @@ jobs:
 
       - name: Shorebird Login 
         run: |
-          ~/.config/shorebird/bin/shorebird --version
-          ~/.config/shorebird/bin/shorebird login --ci
+          #~/.config/shorebird/bin/shorebird --version
+          #~/.config/shorebird/bin/shorebird login --ci
+          echo "$SHOREBIRD_TOKEN" | ~/.config/shorebird/bin/shorebird login
         env: 
           SHOREBIRD_TOKEN: ${{ env.SHOREBIRD_TOKEN }}
 
