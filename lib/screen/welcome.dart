@@ -180,7 +180,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                             child: Column(
                               children: [
                                 const Text(
-                                  'Wheel of Fortune',
+                                  'Fortune',
+                                 // 'Wheel of Fortune',
                                   style: TextStyle(
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
