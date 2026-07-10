@@ -56,8 +56,9 @@ class GameEventsService {
     _sessionStartTime = DateTime.now();
     _sessionSeconds = 0;
 
+    if (AppConfigService().developerTools) {
     Log.i('📊 GameEventsService initialized. Total spins: $_totalSpins');
-
+    }
     // КЛЮЧЕВОЕ ОБНОВЛЕНИЕ: Мгновенная синхронизация с сервером при входе в прогу!
     _sendStatsAsync('APP_INIT_SYNC', false);
   }
@@ -80,8 +81,9 @@ class GameEventsService {
       'timestamp': DateTime.now().toIso8601String(),
     });
 
+    if (AppConfigService().developerTools) {
     Log.i('🎡 Spin #$_totalSpins (session: $_sessionSpins). Записано в память.');
-
+    }
     // 4. Проверяем уведомление (оставили как было)
     if (_spinsSinceLastNotification >= _notificationInterval) {
       _spinsSinceLastNotification = 0;

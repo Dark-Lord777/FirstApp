@@ -372,9 +372,10 @@ static Future<void> resumeMusic() async {
   static void setAppLifecycleState(AppLifecycleState state) {
     if (state ==  AppLifecycleState.paused || 
         state ==  AppLifecycleState.detached) {
-        _saveCurrentStateManually();
         _isAppInBackground = true;
         _backgroundPlayer.stop();
+
+        unawaited(_saveCurrentStateManually());
         Log.d('Music paused (app in background)');
         } else if (state ==  AppLifecycleState.resumed) {
           if (_backgroundTracks.isNotEmpty && AppConfigService().backgroundMusicEnabled) {
@@ -383,6 +384,12 @@ static Future<void> resumeMusic() async {
           Log.d("Music resumed (app in foreground)");
         }
       }
+  static Future<void> _saveStateInBackground() async {
+    await compute(_saveState, null);
+  }
+  static void _saveState(_) {
+    _saveCurrentStateManually();
+  }
 
   static Future<void> _saveCurrentStateManually() async {
   try {

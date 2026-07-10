@@ -15,7 +15,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:bee_dynamic_launcher/bee_dynamic_launcher.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint, kReleaseMode;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint, kReleaseMode, compute;
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -27,14 +27,20 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  //unawaited(Firebase.initializeApp())
   // 👇 СНАЧАЛА ИНИЦИАЛИЗИРУЕМ ВСЕ СЕРВИСЫ
-  await _initServices();
-  
+  //await _initServices();
+    unawaited(_initServices());
   // 👇 ПОТОМ ЗАПУСКАЕМ ПРИЛОЖЕНИЕ
   runApp(const MyApp());
 }
 
 Future<void> _initServices() async {
+  final results = await Future.wait([
+    RoutingService().init(),
+    AppConfigService().init(),
+    GameEventsService().init(),
+  ]);
   try {
     await Firebase.initializeApp();
     Log.i('Firebase initialized successfully');
@@ -51,10 +57,11 @@ Future<void> _initServices() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   
   // ИНИЦИАЛИЗИРУЕМ ВСЕ СЕРВИСЫ ПО ПОРЯДКУ
+  /*
   await RoutingService().init();      // 1. Роутинг
   await AppConfigService().init();    // 2. Конфиг с сервера
   await GameEventsService().init();   // 3. События
-  
+  */ 
   // Инициализация других сервисов в фоне
   unawaited(_initOtherServices());
 }
@@ -108,6 +115,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    //_load
     WidgetsBinding.instance.addObserver(this);
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -130,8 +138,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     MusicService.setAppLifecycleState(state);
     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
-      GameEventsService().endSession();
+      unawaited(_endSessionInBackground());
+//      GameEventsService().endSession();
     }
+  }
+
+  Future<void> _endSessionInBackground() async {
+    await compute(_endSession, null);
+  }
+  static void _endSession(_) {
+    GameEventsService().endSession();
   }
 
   @override
