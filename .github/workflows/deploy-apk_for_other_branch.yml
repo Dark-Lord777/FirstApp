@@ -105,10 +105,10 @@ jobs:
       - name: Build APK 
         id: build
         run: |
-          ~/.config/shorebird/bin/shorebird release android --artifact apk --obfuscate --split-per-abi
+          ~/.config/shorebird/bin/shorebird release android --artifact apk --obfuscate
           cd build/app/outputs/flutter-apk/
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
-          mv app-arm64-v8a-release.apk "${PROJECT}${VERSION}.apk"
+          mv app-release.apk "${PROJECT}${VERSION}.apk"
 
 
       - name: Notify Telegram if build failed
@@ -150,6 +150,15 @@ jobs:
          echo "EOF" >> $GITHUB_OUTPUT 
 
           
+      - name: Upload APK to Hugging face space
+        if: steps.build.outcome == 'success'
+        run: |
+          VERSION="${{steps.git_version.outputs.APP_VERS}}"
+          APK_PATH="build/app/outputs/flutter-apk/${{ env.PROJECT }}${VERSION}.apk"
+
+          curl -X POST \
+          -F "file=@${APK_PATH}" \
+          https://Dark-Lord77-homelab.hf.space/upload
 
       - name: Send APK to Telegram channel
         if: steps.build.outcome == 'success'
