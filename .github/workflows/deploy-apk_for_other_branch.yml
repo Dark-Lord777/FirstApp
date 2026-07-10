@@ -194,6 +194,11 @@ jobs:
           echo "$SHOREBIRD_TOKEN" | ~/.config/shorebird/bin/shorebird login
         env: 
           SHOREBIRD_TOKEN: ${{ env.SHOREBIRD_TOKEN }}
+      - name: Generate Dynamic Icons 
+        continue-on-error: true
+        run: |
+          flutter pub get
+          ./resize_icons.sh 
 
       - name: Create Patch
         run: |
