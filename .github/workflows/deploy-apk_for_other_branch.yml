@@ -27,12 +27,15 @@ permissions:
   id-token: write 
 
 concurrency: 
-  group: "deploy-${ github.ref }"
+  group: "deploy-${{ github.ref }}"
   cancel-in-progress: true
   
 jobs:
   build-apk:
-    if: github.ref != 'main'
+    if: |
+      github.ref != 'main'
+       !contains(github.event.head_commit.message, 'patch')
+
     runs-on: ubuntu-latest
     outputs: 
       build_status: ${{ steps.build.outcome }}
@@ -194,7 +197,7 @@ jobs:
 
       - name: Create Patch
         run: |
-          ~/.config/shorebird/bin/shorebird patch android --obfuscate
+          ~/.config/shorebird/bin/shorebird patch android --release-version=1.0.1+1 --obfuscate 
 
       - name: Notify about Patch
         run: |
