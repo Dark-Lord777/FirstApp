@@ -102,7 +102,9 @@ jobs:
       - name: Build APK 
         id: build
         run: |
-          ~/.config/shorebird/bin/shorebird release android --artifact apk --obfuscate
+          ~/.config/shorebird/bin/shorebird release android --artifact apk --obfuscate --split-debug-info=./debug_info --target-platform android-arm64
+
+          #~/.config/shorebird/bin/shorebird release android --artifact apk --obfuscate
           cd build/app/outputs/flutter-apk/
           VERSION="${{ steps.git_version.outputs.APP_VERS }}"
           mv app-release.apk "${PROJECT}${VERSION}.apk"

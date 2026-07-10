@@ -27,31 +27,34 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-   unawaited(_initServices());
+  unawaited(_initServices());
   runApp(const MyApp());
 }
 
 Future<void> _initServices() async {
-  final results = await Future.wait([
+  // ✅ ТОЛЬКО Future в Future.wait
+  await Future.wait([
     AppConfigService().init(),
     RoutingService().init(),
     GameEventsService().init(),
-
-      // delete white lines on down 
-      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarDividerColor: Colors.transparent,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ));
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
-   unawaited(_initFirebase()),
-   unawaited(_initOtherServices()),
-
+    Firebase.initializeApp(),
   ]);
+  
+  Log.i('✅ Core services initialized');
+  
+  // ✅ Настройки системы выносим ОТДЕЛЬНО
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  
+  // ✅ Остальные сервисы в фоне
+  unawaited(_initOtherServices());
 }
 
-  Future<void> _initFirebase() async {
+Future<void> _initFirebase() async {
   try {
     await Firebase.initializeApp();
     Log.i('Firebase initialized successfully');
@@ -59,11 +62,10 @@ Future<void> _initServices() async {
     Log.h(e, st, 'Firebase init failed');
   }
 }
-  
 
 Future<void> _initOtherServices() async {
   if (kReleaseMode) {
-  Log.d('Release mode started');
+    Log.d('Release mode started');
   }
 
   // Launcher
@@ -78,13 +80,13 @@ Future<void> _initOtherServices() async {
 
   // User ID
   final userInfo = await UserIdService.getUserInfo();
-    Log.i('USER INIT: ${userInfo['nickname']} | ${userInfo['userId']}');
+  Log.i('USER INIT: ${userInfo['nickname']} | ${userInfo['userId']}');
 
   // FCM
   String? fcmToken;
   try {
     fcmToken = await FirebaseMessaging.instance.getToken();
-    Log.i('FCM initializad');
+    Log.i('FCM initialized');
   } catch (e, st) {
     Log.h(e, st, "Failed to get FCM Token");
   }
@@ -118,7 +120,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         await MusicService.initialize(context: context);
       }
     } catch (e, st) {
-      Log.h(e, st,'Failed to load music');
+      Log.h(e, st, 'Failed to load music');
     }
   }
 
@@ -127,13 +129,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     MusicService.setAppLifecycleState(state);
     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
       unawaited(_endSessionInBackground());
-//      GameEventsService().endSession();
     }
   }
 
   Future<void> _endSessionInBackground() async {
     await compute(_endSession, null);
   }
+  
   static void _endSession(_) {
     GameEventsService().endSession();
   }
@@ -148,14 +150,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-       // showPerformanceOverlay: true,
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       theme: ThemeData.dark(),
       home: const SplashScreen(), 
       builder: (context, child) {
         child = BotToastInit()(context, child);
-        return LogOverlay(child:child!);
+        return LogOverlay(child: child!);
       },
       navigatorObservers: [BotToastNavigatorObserver()],
     );
