@@ -33,7 +33,7 @@ concurrency:
 jobs:
   build-apk:
     if: |
-      github.ref != 'main'
+      github.ref != 'main' &&
        !contains(github.event.head_commit.message, 'patch')
 
     runs-on: ubuntu-latest
