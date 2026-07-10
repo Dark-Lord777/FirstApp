@@ -194,6 +194,12 @@ jobs:
           echo "$SHOREBIRD_TOKEN" | ~/.config/shorebird/bin/shorebird login
         env: 
           SHOREBIRD_TOKEN: ${{ env.SHOREBIRD_TOKEN }}
+
+      - name: Install ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick bc
+
       - name: Generate Dynamic Icons 
         continue-on-error: true
         run: |
