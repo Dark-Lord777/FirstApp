@@ -79,6 +79,8 @@ resize_icon() {
 resize_icon "$ASSETS_DIR/ic_777.png" "ic_launcher_777.png"
 resize_icon "$ASSETS_DIR/ic_pink.png" "ic_launcher_pink.png"
 resize_icon "$ASSETS_DIR/ic_default.png" "ic_launcher_default.png"
+resize_icon "$ASSETS_DIR/ic_777.png" "ic_launcher_gold.png"
+resize_icon "$ASSETS_DIR/ic_777.png" "ic_launcher_rainbow.png"
 resize_icon "$ASSETS_DIR/ic_default.png" "ic_launcher.png"
 
 echo "Removing adaptive icons (mipmap-anydpi-v26)..."
