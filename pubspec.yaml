@@ -2,7 +2,7 @@ name: wheel_of_fortune
 description: "Wheel of Fortune - customizable wheel app"
 publish_to: 'none'
 
-version: 1.0.3+1
+version: 1.0.4+1
 
 environment:
   sdk: ^3.5.0
@@ -74,6 +74,16 @@ bee_dynamic_launcher:
     - id: "777"
       image_path: "ic_777.png"
       label: "Wheel of Fortune"
+
+    - id: "gold"
+      image_path: "ic_gold.png"
+      label: "Wheel of Fortune"
+
+    - id: "rainbow"
+      image_path: "ic_rainbow.png"
+      label: "Wheel of Fortune"
+
+
 
       
 
