@@ -3,39 +3,20 @@ RES_DIR="android/app/src/release/res"
 ASSETS_DIR="assets/bee_dynamic_launcher/icons"
 
 if [ ! -f /etc/os-release ] || ! grep -q "Ubuntu" /etc/os-release; then
-	echo "start a script into docker"
-	echo "Use 'make build' if you don't have docker and"
-	echo "Use 'make run'"
-	exit 1
+	echo "Env okey(Ubuntu)."
 fi
 
-echo "Env okey(Ubuntu). Check ImageMagick"
-
-#if ! command -v convert &>/dev/null; then
-#	echo "Install ImageMagick"
-#	apt-get update && apt-get install -y imagemagick
-
-#	if ! command -v convert &>/dev/null; then
-#		echo "Critical error. Exitting"
-#		exit 1
-#	fi
-#fi
-
-# Проверка и установка bc
+# Проверка bc
 if ! command -v bc &>/dev/null; then
 	echo "Install bc (basic calculator)"
 	apt-get update && apt-get install -y bc
-
-	if ! command -v bc &>/dev/null; then
-		echo "Critical error. bc not installed"
-		exit 1
-	fi
 fi
 
 echo "PWD before: $(pwd)"
 pwd
 ls
 
+# Создаем папки
 mkdir -p "$RES_DIR/values/"
 mkdir -p "$RES_DIR/mipmap-anydpi-v26/"
 for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
@@ -46,21 +27,20 @@ clear
 flutter pub get
 dart run bee_dynamic_launcher
 
+# Размеры иконок
 declare -A SIZES
 SIZES=(["mipmap-mdpi"]=48 ["mipmap-hdpi"]=72 ["mipmap-xhdpi"]=96 ["mipmap-xxhdpi"]=144 ["mipmap-xxxhdpi"]=192)
 
+# ✅ УНИВЕРСАЛЬНАЯ ФУНКЦИЯ
 resize_icon() {
 	local src=$1
 	local dest_name=$2
 
 	for folder in "${!SIZES[@]}"; do
 		local size=${SIZES[$folder]}
-
-		# МЕНЯЙ ЗДЕСЬ ПРОЦЕНТ (сейчас 0.5 = 50%)
 		local percent=0.9
 		local inner_size=$(echo "$size * $percent" | bc | cut -d'.' -f1)
 
-		# Защита от нуля
 		if [ "$inner_size" -lt 1 ]; then
 			inner_size=1
 		fi
@@ -76,15 +56,57 @@ resize_icon() {
 	done
 }
 
-resize_icon "$ASSETS_DIR/ic_777.png" "ic_launcher_777.png"
-resize_icon "$ASSETS_DIR/ic_pink.png" "ic_launcher_pink.png"
-resize_icon "$ASSETS_DIR/ic_default.png" "ic_launcher_default.png"
-resize_icon "$ASSETS_DIR/ic_777.png" "ic_launcher_gold.png"
-resize_icon "$ASSETS_DIR/ic_777.png" "ic_launcher_rainbow.png"
-resize_icon "$ASSETS_DIR/ic_default.png" "ic_launcher.png"
+# ✅ АВТОМАТИЧЕСКИ НАХОДИМ ВСЕ ИКОНКИ
+echo "📋 Searching for icons in $ASSETS_DIR..."
+
+# Массив для хранения имен иконок
+declare -a ICON_NAMES
+
+# Находим все PNG файлы в папке иконок
+for file in "$ASSETS_DIR"/*.png; do
+	if [ -f "$file" ]; then
+		# Получаем имя файла без расширения
+		filename=$(basename "$file" .png)
+		# Убираем префикс "ic_" если есть
+		icon_name=${filename#ic_}
+		# Добавляем в массив
+		ICON_NAMES+=("$icon_name")
+		echo "  Found: $icon_name"
+	fi
+done
+
+echo "✅ Found ${#ICON_NAMES[@]} icons"
+
+# ✅ ГЕНЕРИРУЕМ ИКОНКИ ДЛЯ КАЖДОГО НАЙДЕННОГО ВАРИАНТА
+for icon_name in "${ICON_NAMES[@]}"; do
+	src_file="$ASSETS_DIR/ic_${icon_name}.png"
+
+	# Проверяем существует ли файл
+	if [ -f "$src_file" ]; then
+		echo "🔄 Processing: $icon_name"
+
+		# Для default используем имя без суффикса
+		if [ "$icon_name" = "default" ]; then
+			resize_icon "$src_file" "ic_launcher.png"
+			resize_icon "$src_file" "ic_launcher_${icon_name}.png"
+		else
+			resize_icon "$src_file" "ic_launcher_${icon_name}.png"
+		fi
+	else
+		echo "⚠️ Warning: $src_file not found"
+	fi
+done
+
+# 🎯 ОСОБЫЙ СЛУЧАЙ: если есть default, делаем основную иконку
+if [ -f "$ASSETS_DIR/ic_default.png" ]; then
+	echo "🔄 Creating main launcher icon from default"
+	resize_icon "$ASSETS_DIR/ic_default.png" "ic_launcher.png"
+fi
 
 echo "Removing adaptive icons (mipmap-anydpi-v26)..."
 rm -rf "$RES_DIR/mipmap-anydpi-v26/"
 echo " Removed adaptive icons"
 
-echo "All done"
+echo "✅ All done! Processed ${#ICON_NAMES[@]} icon variants"
+echo "📁 Output directory: $RES_DIR"
+ls -la "$RES_DIR" | grep mipmap
