@@ -18,6 +18,18 @@
       "displayName": "Fortune",
       "launcherLabel": "Wheel of Fortune",
       "iconLabel": "Wheel of Fortune"
+    },
+    {
+      "id": "gold",
+      "displayName": "Gold",
+      "launcherLabel": "Wheel of Fortune",
+      "iconLabel": "Wheel of Fortune",
+    },
+    {
+      "id": "rainbow",
+      "displayName": "Rainbow",
+      "launcherLabel": "Wheel of Fortune",
+      "iconLabel": "Wheel of Fortune",
     }
   ]
 }
